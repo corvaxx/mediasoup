@@ -200,6 +200,8 @@ void Settings::PrintConfiguration()
 		logTags.emplace_back("sctp");
 	if (Settings::configuration.logTags.message)
 		logTags.emplace_back("message");
+	if (Settings::configuration.logTags.dead)
+		logTags.emplace_back("dead");
 
 	if (!logTags.empty())
 	{
@@ -325,6 +327,8 @@ void Settings::SetLogTags(const std::vector<std::string>& tags)
 			newLogTags.sctp = true;
 		else if (tag == "message")
 			newLogTags.message = true;
+		else if (tag == "dead")
+			newLogTags.dead = true;
 	}
 
 	Settings::configuration.logTags = newLogTags;

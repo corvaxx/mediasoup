@@ -41,7 +41,9 @@ namespace RTC
 			  size_t len,
 			  RTC::RtpPacket::FrameMarking* frameMarking = nullptr,
 			  uint8_t frameMarkingLen                    = 0);
-			static void ProcessRtpPacket(RTC::RtpPacket* packet);
+
+			static void ProcessRtpPacket(RTC::RtpPacket * packet);
+			static bool UnpackRtpPacket(const RTC::RtpPacket* packet, packetHandler_t handler);
 
 		public:
 			class EncodingContext : public RTC::Codecs::EncodingContext

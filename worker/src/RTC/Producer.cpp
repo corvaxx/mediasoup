@@ -623,6 +623,8 @@ namespace RTC
 		// Media packet.
 		if (packet->GetSsrc() == rtpStream->GetSsrc())
 		{
+			// MS_WARN_TAG(rtp, "received MEDIA packet stream name %s", rtpStream->GetCname().c_str());
+
 			result = ReceiveRtpPacketResult::MEDIA;
 
 			// Process the packet.
@@ -638,6 +640,8 @@ namespace RTC
 		// RTX packet.
 		else if (packet->GetSsrc() == rtpStream->GetRtxSsrc())
 		{
+			// MS_WARN_TAG(rtp, "received RTX packet stream name %s", rtpStream->GetCname().c_str());
+
 			result = ReceiveRtpPacketResult::RETRANSMISSION;
 			isRtx  = true;
 

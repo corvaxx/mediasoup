@@ -13,6 +13,8 @@ using json = nlohmann::json;
 
 namespace RTC
 {
+    using packetHandler_t = std::function<void(const uint8_t * data, const size_t size, const int flags)>;
+
 	// Max RTP length.
 	constexpr size_t RtpBufferSize{ 65536u };
 	// Max MTU size.

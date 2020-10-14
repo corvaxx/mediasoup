@@ -256,7 +256,34 @@ namespace RTC
 
 		// Process the packet at codec level.
 		if (packet->GetPayloadType() == GetPayloadType())
+		{
 			RTC::Codecs::Tools::ProcessRtpPacket(packet, GetMimeType());
+
+			{
+				MS_WARN_TAG(dead, "stream %s unpack packet type %d sequence %d", 
+									GetCname().c_str(), packet->GetPayloadType(), packet->GetSequenceNumber());
+
+				// unpack and process packet
+				RTC::Codecs::Tools::UnpackRtpPacket(packet, GetMimeType(), 
+				[](const uint8_t * data, const size_t bytes, const int flags)
+				{
+					static const uint8_t start_code[4] = { 0, 0, 0, 1 };
+
+					static uint8_t buffer[2 * 1024 * 1024];
+					assert(bytes + 4 < sizeof(buffer));
+					assert(0 == flags);
+
+					memcpy(buffer, start_code, sizeof(start_code));
+					size_t size = sizeof(start_code);
+
+					memcpy(buffer + size, data, bytes);
+					size += bytes;
+
+					// TODO write to file
+					// fwrite(buffer, 1, size, f);				
+				});
+			}
+		}
 
 		// Pass the packet to the NackGenerator.
 		if (this->params.useNack)

@@ -42,6 +42,37 @@ namespace RTC
 				}
 			}
 
+			static bool UnpackRtpPacket(RTC::RtpPacket * packet, const RTC::RtpCodecMimeType & mimeType, packetHandler_t handler)
+			{
+				switch (mimeType.type)
+				{
+					case RTC::RtpCodecMimeType::Type::VIDEO:
+					{
+						switch (mimeType.subtype)
+						{
+							case RTC::RtpCodecMimeType::Subtype::VP8:
+							case RTC::RtpCodecMimeType::Subtype::VP9:
+							{
+								assert(false || "unsupported codec");
+								break;
+							}
+
+							case RTC::RtpCodecMimeType::Subtype::H264:
+							{
+								RTC::Codecs::H264::UnpackRtpPacket(packet, handler);
+								break;
+							}
+
+							default:;
+						}
+					}
+
+					default:;
+				}
+
+				return true;
+			}
+
 			static void ProcessRtpPacket(RTC::RtpPacket* packet, const RTC::RtpCodecMimeType& mimeType)
 			{
 				switch (mimeType.type)
