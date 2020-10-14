@@ -279,10 +279,12 @@ namespace RTC
 									memcpy(buffer + size, data, bytes);
 									size += bytes;
 
-									// TODO write to file
-									// fwrite(buffer, 1, size, f);				
-
 									MS_WARN_TAG(dead, "write packet size %" PRIu64, bytes);
+
+									// TODO debug code, write to file
+									FILE * f = fopen("/tmp/debug-out.media", "a+b");
+									fwrite(buffer, 1, size, f);	
+									fclose(f);			
 								});
 			}
 		}
