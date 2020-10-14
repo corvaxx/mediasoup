@@ -11,9 +11,26 @@
 
 using json = nlohmann::json;
 
+// some packets lost before the packet
+#define RTP_PAYLOAD_FLAG_PACKET_LOST	0x0100
+// the packet data is corrupt
+#define RTP_PAYLOAD_FLAG_PACKET_CORRUPT 0x0200
+
+#define RTP_PAYLOAD_MAX_SIZE			(10 * 1024 * 1024)
+
 namespace RTC
 {
     using packetHandler_t = std::function<void(const uint8_t * data, const size_t size, const int flags)>;
+
+	struct UnpackContext
+	{
+		uint32_t  flags     {0};
+		uint32_t  timestamp {0};
+		size_t    size      {0};
+		size_t    capacity  {0};
+		uint8_t * ptr       {nullptr};
+	};
+
 
 	// Max RTP length.
 	constexpr size_t RtpBufferSize{ 65536u };

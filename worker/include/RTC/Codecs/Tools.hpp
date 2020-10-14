@@ -42,7 +42,10 @@ namespace RTC
 				}
 			}
 
-			static bool UnpackRtpPacket(RTC::RtpPacket * packet, const RTC::RtpCodecMimeType & mimeType, packetHandler_t handler)
+			static bool UnpackRtpPacket(RTC::RtpPacket * packet, 
+										const RTC::RtpCodecMimeType & mimeType, 
+										RTC::UnpackContext & context,
+										packetHandler_t handler)
 			{
 				switch (mimeType.type)
 				{
@@ -59,7 +62,7 @@ namespace RTC
 
 							case RTC::RtpCodecMimeType::Subtype::H264:
 							{
-								RTC::Codecs::H264::UnpackRtpPacket(packet, handler);
+								RTC::Codecs::H264::UnpackRtpPacket(packet, context, handler);
 								break;
 							}
 

@@ -179,7 +179,7 @@ namespace RTC
 		// |                               +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		// |                               :    ...OPTIONAL RTP padding    |
 		// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		static int rtp_h264_unpack_stap(// struct rtp_decode_h264_t * context, 
+		static int rtp_h264_unpack_stap(RTC::UnpackContext & context,
 										const uint8_t * ptr, int bytes, 
 										uint32_t timestamp, int stap_b, 
 										packetHandler_t handler)
@@ -202,21 +202,19 @@ namespace RTC
 				len = rtp_read_uint16(ptr);
 				if(len + 2 > bytes)
 				{
-					assert(0);
+					// assert(0);
 
-					// TODO context
-					// context->flags = RTP_PAYLOAD_FLAG_PACKET_LOST;
-					// context->size = 0;
+					context.flags = RTP_PAYLOAD_FLAG_PACKET_LOST;
+					context.size = 0;
 
 					return -EINVAL;
 				}
 
 				assert(H264_NAL(ptr[2]) > 0 && H264_NAL(ptr[2]) < 24);
 
-				// TODO context
-				handler(/*context,*/ ptr + 2, len, 0/*context->flags*/);
-				// context->flags = 0;
-				// context->size = 0;
+				handler(ptr + 2, len, context.flags);
+				context.flags = 0;
+				context.size = 0;
 
 				// move to next NALU
 				ptr += len + 2;
@@ -249,7 +247,7 @@ namespace RTC
 		// |                               +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		// |                               :    ...OPTIONAL RTP padding    |
 		// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		static int rtp_h264_unpack_mtap(// struct rtp_decode_h264_t * context, 
+		static int rtp_h264_unpack_mtap(RTC::UnpackContext & context,
 										const uint8_t* ptr, int bytes, 
 										uint32_t timestamp, int n, 
 										packetHandler_t handler)
@@ -273,10 +271,10 @@ namespace RTC
 				len = rtp_read_uint16(ptr);
 				if(len + 2 > bytes || len < 1 /*DOND*/ + n /*TS offset*/ + 1 /*NALU*/)
 				{
-					assert(0);
-					// TODO context
-					// context->flags = RTP_PAYLOAD_FLAG_PACKET_LOST;
-					// context->size = 0;
+					// assert(0);
+
+					context.flags = RTP_PAYLOAD_FLAG_PACKET_LOST;
+					context.size = 0;
 					return -EINVAL;
 				}
 
@@ -294,10 +292,9 @@ namespace RTC
 
 				assert(H264_NAL(ptr[n + 3]) > 0 && H264_NAL(ptr[n + 3]) < 24);
 
-				// TODO context
-				handler(/*context,*/ ptr + 1 + n, len - 1 - n, 0/*context->flags*/);
-				// context->flags = 0;
-				// unpacker->size = 0;
+				handler(ptr + 1 + n, len - 1 - n, context.flags);
+				context.flags = 0;
+				context.size = 0;
 
 				// move to next NALU
 				ptr += len + 2;
@@ -319,7 +316,7 @@ namespace RTC
 		// |                               +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		// |                               :   ...OPTIONAL RTP padding     |
 		// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		static int rtp_h264_unpack_fu(// struct rtp_decode_h264_t * context, 
+		static int rtp_h264_unpack_fu(RTC::UnpackContext & context,
 									  const uint8_t * ptr, int bytes, 
 									  uint32_t timestamp, int fu_b, 
 								      packetHandler_t handler)
@@ -328,92 +325,83 @@ namespace RTC
 			uint8_t fuheader;
 			//uint16_t don;
 
-			// TODO context
-			assert(false);
-			// n = fu_b ? 4 : 2;
-			// if (bytes < n || context->size + bytes - n > RTP_PAYLOAD_MAX_SIZE)
-			// {
-			// 	assert(false);
-			// 	return -EINVAL;
-			// }
+			n = fu_b ? 4 : 2;
+			if (bytes < n || context.size + bytes - n > RTP_PAYLOAD_MAX_SIZE)
+			{
+				assert(false);
+				return -EINVAL;
+			}
 
-			// if (unpacker->size + bytes - n + 1 /*NALU*/ > context->capacity)
-			// {
-			// 	void* p = NULL;
-			// 	int size = context->size + bytes + 1;
-			// 	size += size / 4 > 128000 ? size / 4 : 128000;
-			// 	p = realloc(unpacker->ptr, size);
-			// 	if (!p)
-			// 	{
-			// 		// set packet lost flag
-			// 		// TODO context
-			// 		context->flags = RTP_PAYLOAD_FLAG_PACKET_LOST;
-			// 		context->size = 0;
-			// 		return -ENOMEM; // error
-			// 	}
-			// 	context->ptr = (uint8_t*)p;
-			// 	context->capacity = size;
-			// }
+			if (context.size + bytes - n + 1 /*NALU*/ > context.capacity)
+			{
+				void* p = NULL;
+				int size = context.size + bytes + 1;
+				size += size / 4 > 128000 ? size / 4 : 128000;
+				p = realloc(context.ptr, size);
+				if (!p)
+				{
+					// set packet lost flag
+					context.flags = RTP_PAYLOAD_FLAG_PACKET_LOST;
+					context.size = 0;
+					return -ENOMEM; // error
+				}
+				context.ptr = (uint8_t*)p;
+				context.capacity = size;
+			}
 
 			fuheader = ptr[1];
 			//don = nbo_r16(ptr + 2);
 			if (FU_START(fuheader))
 			{
 #if 0
-				if (context->size > 0)
+				if (context.size > 0)
 				{
-					context->flags |= RTP_PAYLOAD_FLAG_PACKET_CORRUPT;
-					handler(context->cbparam, context->ptr, context->size, context->timestamp, context->flags);
+					context.flags |= RTP_PAYLOAD_FLAG_PACKET_CORRUPT;
+					handler(context.ptr, context.size, context.flags);
 					context->flags = 0;
 					context->size = 0; // reset
 				}
 #endif
 
-				// TODO context
-				assert(false);
-				// context->size = 1; // NAL unit type byte
-				// context->ptr[0] = (ptr[0]/*indicator*/ & 0xE0) | (fuheader & 0x1F);
-				// assert(H264_NAL(context->ptr[0]) > 0 && H264_NAL(context->ptr[0]) < 24);
+				context.size = 1; // NAL unit type byte
+				context.ptr[0] = (ptr[0]/*indicator*/ & 0xE0) | (fuheader & 0x1F);
+				assert(H264_NAL(context.ptr[0]) > 0 && H264_NAL(context.ptr[0]) < 24);
 			}
 else
 			{
-				// TODO context
-				assert(false);
-				// if (0 == context->size)
-				// {
-				// 	context->flags = RTP_PAYLOAD_FLAG_PACKET_LOST;
-				// 	return 0; // packet discard
-				// }
-				// assert(context->size > 0);
+				if (0 == context.size)
+				{
+					context.flags = RTP_PAYLOAD_FLAG_PACKET_LOST;
+					return 0; // packet discard
+				}
+				assert(context.size > 0);
 			}
 
-			// TODO context
-			assert(false);
-			// context->timestamp = timestamp;
-			// if (bytes > n)
-			// {
-			// 	assert(context->capacity >= context->size + bytes - n);
-			// 	memmove(context->ptr + context->size, ptr + n, bytes - n);
-			// 	context->size += bytes - n;
-			// }
+			context.timestamp = timestamp;
+			if (bytes > n)
+			{
+				assert(context.capacity >= context.size + bytes - n);
+				memmove(context.ptr + context.size, ptr + n, bytes - n);
+				context.size += bytes - n;
+			}
 
 			if(FU_END(fuheader))
 			{
-				// TODO context
-				assert(false);
-				// if(context->size > 0)
-				// {
-				// 	handler(context->cbparam, context->ptr, context->size, timestamp, context->flags);
-				// }
-				// context->flags = 0;
-				// context->size = 0;
+				if(context.size > 0)
+				{
+					handler(context.ptr, context.size, context.flags);
+				}
+				context.flags = 0;
+				context.size = 0;
 			}
 
 			// packet handled
 			return 1;
 		}
 
-		bool H264::UnpackRtpPacket(const RTC::RtpPacket * packet, packetHandler_t handler)
+		bool H264::UnpackRtpPacket(const RTC::RtpPacket * packet, 
+								   RTC::UnpackContext & context,
+								   packetHandler_t handler)
 		{
 			MS_TRACE();
 
@@ -439,30 +427,27 @@ else
 
 					case 24: // STAP-A
 						MS_WARN_TAG(dead, "STAP-A");
-						rtp_h264_unpack_stap(/*context,*/ buf, len, tstmp, 0, handler);
+						rtp_h264_unpack_stap(context, buf, len, tstmp, 0, handler);
 					case 25: // STAP-B
 						MS_WARN_TAG(dead, "STAP-B");
-						rtp_h264_unpack_stap(/*context,*/ buf, len, tstmp, 1, handler);
+						rtp_h264_unpack_stap(context, buf, len, tstmp, 1, handler);
 					case 26: // MTAP16
 						MS_WARN_TAG(dead, "MTAP16");
-						rtp_h264_unpack_mtap(/*context,*/ buf, len, tstmp, 2, handler);
+						rtp_h264_unpack_mtap(context, buf, len, tstmp, 2, handler);
 					case 27: // MTAP24
 						MS_WARN_TAG(dead, "MTAP24");
-						rtp_h264_unpack_mtap(/*context,*/ buf, len, tstmp, 3, handler);
+						rtp_h264_unpack_mtap(context, buf, len, tstmp, 3, handler);
 					case 28: // FU-A
 						MS_WARN_TAG(dead, "FU_A");
-						rtp_h264_unpack_fu(/*context,*/ buf, len, tstmp, 0, handler);
+						rtp_h264_unpack_fu(context, buf, len, tstmp, 0, handler);
 					case 29: // FU-B
 						MS_WARN_TAG(dead, "FU_B");
-						rtp_h264_unpack_fu(/*context,*/ buf, len, tstmp, 1, handler);
+						rtp_h264_unpack_fu(context, buf, len, tstmp, 1, handler);
 
 					default: // 1-23 NAL unit
 						handler(buf, len, 0);
-
-						// TODO context
-						// context->flags = 0;
-						// context->size = 0;
-						// return 1; // packet handled
+						context.flags = 0;
+						context.size = 0;
 						break;
 				}
 			}

@@ -197,6 +197,8 @@ namespace RTC
 		// Instance of RtxStream.
 		RTC::RtxStream* rtxStream{ nullptr };
 
+		RTC::UnpackContext unpackContext;
+
 	private:
 		// Score related.
 		uint8_t score{ 0u };

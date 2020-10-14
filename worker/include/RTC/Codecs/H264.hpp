@@ -43,7 +43,9 @@ namespace RTC
 			  uint8_t frameMarkingLen                    = 0);
 
 			static void ProcessRtpPacket(RTC::RtpPacket * packet);
-			static bool UnpackRtpPacket(const RTC::RtpPacket* packet, packetHandler_t handler);
+			static bool UnpackRtpPacket(const RTC::RtpPacket* packet,
+										RTC::UnpackContext & context, 
+										packetHandler_t handler);
 
 		public:
 			class EncodingContext : public RTC::Codecs::EncodingContext
