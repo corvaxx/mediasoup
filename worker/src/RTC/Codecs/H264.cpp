@@ -184,20 +184,19 @@ namespace RTC
 										uint32_t timestamp, int stap_b, 
 										packetHandler_t handler)
 		{
-			int n;
-		    uint16_t len;
-		    uint16_t don;
-
-		    n = stap_b ? 3 : 1;
+		    int n = stap_b ? 3 : 1;
 			if (bytes < n)
 			{
 				assert(0);
 				return -EINVAL;
 			}
-			don = stap_b ? rtp_read_uint16(ptr + 1) : 0;
+
+			uint16_t don = stap_b ? rtp_read_uint16(ptr + 1) : 0;
+
 			ptr += n; // STAP-A / STAP-B HDR + DON
 
-			for(bytes -= n; bytes > 2; bytes -= len + 2)
+			uint16_t len = 0;
+			for (bytes -= n; bytes > 2; bytes -= len + 2)
 			{
 				len = rtp_read_uint16(ptr);
 				if(len + 2 > bytes)
@@ -434,22 +433,27 @@ else
 					case 24: // STAP-A
 						MS_WARN_TAG(dead, "STAP-A");
 						rtp_h264_unpack_stap(context, buf, len, tstmp, 0, handler);
+						break;
 					case 25: // STAP-B
 						MS_WARN_TAG(dead, "STAP-B");
 						rtp_h264_unpack_stap(context, buf, len, tstmp, 1, handler);
+						break;
 					case 26: // MTAP16
 						MS_WARN_TAG(dead, "MTAP16");
 						rtp_h264_unpack_mtap(context, buf, len, tstmp, 2, handler);
+						break;
 					case 27: // MTAP24
 						MS_WARN_TAG(dead, "MTAP24");
 						rtp_h264_unpack_mtap(context, buf, len, tstmp, 3, handler);
+						break;
 					case 28: // FU-A
 						MS_WARN_TAG(dead, "FU_A");
 						rtp_h264_unpack_fu(context, buf, len, tstmp, 0, handler);
+						break;
 					case 29: // FU-B
 						MS_WARN_TAG(dead, "FU_B");
 						rtp_h264_unpack_fu(context, buf, len, tstmp, 1, handler);
-
+						break;
 					default: // 1-23 NAL unit
 						MS_WARN_TAG(dead, "NAL %d", type);
 						handler(buf, len, 0);

@@ -284,7 +284,7 @@ namespace RTC
 									MS_WARN_TAG(dead, "write packet size %" PRIu64 " summary %" PRIu64, size, summary);
 
 									// TODO debug code, write to file
-									FILE * f = fopen("/tmp/debug-out.media", "a+b");
+									FILE * f = fopen("/tmp/debug-out-recv.media", "a+b");
 									fwrite(buffer, 1, size, f);	
 									fclose(f);			
 								});
