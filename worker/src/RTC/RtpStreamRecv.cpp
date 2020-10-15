@@ -267,6 +267,7 @@ namespace RTC
 				RTC::Codecs::Tools::UnpackRtpPacket(packet, GetMimeType(), unpackContext,
 								[](const uint8_t * data, const size_t bytes, const int flags)
 								{
+									static size_t summary = 0;
 									static const uint8_t start_code[4] = { 0, 0, 0, 1 };
 
 									static uint8_t buffer[2 * 1024 * 1024];
@@ -278,8 +279,9 @@ namespace RTC
 
 									memcpy(buffer + size, data, bytes);
 									size += bytes;
+									summary += size;
 
-									MS_WARN_TAG(dead, "write packet size %" PRIu64, bytes);
+									MS_WARN_TAG(dead, "write packet size %" PRIu64 " summary %" PRIu64, size, summary);
 
 									// TODO debug code, write to file
 									FILE * f = fopen("/tmp/debug-out.media", "a+b");

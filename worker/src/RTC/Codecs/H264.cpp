@@ -203,6 +203,7 @@ namespace RTC
 				if(len + 2 > bytes)
 				{
 					// assert(0);
+					MS_WARN_TAG(dead, "RTP_PAYLOAD_FLAG_PACKET_LOST");
 
 					context.flags = RTP_PAYLOAD_FLAG_PACKET_LOST;
 					context.size = 0;
@@ -272,6 +273,7 @@ namespace RTC
 				if(len + 2 > bytes || len < 1 /*DOND*/ + n /*TS offset*/ + 1 /*NALU*/)
 				{
 					// assert(0);
+					MS_WARN_TAG(dead, "RTP_PAYLOAD_FLAG_PACKET_LOST");
 
 					context.flags = RTP_PAYLOAD_FLAG_PACKET_LOST;
 					context.size = 0;
@@ -341,6 +343,8 @@ namespace RTC
 				if (!p)
 				{
 					// set packet lost flag
+					MS_WARN_TAG(dead, "RTP_PAYLOAD_FLAG_PACKET_LOST");
+
 					context.flags = RTP_PAYLOAD_FLAG_PACKET_LOST;
 					context.size = 0;
 					return -ENOMEM; // error
@@ -371,6 +375,8 @@ else
 			{
 				if (0 == context.size)
 				{
+					MS_WARN_TAG(dead, "RTP_PAYLOAD_FLAG_PACKET_LOST");
+
 					context.flags = RTP_PAYLOAD_FLAG_PACKET_LOST;
 					return 0; // packet discard
 				}
@@ -445,6 +451,7 @@ else
 						rtp_h264_unpack_fu(context, buf, len, tstmp, 1, handler);
 
 					default: // 1-23 NAL unit
+						MS_WARN_TAG(dead, "NAL %d", type);
 						handler(buf, len, 0);
 						context.flags = 0;
 						context.size = 0;

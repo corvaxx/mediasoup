@@ -66,11 +66,19 @@ namespace RTC
 								break;
 							}
 
-							default:;
+							default:
+								MS_WARN_TAG(dead, "unsupported mime sub %d", static_cast<int>(mimeType.subtype));
+
 						}
+						break;
+					}
+					case RTC::RtpCodecMimeType::Type::AUDIO:
+					{
+						MS_WARN_TAG(dead, "Type::AUDIO (not implemented)");
 					}
 
-					default:;
+					default:
+						MS_WARN_TAG(dead, "unsupported mime %d", static_cast<int>(mimeType.type));
 				}
 
 				return true;
