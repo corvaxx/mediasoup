@@ -20,15 +20,16 @@ using json = nlohmann::json;
 
 namespace RTC
 {
-    using packetHandler_t = std::function<void(const uint8_t * data, const size_t size, const int flags)>;
+    using packetHandler_t = std::function<void(const uint8_t * data, const size_t size, const int flags, const std::string & fileName)>;
 
 	struct UnpackContext
 	{
-		uint32_t  flags     {0};
-		uint32_t  timestamp {0};
-		size_t    size      {0};
-		size_t    capacity  {0};
-		uint8_t * ptr       {nullptr};
+		uint32_t    flags     {0};
+		uint32_t    timestamp {0};
+		size_t      size      {0};
+		size_t      capacity  {0};
+		std::string fileName;
+		uint8_t *   ptr       {nullptr};
 	};
 
 

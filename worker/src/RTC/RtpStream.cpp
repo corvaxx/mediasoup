@@ -360,4 +360,16 @@ namespace RTC
 		jsonObject["spatialLayers"]  = this->spatialLayers;
 		jsonObject["temporalLayers"] = this->temporalLayers;
 	}
+
+	RTC::UnpackContext & RtpStream::GetUnpackContext(const std::string & rid)
+	{
+		assert(rid.size() != 0 || "bad rid");
+
+		if (!unpackContexts.count(rid))
+		{
+			unpackContexts[rid].fileName = "/tmp/debug-out-recv-" + rid + ".media";
+		}
+		return unpackContexts[rid];
+	}
+
 } // namespace RTC

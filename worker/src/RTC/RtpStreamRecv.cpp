@@ -257,15 +257,15 @@ namespace RTC
 		// Process the packet at codec level.
 		if (packet->GetPayloadType() == GetPayloadType())
 		{
-			RTC::Codecs::Tools::ProcessRtpPacket(packet, GetMimeType());
-
 			{
-				MS_WARN_TAG(dead, "stream %s unpack packet type %d sequence %d", 
-									GetCname().c_str(), packet->GetPayloadType(), packet->GetSequenceNumber());
+				MS_WARN_TAG(dead, "stream %s rid %s unpack packet type %d sequence %d", 
+									GetCname().c_str(), GetRid().c_str(), packet->GetPayloadType(), packet->GetSequenceNumber());
 
 				// unpack and process packet
-				RTC::Codecs::Tools::UnpackRtpPacket(packet, GetMimeType(), unpackContext,
-								[](const uint8_t * data, const size_t bytes, const int flags)
+				RTC::UnpackContext & c = GetUnpackContext(GetRid());
+
+				RTC::Codecs::Tools::UnpackRtpPacket(packet, GetMimeType(), c,
+								[](const uint8_t * data, const size_t bytes, const int flags, const std::string & fileName)
 								{
 									static size_t summary = 0;
 									static const uint8_t start_code[4] = { 0, 0, 0, 1 };
@@ -284,11 +284,14 @@ namespace RTC
 									MS_WARN_TAG(dead, "write packet size %" PRIu64 " summary %" PRIu64, size, summary);
 
 									// TODO debug code, write to file
-									FILE * f = fopen("/tmp/debug-out-recv.media", "a+b");
+									FILE * f = fopen(fileName.c_str(), "a+b");
 									fwrite(buffer, 1, size, f);	
 									fclose(f);			
 								});
 			}
+
+
+			RTC::Codecs::Tools::ProcessRtpPacket(packet, GetMimeType());
 		}
 
 		// Pass the packet to the NackGenerator.

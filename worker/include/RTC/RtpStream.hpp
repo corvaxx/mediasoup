@@ -152,6 +152,8 @@ namespace RTC
 			return DepLibUV::GetTimeMs() - this->activeSinceMs;
 		}
 
+		RTC::UnpackContext & GetUnpackContext(const std::string & rid);
+
 	protected:
 		bool UpdateSeq(RTC::RtpPacket* packet);
 		void UpdateScore(uint8_t score);
@@ -197,7 +199,7 @@ namespace RTC
 		// Instance of RtxStream.
 		RTC::RtxStream* rtxStream{ nullptr };
 
-		RTC::UnpackContext unpackContext;
+		std::map<std::string, RTC::UnpackContext> unpackContexts;
 
 	private:
 		// Score related.

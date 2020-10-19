@@ -212,7 +212,7 @@ namespace RTC
 
 				assert(H264_NAL(ptr[2]) > 0 && H264_NAL(ptr[2]) < 24);
 
-				handler(ptr + 2, len, context.flags);
+				handler(ptr + 2, len, context.flags, context.fileName);
 				context.flags = 0;
 				context.size = 0;
 
@@ -293,7 +293,7 @@ namespace RTC
 
 				assert(H264_NAL(ptr[n + 3]) > 0 && H264_NAL(ptr[n + 3]) < 24);
 
-				handler(ptr + 1 + n, len - 1 - n, context.flags);
+				handler(ptr + 1 + n, len - 1 - n, context.flags, context.fileName);
 				context.flags = 0;
 				context.size = 0;
 
@@ -394,7 +394,7 @@ else
 			{
 				if(context.size > 0)
 				{
-					handler(context.ptr, context.size, context.flags);
+					handler(context.ptr, context.size, context.flags, context.fileName);
 				}
 				context.flags = 0;
 				context.size = 0;
@@ -431,32 +431,32 @@ else
 						return false; // packet discard
 
 					case 24: // STAP-A
-						MS_WARN_TAG(dead, "STAP-A");
+						MS_WARN_TAG(dead, "STAP-A %" PRIu64, len);
 						rtp_h264_unpack_stap(context, buf, len, tstmp, 0, handler);
 						break;
 					case 25: // STAP-B
-						MS_WARN_TAG(dead, "STAP-B");
+						MS_WARN_TAG(dead, "STAP-B %" PRIu64, len);
 						rtp_h264_unpack_stap(context, buf, len, tstmp, 1, handler);
 						break;
 					case 26: // MTAP16
-						MS_WARN_TAG(dead, "MTAP16");
+						MS_WARN_TAG(dead, "MTAP16 %" PRIu64, len);
 						rtp_h264_unpack_mtap(context, buf, len, tstmp, 2, handler);
 						break;
 					case 27: // MTAP24
-						MS_WARN_TAG(dead, "MTAP24");
+						MS_WARN_TAG(dead, "MTAP24 %" PRIu64, len);
 						rtp_h264_unpack_mtap(context, buf, len, tstmp, 3, handler);
 						break;
 					case 28: // FU-A
-						MS_WARN_TAG(dead, "FU_A");
+						MS_WARN_TAG(dead, "FU_A %" PRIu64, len);
 						rtp_h264_unpack_fu(context, buf, len, tstmp, 0, handler);
 						break;
 					case 29: // FU-B
-						MS_WARN_TAG(dead, "FU_B");
+						MS_WARN_TAG(dead, "FU_B %" PRIu64, len);
 						rtp_h264_unpack_fu(context, buf, len, tstmp, 1, handler);
 						break;
 					default: // 1-23 NAL unit
-						MS_WARN_TAG(dead, "NAL %d", type);
-						handler(buf, len, 0);
+						MS_WARN_TAG(dead, "NAL %d %" PRIu64, type, len);
+						handler(buf, len, 0, context.fileName);
 						context.flags = 0;
 						context.size = 0;
 						break;
