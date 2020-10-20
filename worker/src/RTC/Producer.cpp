@@ -623,7 +623,42 @@ namespace RTC
 		// Media packet.
 		if (packet->GetSsrc() == rtpStream->GetSsrc())
 		{
-			// MS_WARN_TAG(rtp, "received MEDIA packet stream name %s", rtpStream->GetCname().c_str());
+			MS_WARN_TAG(rtp, "received MEDIA packet stream name %s", rtpStream->GetCname().c_str());
+
+			{
+				MS_WARN_TAG(dead, "stream %s rid %s unpack packet type %d sequence %d", 
+									rtpStream->GetCname().c_str(), rtpStream->GetRid().c_str(), 
+									packet->GetPayloadType(), packet->GetSequenceNumber());
+
+				// unpack and process packet
+				RTC::UnpackContext & c = rtpStream->GetUnpackContext(rtpStream->GetRid());
+
+				// unpack and process packet
+				RTC::Codecs::Tools::UnpackRtpPacket(packet, rtpStream->GetMimeType(), c,
+								[](const uint8_t * data, const size_t bytes, const int flags, const std::string & fileName)
+								{
+									static size_t summary = 0;
+									static const uint8_t start_code[4] = { 0, 0, 0, 1 };
+
+									static uint8_t buffer[2 * 1024 * 1024];
+									assert(bytes + 4 < sizeof(buffer));
+									assert(0 == flags);
+
+									memcpy(buffer, start_code, sizeof(start_code));
+									size_t size = sizeof(start_code);
+
+									memcpy(buffer + size, data, bytes);
+									size += bytes;
+									summary += size;
+
+									MS_WARN_TAG(dead, "write packet size %" PRIu64 " summary %" PRIu64, size, summary);
+
+									// TODO debug code, write to file
+									FILE * f = fopen(fileName.c_str(), "a+b");
+									fwrite(buffer, 1, size, f);	
+									fclose(f);			
+								});
+			}
 
 			result = ReceiveRtpPacketResult::MEDIA;
 

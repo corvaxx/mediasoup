@@ -25,7 +25,6 @@ namespace RTC
 	struct UnpackContext
 	{
 		uint32_t    flags     {0};
-		uint32_t    timestamp {0};
 		size_t      size      {0};
 		size_t      capacity  {0};
 		std::string fileName;

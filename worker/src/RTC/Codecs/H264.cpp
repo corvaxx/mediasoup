@@ -179,19 +179,18 @@ namespace RTC
 		// |                               +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		// |                               :    ...OPTIONAL RTP padding    |
 		// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		static int rtp_h264_unpack_stap(RTC::UnpackContext & context,
-										const uint8_t * ptr, int bytes, 
-										uint32_t timestamp, int stap_b, 
-										packetHandler_t handler)
+		bool rtp_h264_unpack_stap(RTC::UnpackContext & context,
+								  const uint8_t * ptr, int bytes, bool is_stap_b, 
+								  packetHandler_t handler)
 		{
-		    int n = stap_b ? 3 : 1;
+		    int n = is_stap_b ? 3 : 1;
 			if (bytes < n)
 			{
 				assert(0);
-				return -EINVAL;
+				return false;
 			}
 
-			uint16_t don = stap_b ? rtp_read_uint16(ptr + 1) : 0;
+			uint16_t don = is_stap_b ? rtp_read_uint16(ptr + 1) : 0;
 
 			ptr += n; // STAP-A / STAP-B HDR + DON
 
@@ -207,7 +206,7 @@ namespace RTC
 					context.flags = RTP_PAYLOAD_FLAG_PACKET_LOST;
 					context.size = 0;
 
-					return -EINVAL;
+					return false;
 				}
 
 				assert(H264_NAL(ptr[2]) > 0 && H264_NAL(ptr[2]) < 24);
@@ -222,7 +221,7 @@ namespace RTC
 			}
 
 			// packet handled
-			return 1;
+			return true;
 		}
 
 		// 5.7.2. Multi-Time Aggregation Packets (MTAPs) (p27)
@@ -247,26 +246,22 @@ namespace RTC
 		// |                               +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		// |                               :    ...OPTIONAL RTP padding    |
 		// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		static int rtp_h264_unpack_mtap(RTC::UnpackContext & context,
-										const uint8_t* ptr, int bytes, 
-										uint32_t timestamp, int n, 
-										packetHandler_t handler)
+		bool rtp_h264_unpack_mtap(RTC::UnpackContext & context,
+		    					  const uint8_t* ptr, int bytes, bool is_mtap24,
+		    					  packetHandler_t handler)
 		{
-			uint16_t dond;
-			uint16_t donb;
-			uint16_t len;
-			uint32_t ts;
+			int n = is_mtap24 ? 3 : 2;
 
 			if (bytes < 3)
 			{
 				assert(0);
-				return -EINVAL;
+				return false;
 			}
 		    
-			donb = rtp_read_uint16(ptr + 1);
 			ptr += 3; // MTAP16/MTAP24 HDR + DONB
 
-			for(bytes -= 3; n + 3 < bytes; bytes -= len + 2)
+			uint16_t len = 0;
+			for (bytes -= 3; n + 3 < bytes; bytes -= len + 2)
 			{
 				len = rtp_read_uint16(ptr);
 				if(len + 2 > bytes || len < 1 /*DOND*/ + n /*TS offset*/ + 1 /*NALU*/)
@@ -276,19 +271,7 @@ namespace RTC
 
 					context.flags = RTP_PAYLOAD_FLAG_PACKET_LOST;
 					context.size = 0;
-					return -EINVAL;
-				}
-
-				dond = (ptr[2] + donb) % 65536;
-				ts = (uint16_t)rtp_read_uint16(ptr + 3);
-				if (3 == n) ts = (ts << 16) | ptr[5]; // MTAP24
-
-				// if the NALU-time is larger than or equal to the RTP timestamp of the packet, 
-				// then the timestamp offset equals (the NALU - time of the NAL unit - the RTP timestamp of the packet).
-				// If the NALU - time is smaller than the RTP timestamp of the packet,
-				// then the timestamp offset is equal to the NALU - time + (2 ^ 32 - the RTP timestamp of the packet).
-				{
-					ts += timestamp; // wrap 1 << 32
+					return false;
 				}
 
 				assert(H264_NAL(ptr[n + 3]) > 0 && H264_NAL(ptr[n + 3]) < 24);
@@ -302,7 +285,7 @@ namespace RTC
 			}
 
 			// packet handled
-			return 1;
+			return true;
 		}
 
 		// 5.8. Fragmentation Units (FUs) (p29)
@@ -317,20 +300,15 @@ namespace RTC
 		// |                               +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		// |                               :   ...OPTIONAL RTP padding     |
 		// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		static int rtp_h264_unpack_fu(RTC::UnpackContext & context,
-									  const uint8_t * ptr, int bytes, 
-									  uint32_t timestamp, int fu_b, 
-								      packetHandler_t handler)
+		bool rtp_h264_unpack_fu(RTC::UnpackContext & context,
+								const uint8_t * ptr, int bytes, bool is_fu_b,
+								packetHandler_t handler)
 		{
-			int n;
-			uint8_t fuheader;
-			//uint16_t don;
-
-			n = fu_b ? 4 : 2;
+			int n = is_fu_b ? 4 : 2;
 			if (bytes < n || context.size + bytes - n > RTP_PAYLOAD_MAX_SIZE)
 			{
 				assert(false);
-				return -EINVAL;
+				return false;
 			}
 
 			if (context.size + bytes - n + 1 /*NALU*/ > context.capacity)
@@ -352,8 +330,7 @@ namespace RTC
 				context.capacity = size;
 			}
 
-			fuheader = ptr[1];
-			//don = nbo_r16(ptr + 2);
+			uint8_t fuheader = ptr[1];
 			if (FU_START(fuheader))
 			{
 #if 0
@@ -382,7 +359,6 @@ else
 				assert(context.size > 0);
 			}
 
-			context.timestamp = timestamp;
 			if (bytes > n)
 			{
 				assert(context.capacity >= context.size + bytes - n);
@@ -398,10 +374,12 @@ else
 				}
 				context.flags = 0;
 				context.size = 0;
+
+				// packet handled
+				return true;
 			}
 
-			// packet handled
-			return 1;
+			return false;
 		}
 
 		bool H264::UnpackRtpPacket(const RTC::RtpPacket * packet, 
@@ -412,7 +390,6 @@ else
 
 			const uint8_t * buf   = packet->GetPayload();
 			const size_t    len   = packet->GetPayloadLength();
-			const uint32_t  tstmp = packet->GetTimestamp();
 
 			if (!buf)
 			{
@@ -432,27 +409,27 @@ else
 
 					case 24: // STAP-A
 						MS_WARN_TAG(dead, "STAP-A %" PRIu64, len);
-						rtp_h264_unpack_stap(context, buf, len, tstmp, 0, handler);
+						rtp_h264_unpack_stap(context, buf, len, false, handler);
 						break;
 					case 25: // STAP-B
 						MS_WARN_TAG(dead, "STAP-B %" PRIu64, len);
-						rtp_h264_unpack_stap(context, buf, len, tstmp, 1, handler);
+						rtp_h264_unpack_stap(context, buf, len, true, handler);
 						break;
 					case 26: // MTAP16
 						MS_WARN_TAG(dead, "MTAP16 %" PRIu64, len);
-						rtp_h264_unpack_mtap(context, buf, len, tstmp, 2, handler);
+						rtp_h264_unpack_mtap(context, buf, len, false, handler);
 						break;
 					case 27: // MTAP24
 						MS_WARN_TAG(dead, "MTAP24 %" PRIu64, len);
-						rtp_h264_unpack_mtap(context, buf, len, tstmp, 3, handler);
+						rtp_h264_unpack_mtap(context, buf, len, true, handler);
 						break;
 					case 28: // FU-A
 						MS_WARN_TAG(dead, "FU_A %" PRIu64, len);
-						rtp_h264_unpack_fu(context, buf, len, tstmp, 0, handler);
+						rtp_h264_unpack_fu(context, buf, len, false, handler);
 						break;
 					case 29: // FU-B
 						MS_WARN_TAG(dead, "FU_B %" PRIu64, len);
-						rtp_h264_unpack_fu(context, buf, len, tstmp, 1, handler);
+						rtp_h264_unpack_fu(context, buf, len, true, handler);
 						break;
 					default: // 1-23 NAL unit
 						MS_WARN_TAG(dead, "NAL %d %" PRIu64, type, len);
