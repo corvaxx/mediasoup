@@ -150,6 +150,12 @@ namespace RTC
 			packet->SetPayloadDescriptorHandler(payloadDescriptorHandler);
 		}
 
+		bool H264::ProduceRtpPacket(const uint8_t * data, const size_t size, 
+					   		        std::vector<RTC::RtpPacket> & packets)
+		{
+			return false;
+		}
+
 		static inline uint16_t rtp_read_uint16(const uint8_t* ptr)
 		{
 			return (((uint16_t)ptr[0]) << 8) | ptr[1];
@@ -181,7 +187,7 @@ namespace RTC
 		// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		bool rtp_h264_unpack_stap(RTC::UnpackContext & context,
 								  const uint8_t * ptr, int bytes, bool is_stap_b, 
-								  packetHandler_t handler)
+								  std::vector<std::pair<const uint8_t *, size_t> > & nalptrs)
 		{
 		    int n = is_stap_b ? 3 : 1;
 			if (bytes < n)
@@ -204,16 +210,13 @@ namespace RTC
 					MS_WARN_TAG(dead, "RTP_PAYLOAD_FLAG_PACKET_LOST");
 
 					context.flags = RTP_PAYLOAD_FLAG_PACKET_LOST;
-					context.size = 0;
-
 					return false;
 				}
 
 				assert(H264_NAL(ptr[2]) > 0 && H264_NAL(ptr[2]) < 24);
 
-				handler(ptr + 2, len, context.flags, context.fileName);
+				nalptrs.emplace_back(std::make_pair(ptr + 2, len));
 				context.flags = 0;
-				context.size = 0;
 
 				// move to next NALU
 				ptr += len + 2;
@@ -248,7 +251,7 @@ namespace RTC
 		// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		bool rtp_h264_unpack_mtap(RTC::UnpackContext & context,
 		    					  const uint8_t* ptr, int bytes, bool is_mtap24,
-		    					  packetHandler_t handler)
+		    					  std::vector<std::pair<const uint8_t *, size_t> > & nalptrs)
 		{
 			int n = is_mtap24 ? 3 : 2;
 
@@ -270,15 +273,13 @@ namespace RTC
 					MS_WARN_TAG(dead, "RTP_PAYLOAD_FLAG_PACKET_LOST");
 
 					context.flags = RTP_PAYLOAD_FLAG_PACKET_LOST;
-					context.size = 0;
 					return false;
 				}
 
 				assert(H264_NAL(ptr[n + 3]) > 0 && H264_NAL(ptr[n + 3]) < 24);
 
-				handler(ptr + 1 + n, len - 1 - n, context.flags, context.fileName);
+				nalptrs.emplace_back(std::make_pair(ptr + 1 + n, len - 1 - n));
 				context.flags = 0;
-				context.size = 0;
 
 				// move to next NALU
 				ptr += len + 2;
@@ -302,32 +303,13 @@ namespace RTC
 		// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 		bool rtp_h264_unpack_fu(RTC::UnpackContext & context,
 								const uint8_t * ptr, int bytes, bool is_fu_b,
-								packetHandler_t handler)
+								std::vector<std::pair<const uint8_t *, size_t> > & nalptrs)
 		{
 			int n = is_fu_b ? 4 : 2;
 			if (bytes < n || context.size + bytes - n > RTP_PAYLOAD_MAX_SIZE)
 			{
 				assert(false);
 				return false;
-			}
-
-			if (context.size + bytes - n + 1 /*NALU*/ > context.capacity)
-			{
-				void* p = NULL;
-				int size = context.size + bytes + 1;
-				size += size / 4 > 128000 ? size / 4 : 128000;
-				p = realloc(context.ptr, size);
-				if (!p)
-				{
-					// set packet lost flag
-					MS_WARN_TAG(dead, "RTP_PAYLOAD_FLAG_PACKET_LOST");
-
-					context.flags = RTP_PAYLOAD_FLAG_PACKET_LOST;
-					context.size = 0;
-					return -ENOMEM; // error
-				}
-				context.ptr = (uint8_t*)p;
-				context.capacity = size;
 			}
 
 			uint8_t fuheader = ptr[1];
@@ -354,14 +336,13 @@ else
 					MS_WARN_TAG(dead, "RTP_PAYLOAD_FLAG_PACKET_LOST");
 
 					context.flags = RTP_PAYLOAD_FLAG_PACKET_LOST;
-					return 0; // packet discard
+					return false; // packet discard
 				}
 				assert(context.size > 0);
 			}
 
 			if (bytes > n)
 			{
-				assert(context.capacity >= context.size + bytes - n);
 				memmove(context.ptr + context.size, ptr + n, bytes - n);
 				context.size += bytes - n;
 			}
@@ -370,7 +351,7 @@ else
 			{
 				if(context.size > 0)
 				{
-					handler(context.ptr, context.size, context.flags, context.fileName);
+					nalptrs.emplace_back(std::make_pair(context.ptr, context.size));
 				}
 				context.flags = 0;
 				context.size = 0;
@@ -384,9 +365,11 @@ else
 
 		bool H264::UnpackRtpPacket(const RTC::RtpPacket * packet, 
 								   RTC::UnpackContext & context,
-								   packetHandler_t handler)
+								   std::vector<std::pair<const uint8_t *, size_t> > & nalptrs)
 		{
 			MS_TRACE();
+
+			nalptrs.clear();
 
 			const uint8_t * buf   = packet->GetPayload();
 			const size_t    len   = packet->GetPayloadLength();
@@ -409,33 +392,32 @@ else
 
 					case 24: // STAP-A
 						MS_WARN_TAG(dead, "STAP-A %" PRIu64, len);
-						rtp_h264_unpack_stap(context, buf, len, false, handler);
+						rtp_h264_unpack_stap(context, buf, len, false, nalptrs);
 						break;
 					case 25: // STAP-B
 						MS_WARN_TAG(dead, "STAP-B %" PRIu64, len);
-						rtp_h264_unpack_stap(context, buf, len, true, handler);
+						rtp_h264_unpack_stap(context, buf, len, true, nalptrs);
 						break;
 					case 26: // MTAP16
 						MS_WARN_TAG(dead, "MTAP16 %" PRIu64, len);
-						rtp_h264_unpack_mtap(context, buf, len, false, handler);
+						rtp_h264_unpack_mtap(context, buf, len, false, nalptrs);
 						break;
 					case 27: // MTAP24
 						MS_WARN_TAG(dead, "MTAP24 %" PRIu64, len);
-						rtp_h264_unpack_mtap(context, buf, len, true, handler);
+						rtp_h264_unpack_mtap(context, buf, len, true, nalptrs);
 						break;
 					case 28: // FU-A
 						MS_WARN_TAG(dead, "FU_A %" PRIu64, len);
-						rtp_h264_unpack_fu(context, buf, len, false, handler);
+						rtp_h264_unpack_fu(context, buf, len, false, nalptrs);
 						break;
 					case 29: // FU-B
 						MS_WARN_TAG(dead, "FU_B %" PRIu64, len);
-						rtp_h264_unpack_fu(context, buf, len, true, handler);
+						rtp_h264_unpack_fu(context, buf, len, true, nalptrs);
 						break;
 					default: // 1-23 NAL unit
 						MS_WARN_TAG(dead, "NAL %d %" PRIu64, type, len);
-						handler(buf, len, 0, context.fileName);
+						nalptrs.emplace_back(buf, len);
 						context.flags = 0;
-						context.size = 0;
 						break;
 				}
 			}
