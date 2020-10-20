@@ -31,6 +31,7 @@ namespace Channel
 		{ "transport.setMaxIncomingBitrate",             Request::MethodId::TRANSPORT_SET_MAX_INCOMING_BITRATE               },
 		{ "transport.restartIce",                        Request::MethodId::TRANSPORT_RESTART_ICE                            },
 		{ "transport.produce",                           Request::MethodId::TRANSPORT_PRODUCE                                },
+		{ "transport.producefile",                       Request::MethodId::TRANSPORT_PRODUCE_FILE                           },
 		{ "transport.consume",                           Request::MethodId::TRANSPORT_CONSUME                                },
 		{ "transport.produceData",                       Request::MethodId::TRANSPORT_PRODUCE_DATA                           },
 		{ "transport.consumeData",                       Request::MethodId::TRANSPORT_CONSUME_DATA                           },

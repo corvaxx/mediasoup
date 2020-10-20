@@ -765,6 +765,163 @@ namespace RTC
 				break;
 			}
 
+			case Channel::Request::MethodId::TRANSPORT_PRODUCE_FILE:
+			{
+				std::string producerId;
+
+				// This may throw.
+				SetNewProducerIdFromInternal(request->internal, producerId);
+
+				// This may throw.
+				auto* producer = new RTC::FileProducer(producerId, this, request->data);
+
+				// Insert the Producer into the RtpListener.
+				// This may throw. If so, delete the Producer and throw.
+				try
+				{
+					this->rtpListener.AddProducer(producer);
+				}
+				catch (const MediaSoupError& error)
+				{
+					delete producer;
+
+					throw;
+				}
+
+				// Notify the listener.
+				// This may throw if a Producer with same id already exists.
+				try
+				{
+					this->listener->OnTransportNewProducer(this, producer);
+				}
+				catch (const MediaSoupError& error)
+				{
+					this->rtpListener.RemoveProducer(producer);
+
+					delete producer;
+
+					throw;
+				}
+
+				// Insert into the map.
+				this->mapProducers[producerId] = producer;
+
+				MS_DEBUG_DEV("Producer created [producerId:%s]", producerId.c_str());
+
+				// Take the transport related RTP header extensions of the Producer and
+				// add them to the Transport.
+				// NOTE: Producer::GetRtpHeaderExtensionIds() returns the original
+				// header extension ids of the Producer (and not their mapped values).
+				const auto& producerRtpHeaderExtensionIds = producer->GetRtpHeaderExtensionIds();
+
+				if (producerRtpHeaderExtensionIds.mid != 0u)
+				{
+					this->recvRtpHeaderExtensionIds.mid = producerRtpHeaderExtensionIds.mid;
+				}
+
+				if (producerRtpHeaderExtensionIds.rid != 0u)
+				{
+					this->recvRtpHeaderExtensionIds.rid = producerRtpHeaderExtensionIds.rid;
+				}
+
+				if (producerRtpHeaderExtensionIds.rrid != 0u)
+				{
+					this->recvRtpHeaderExtensionIds.rrid = producerRtpHeaderExtensionIds.rrid;
+				}
+
+				if (producerRtpHeaderExtensionIds.absSendTime != 0u)
+				{
+					this->recvRtpHeaderExtensionIds.absSendTime = producerRtpHeaderExtensionIds.absSendTime;
+				}
+
+				if (producerRtpHeaderExtensionIds.transportWideCc01 != 0u)
+				{
+					this->recvRtpHeaderExtensionIds.transportWideCc01 =
+					  producerRtpHeaderExtensionIds.transportWideCc01;
+				}
+
+				// Create status response.
+				json data = json::object();
+
+				data["type"] = RTC::RtpParameters::GetTypeString(producer->GetType());
+
+				request->Accept(data);
+
+				// Check if TransportCongestionControlServer or REMB server must be
+				// created.
+				const auto& rtpHeaderExtensionIds = producer->GetRtpHeaderExtensionIds();
+				const auto& codecs                = producer->GetRtpParameters().codecs;
+
+				// Set TransportCongestionControlServer.
+				if (!this->tccServer)
+				{
+					bool createTccServer{ false };
+					RTC::BweType bweType;
+
+					// Use transport-cc if:
+					// - there is transport-wide-cc-01 RTP header extension, and
+					// - there is "transport-cc" in codecs RTCP feedback.
+					//
+					// clang-format off
+					if (
+						rtpHeaderExtensionIds.transportWideCc01 != 0u &&
+						std::any_of(
+							codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
+							{
+								return std::any_of(
+									codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RTC::RtcpFeedback& fb)
+									{
+										return fb.type == "transport-cc";
+									});
+							})
+					)
+					// clang-format on
+					{
+						MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlServer with transport-cc");
+
+						createTccServer = true;
+						bweType         = RTC::BweType::TRANSPORT_CC;
+					}
+					// Use REMB if:
+					// - there is abs-send-time RTP header extension, and
+					// - there is "remb" in codecs RTCP feedback.
+					//
+					// clang-format off
+					else if (
+						rtpHeaderExtensionIds.absSendTime != 0u &&
+						std::any_of(
+							codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
+							{
+								return std::any_of(
+									codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RTC::RtcpFeedback& fb)
+									{
+										return fb.type == "goog-remb";
+									});
+							})
+					)
+					// clang-format on
+					{
+						MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlServer with REMB");
+
+						createTccServer = true;
+						bweType         = RTC::BweType::REMB;
+					}
+
+					if (createTccServer)
+					{
+						this->tccServer = new RTC::TransportCongestionControlServer(this, bweType, RTC::MtuSize);
+
+						if (this->maxIncomingBitrate != 0u)
+							this->tccServer->SetMaxIncomingBitrate(this->maxIncomingBitrate);
+
+						if (IsConnected())
+							this->tccServer->TransportConnected();
+					}
+				}
+
+				break;
+			}
+
 			case Channel::Request::MethodId::TRANSPORT_CONSUME:
 			{
 				auto jsonProducerIdIt = request->internal.find("producerId");
