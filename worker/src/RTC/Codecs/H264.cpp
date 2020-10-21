@@ -189,6 +189,8 @@ namespace RTC
 								  const uint8_t * ptr, int bytes, bool is_stap_b, 
 								  std::vector<std::pair<const uint8_t *, size_t> > & nalptrs)
 		{
+			MS_TRACE();
+
 		    int n = is_stap_b ? 3 : 1;
 			if (bytes < n)
 			{
@@ -253,6 +255,8 @@ namespace RTC
 		    					  const uint8_t* ptr, int bytes, bool is_mtap24,
 		    					  std::vector<std::pair<const uint8_t *, size_t> > & nalptrs)
 		{
+			MS_TRACE();
+
 			int n = is_mtap24 ? 3 : 2;
 
 			if (bytes < 3)
@@ -305,6 +309,8 @@ namespace RTC
 								const uint8_t * ptr, int bytes, bool is_fu_b,
 								std::vector<std::pair<const uint8_t *, size_t> > & nalptrs)
 		{
+			MS_TRACE();
+
 			int n = is_fu_b ? 4 : 2;
 			if (bytes < n || context.size + bytes - n > RTP_PAYLOAD_MAX_SIZE)
 			{

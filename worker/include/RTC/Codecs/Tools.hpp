@@ -96,6 +96,8 @@ namespace RTC
 										RTC::UnpackContext & context,
 										std::vector<std::pair<const uint8_t *, size_t> > & nalptrs)
 			{
+				nalptrs.clear();
+				
 				switch (mimeType.type)
 				{
 					case RTC::RtpCodecMimeType::Type::VIDEO:
