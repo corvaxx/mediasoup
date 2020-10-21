@@ -635,7 +635,7 @@ namespace RTC
 
 				// unpack and process packet
 				std::vector<std::pair<const uint8_t *, size_t> > nalptrs;
-				if (RTC::Codecs::Tools::UnpackRtpPacket(packet, rtpStream->GetMimeType(), c, nalptrs))
+				if (RTC::Codecs::Tools::UnpackRtpPacket(c, packet, rtpStream->GetMimeType(), nalptrs))
 				{
 					static size_t summary = 0;
 					static const uint8_t start_code[4] = { 0, 0, 0, 1 };

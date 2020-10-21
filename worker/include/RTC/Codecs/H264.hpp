@@ -46,8 +46,8 @@ namespace RTC
 
 			static bool ProduceRtpPacket(const uint8_t * data, const size_t size, 
 									     std::vector<RTC::RtpPacket> & packets);
-			static bool UnpackRtpPacket(const RTC::RtpPacket* packet,
-										RTC::UnpackContext & context, 
+			static bool UnpackRtpPacket(RTC::UnpackContext & context,
+										const RTC::RtpPacket* packet,
 										std::vector<std::pair<const uint8_t *, size_t> > & nalptrs);
 
 		public:

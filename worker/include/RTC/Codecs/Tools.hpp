@@ -91,13 +91,13 @@ namespace RTC
 				return true;
 			}
 
-			static bool UnpackRtpPacket(RTC::RtpPacket * packet, 
+			static bool UnpackRtpPacket(RTC::UnpackContext & context,
+										RTC::RtpPacket * packet, 
 										const RTC::RtpCodecMimeType & mimeType, 
-										RTC::UnpackContext & context,
 										std::vector<std::pair<const uint8_t *, size_t> > & nalptrs)
 			{
 				nalptrs.clear();
-				
+
 				switch (mimeType.type)
 				{
 					case RTC::RtpCodecMimeType::Type::VIDEO:
@@ -113,7 +113,7 @@ namespace RTC
 
 							case RTC::RtpCodecMimeType::Subtype::H264:
 							{
-								return RTC::Codecs::H264::UnpackRtpPacket(packet, context, nalptrs);
+								return RTC::Codecs::H264::UnpackRtpPacket(context, packet, nalptrs);
 							}
 
 							default:

@@ -156,12 +156,12 @@ namespace RTC
 			return false;
 		}
 
-		static inline uint16_t rtp_read_uint16(const uint8_t* ptr)
+		inline uint16_t rtp_read_uint16(const uint8_t* ptr)
 		{
 			return (((uint16_t)ptr[0]) << 8) | ptr[1];
 		}
 
-		static inline uint32_t rtp_read_uint32(const uint8_t* ptr)
+		inline uint32_t rtp_read_uint32(const uint8_t* ptr)
 		{
 			return (((uint32_t)ptr[0]) << 24) | (((uint32_t)ptr[1]) << 16) | (((uint32_t)ptr[2]) << 8) | ptr[3];
 		}
@@ -369,8 +369,8 @@ else
 			return false;
 		}
 
-		bool H264::UnpackRtpPacket(const RTC::RtpPacket * packet, 
-								   RTC::UnpackContext & context,
+		bool H264::UnpackRtpPacket(RTC::UnpackContext & context,
+								   const RTC::RtpPacket * packet, 
 								   std::vector<std::pair<const uint8_t *, size_t> > & nalptrs)
 		{
 			MS_TRACE();
