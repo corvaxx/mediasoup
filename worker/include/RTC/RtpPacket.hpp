@@ -18,8 +18,16 @@ using json = nlohmann::json;
 
 #define RTP_PAYLOAD_MAX_SIZE			(10 * 1024 * 1024)
 
+#define RTP_FIXED_HEADER                12
+
 namespace RTC
 {
+	struct PackContext
+	{
+		size_t      size      {0};
+		uint32_t    timestamp {0};
+	};
+
 	struct UnpackContext
 	{
 		uint32_t    flags     {0};

@@ -150,10 +150,215 @@ namespace RTC
 			packet->SetPayloadDescriptorHandler(payloadDescriptorHandler);
 		}
 
-		bool H264::ProduceRtpPacket(const uint8_t * data, const size_t size, 
+		int rtp_packet_serialize_header(const struct rtp_packet_t * pkt, void * data, int bytes)
+		{
+            // RTC::RtpPacket::RtpPacket header;
+
+			// int hdrlen;
+			// uint32_t i;
+			// uint8_t* ptr;
+
+			// if (RTP_VERSION != pkt->rtp.v || 0 != (pkt->extlen % 4))
+			// {
+			// 	assert(0); // RTP version field must equal 2 (p66)
+			// 	return -1;
+			// }
+
+			// // RFC3550 5.1 RTP Fixed Header Fields(p12)
+			// hdrlen = RTP_FIXED_HEADER + pkt->rtp.cc * 4 + (pkt->rtp.x ? 4 : 0);
+			// if (bytes < hdrlen + pkt->extlen)
+			// 	return -1;
+
+			// ptr = (uint8_t *)data;
+			// nbo_write_rtp_header(ptr, &pkt->rtp);
+			// ptr += RTP_FIXED_HEADER;
+
+			// // pkt contributing source
+			// for (i = 0; i < pkt->rtp.cc; i++, ptr += 4)
+			// {
+			// 	nbo_w32(ptr, pkt->csrc[i]);
+			// }
+
+			// // pkt header extension
+			// if (1 == pkt->rtp.x)
+			// {
+			// 	// 5.3.1 RTP Header Extension
+			// 	assert(0 == (pkt->extlen % 4));
+			// 	nbo_w16(ptr, pkt->reserved);
+			// 	nbo_w16(ptr + 2, pkt->extlen / 4);
+			// 	memcpy(ptr + 4, pkt->extension, pkt->extlen);
+			// 	ptr += pkt->extlen + 4;
+			// }
+
+			// return hdrlen + pkt->extlen;
+            return 0;
+		}
+
+		int rtp_packet_serialize(const struct rtp_packet_t * pkt, void * data, int bytes)
+		{
+			return 0;
+
+			// int hdrlen;
+
+			// hdrlen = rtp_packet_serialize_header(pkt, data, bytes);
+			// if (hdrlen < RTP_FIXED_HEADER || hdrlen + pkt->payloadlen > bytes)
+			// 	return -1;
+
+			// memcpy(((uint8_t*)data) + hdrlen, pkt->payload, pkt->payloadlen);
+			// return hdrlen + pkt->payloadlen;
+		}
+
+		const uint8_t * h264_nalu_find(const uint8_t * p, const uint8_t* end)
+		{
+			for (p += 2; p + 1 < end; ++p)
+			{
+				if (0x01 == *p && 0x00 == *(p - 1) && 0x00 == *(p - 2))
+				{
+					return p + 1;
+				}
+			}
+			return end;
+		}
+
+		int rtp_h264_pack_nalu(RTC::PackContext & context,
+ 							   const uint8_t * nalu, const size_t bytes,
+							   std::vector<RTC::RtpPacket> & packets)
+		{
+			// packer->pkt.payload    = nalu;
+			// packer->pkt.payloadlen = bytes;
+			// int n = RTP_FIXED_HEADER + packer->pkt.payloadlen;
+			// uint8_t * rtp = (uint8_t*)packer->handler.alloc(packer->cbparam, n);
+			// if (!rtp) 
+			// {
+			// 	return ENOMEM;
+			// }
+
+			// //packer->pkt.rtp.m = 1; // set marker flag
+			// packer->pkt.rtp.m = (*nalu & 0x1f) <= 5 ? 1 : 0; // VCL only
+			// n = rtp_packet_serialize(&packer->pkt, rtp, n);
+			// if (n != RTP_FIXED_HEADER + packer->pkt.payloadlen)
+			// {
+			// 	assert(0);
+			// 	return -1;
+			// }
+
+			// ++packer->pkt.rtp.seq;
+			// int r = packer->handler.packet(packer->cbparam, rtp, n, packer->pkt.rtp.timestamp, 0);
+			// packer->handler.free(packer->cbparam, rtp);
+
+			// return r;
+            return 0;
+		}
+
+		static int rtp_h264_pack_fu_a(RTC::PackContext & context, 
+									  const uint8_t* nalu, const size_t bytes,
+									  std::vector<RTC::RtpPacket> & packets)
+		{
+			return 0;
+
+			// // RFC6184 5.3. NAL Unit Header Usage: Table 2 (p15)
+			// // RFC6184 5.8. Fragmentation Units (FUs) (p29)
+			// uint8_t fu_indicator = (*nalu & 0xE0) | 28; // FU-A
+			// uint8_t fu_header = *nalu & 0x1F;
+
+			// int r = 0;
+			// nalu += 1; // skip NAL Unit Type byte
+			// bytes -= 1;
+			// assert(bytes > 0);
+
+			// // FU-A start
+			// for (fu_header |= FU_START; 0 == r && bytes > 0; ++packer->pkt.rtp.seq)
+			// {
+			// 	if (bytes + RTP_FIXED_HEADER <= packer->size - N_FU_HEADER)
+			// 	{
+			// 		assert(0 == (fu_header & FU_START));
+			// 		fu_header = FU_END | (fu_header & 0x1F); // FU-A end
+			// 		packer->pkt.payloadlen = bytes;
+			// 	}
+			// 	else
+			// 	{
+			// 		packer->pkt.payloadlen = packer->size - RTP_FIXED_HEADER - N_FU_HEADER;
+			// 	}
+
+			// 	packer->pkt.payload = nalu;
+			// 	int n = RTP_FIXED_HEADER + N_FU_HEADER + packer->pkt.payloadlen;
+			// 	uint8_t * rtp = (uint8_t*)packer->handler.alloc(packer->cbparam, n);
+			// 	if (!rtp)
+			// 	{
+			// 		return -ENOMEM;
+			// 	}
+
+			// 	packer->pkt.rtp.m = (FU_END & fu_header) ? 1 : 0; // set marker flag
+			// 	n = rtp_packet_serialize_header(&packer->pkt, rtp, n);
+			// 	if (n != RTP_FIXED_HEADER)
+			// 	{
+			// 		assert(0);
+			// 		return -1;
+			// 	}
+
+			// 	/*fu_indicator + fu_header*/
+			// 	rtp[n + 0] = fu_indicator;
+			// 	rtp[n + 1] = fu_header;
+			// 	memcpy(rtp + n + N_FU_HEADER, packer->pkt.payload, packer->pkt.payloadlen);
+
+			// 	r = packer->handler.packet(packer->cbparam, rtp, n + N_FU_HEADER + packer->pkt.payloadlen, packer->pkt.rtp.timestamp, 0);
+			// 	packer->handler.free(packer->cbparam, rtp);
+
+			// 	bytes -= packer->pkt.payloadlen;
+			// 	nalu += packer->pkt.payloadlen;
+			// 	fu_header &= 0x1F; // clear flags
+			// }
+
+			// return r;
+		}
+
+		bool H264::ProduceRtpPacket(RTC::PackContext & context, 
+									const uint8_t * data, const size_t size, 
+									const uint32_t timestamp,
 					   		        std::vector<RTC::RtpPacket> & packets)
 		{
-			return false;
+			MS_TRACE();
+
+			packets.clear();
+
+			context.timestamp = timestamp; //(uint32_t)time * KHz; // ms -> 90KHZ
+
+			int r = 0;
+			const uint8_t * pend = data + size;
+			const uint8_t * p1   = h264_nalu_find(data, pend);
+			const uint8_t * p2   = p1;
+
+			for (; 0 == r && p1 < pend && 0 == r; p1 = p2)
+			{
+				// filter H.264 start code(0x00000001)
+				assert(0 < (*p1 & 0x1F) && (*p1 & 0x1F) < 24);
+
+				p2 = h264_nalu_find(p1 + 1, pend);
+				size_t nalu_size = p2 - p1;
+				
+				// filter suffix '00' bytes
+				if (p2 != pend)
+				{
+					--nalu_size;
+				}
+
+				while (0 == p1[nalu_size-1])
+				{
+					--nalu_size;
+				}
+
+				if (nalu_size + RTP_FIXED_HEADER <= context.size)
+				{
+					// single NAl unit packet 
+					r = rtp_h264_pack_nalu(context, p1, nalu_size, packets);
+				}
+				else
+				{
+					r = rtp_h264_pack_fu_a(context, p1, nalu_size, packets);
+				}
+			}
+
+			return true;
 		}
 
 		inline uint16_t rtp_read_uint16(const uint8_t* ptr)

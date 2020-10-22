@@ -42,7 +42,9 @@ namespace RTC
 				}
 			}
 
-			static bool ProduceRtpPacket(const uint8_t * data, const size_t size, 
+			static bool ProduceRtpPacket(RTC::PackContext & context,
+										 const uint8_t * data, const size_t size, 
+										 const uint32_t timestamp,
 										 const RTC::RtpCodecMimeType & mimeType, 
 									     std::vector<RTC::RtpPacket> & packets)
 			{
@@ -63,7 +65,7 @@ namespace RTC
 
 							case RTC::RtpCodecMimeType::Subtype::H264:
 							{
-								return RTC::Codecs::H264::ProduceRtpPacket(data, size, packets);
+								return RTC::Codecs::H264::ProduceRtpPacket(context, data, size, timestamp, packets);
 							}
 
 							default:

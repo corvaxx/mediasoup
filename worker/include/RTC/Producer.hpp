@@ -87,9 +87,15 @@ namespace RTC
 		virtual ~Producer();
 
 	public:
-		void FillJson(json& jsonObject) const;
-		void FillJsonStats(json& jsonArray) const;
-		void HandleRequest(Channel::Request* request);
+		//
+		virtual void FillJson(json& jsonObject) const;
+
+		//
+		virtual void FillJsonStats(json& jsonArray) const;
+
+		//
+		virtual void HandleRequest(Channel::Request* request);
+
 		RTC::Media::Kind GetKind() const
 		{
 			return this->kind;
@@ -118,14 +124,20 @@ namespace RTC
 		{
 			return std::addressof(this->rtpStreamScores);
 		}
-		ReceiveRtpPacketResult ReceiveRtpPacket(RTC::RtpPacket* packet);
+
+		//
+		virtual ReceiveRtpPacketResult ReceiveRtpPacket(RTC::RtpPacket* packet);
+
+		//
 		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
 		void ReceiveRtcpXrDelaySinceLastRr(RTC::RTCP::DelaySinceLastRr::SsrcInfo* ssrcInfo);
 		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs);
 		void RequestKeyFrame(uint32_t mappedSsrc);
 
-	private:
+	protected:
 		RTC::RtpStreamRecv* GetRtpStream(RTC::RtpPacket* packet);
+
+	private:
 		RTC::RtpStreamRecv* CreateRtpStream(
 		  RTC::RtpPacket* packet, const RTC::RtpCodecParameters& mediaCodec, size_t encodingIdx);
 		void NotifyNewRtpStream(RTC::RtpStreamRecv* rtpStream);
@@ -154,6 +166,9 @@ namespace RTC
 		// Passed by argument.
 		const std::string id;
 
+	protected:
+		bool paused{ false };
+
 	private:
 		// Passed by argument.
 		RTC::Producer::Listener* listener{ nullptr };
@@ -171,7 +186,6 @@ namespace RTC
 		std::map<RTC::RtpStreamRecv*, uint32_t> mapRtpStreamMappedSsrc;
 		std::map<uint32_t, uint32_t> mapMappedSsrcSsrc;
 		struct RTC::RtpHeaderExtensionIds rtpHeaderExtensionIds;
-		bool paused{ false };
 		RTC::RtpPacket* currentRtpPacket{ nullptr };
 		// Timestamp when last RTCP was sent.
 		uint64_t lastRtcpSentTime{ 0u };
