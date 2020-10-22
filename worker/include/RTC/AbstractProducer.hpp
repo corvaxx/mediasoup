@@ -6,6 +6,7 @@
 
 #include "Channel/Request.hpp"
 #include "RTC/RtpDictionaries.hpp"
+#include "RTC/RtpHeaderExtensionIds.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStreamRecv.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
@@ -59,6 +60,18 @@ public:
 
     //
     virtual void HandleRequest(Channel::Request * request) = 0;
+
+    //
+    const struct RTC::RtpHeaderExtensionIds& GetRtpHeaderExtensionIds() const
+    {
+        return this->rtpHeaderExtensionIds;
+    }
+
+    //
+    RTC::RtpParameters::Type GetType() const
+    {
+        return this->type;
+    }
 
     //
     RTC::Media::Kind GetKind() const
@@ -116,8 +129,10 @@ protected:
 
     // Others.
     bool paused { false };
+    RTC::RtpParameters::Type type{ RTC::RtpParameters::Type::NONE };
     RTC::Media::Kind kind;
 
+    struct RTC::RtpHeaderExtensionIds rtpHeaderExtensionIds;
     std::vector<uint8_t> rtpStreamScores;
     std::map<RTC::RtpStreamRecv*, uint32_t> mapRtpStreamMappedSsrc;
     RTC::RtpParameters rtpParameters;

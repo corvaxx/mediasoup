@@ -117,4 +117,34 @@ ReceiveRtpPacketResult FileProducer::ReceiveRtpPacket(RTC::RtpPacket * packet)
     return ReceiveRtpPacketResult::DISCARDED;
 }
 
+//******************************************************************************
+//******************************************************************************
+void FileProducer::ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* /*report*/)
+{
+
+}
+
+//******************************************************************************
+//******************************************************************************
+void FileProducer::ReceiveRtcpXrDelaySinceLastRr(RTC::RTCP::DelaySinceLastRr::SsrcInfo* /*ssrcInfo*/)
+{
+
+}
+
+//******************************************************************************
+//******************************************************************************
+void FileProducer::GetRtcp(RTC::RTCP::CompoundPacket* /*packet*/, uint64_t /*nowMs*/)
+{
+
+}
+
+//******************************************************************************
+//******************************************************************************
+void FileProducer::RequestKeyFrame(uint32_t /*mappedSsrc*/)
+{
+
+}
+
+
+
 } // namespace RTC

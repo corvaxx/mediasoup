@@ -68,15 +68,6 @@ namespace RTC
 		//
 		virtual void HandleRequest(Channel::Request* request);
 
-		const struct RTC::RtpHeaderExtensionIds& GetRtpHeaderExtensionIds() const
-		{
-			return this->rtpHeaderExtensionIds;
-		}
-		RTC::RtpParameters::Type GetType() const
-		{
-			return this->type;
-		}
-
 		//
 		virtual ReceiveRtpPacketResult ReceiveRtpPacket(RTC::RtpPacket* packet);
 
@@ -119,12 +110,10 @@ namespace RTC
 		std::map<uint32_t, RTC::RtpStreamRecv*> mapSsrcRtpStream;
 		RTC::KeyFrameRequestManager* keyFrameRequestManager{ nullptr };
 		// Others.
-		RTC::RtpParameters::Type type{ RTC::RtpParameters::Type::NONE };
 		struct RtpMapping rtpMapping;
 		std::vector<RTC::RtpStreamRecv*> rtpStreamByEncodingIdx;
 		std::map<uint32_t, RTC::RtpStreamRecv*> mapRtxSsrcRtpStream;
 		std::map<uint32_t, uint32_t> mapMappedSsrcSsrc;
-		struct RTC::RtpHeaderExtensionIds rtpHeaderExtensionIds;
 		RTC::RtpPacket* currentRtpPacket{ nullptr };
 		// Timestamp when last RTCP was sent.
 		uint64_t lastRtcpSentTime{ 0u };
