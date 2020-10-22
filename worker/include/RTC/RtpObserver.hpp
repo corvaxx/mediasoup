@@ -2,7 +2,7 @@
 #define MS_RTC_RTP_PACKET_OBSERVER_HPP
 
 #include "common.hpp"
-#include "RTC/Producer.hpp"
+#include "RTC/AbstractProducer.hpp"
 #include "RTC/RtpPacket.hpp"
 #include <string>
 
@@ -21,11 +21,11 @@ namespace RTC
 		{
 			return this->paused;
 		}
-		virtual void AddProducer(RTC::Producer* producer)                              = 0;
-		virtual void RemoveProducer(RTC::Producer* producer)                           = 0;
-		virtual void ReceiveRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet) = 0;
-		virtual void ProducerPaused(RTC::Producer* producer)                           = 0;
-		virtual void ProducerResumed(RTC::Producer* producer)                          = 0;
+		virtual void AddProducer(RTC::AbstractProducer* producer)                              = 0;
+		virtual void RemoveProducer(RTC::AbstractProducer* producer)                           = 0;
+		virtual void ReceiveRtpPacket(RTC::AbstractProducer* producer, RTC::RtpPacket* packet) = 0;
+		virtual void ProducerPaused(RTC::AbstractProducer* producer)                           = 0;
+		virtual void ProducerResumed(RTC::AbstractProducer* producer)                          = 0;
 
 	protected:
 		virtual void Paused()  = 0;

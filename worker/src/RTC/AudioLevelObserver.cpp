@@ -69,7 +69,7 @@ namespace RTC
 		delete this->periodicTimer;
 	}
 
-	void AudioLevelObserver::AddProducer(RTC::Producer* producer)
+	void AudioLevelObserver::AddProducer(RTC::AbstractProducer* producer)
 	{
 		MS_TRACE();
 
@@ -80,7 +80,7 @@ namespace RTC
 		this->mapProducerDBovs[producer];
 	}
 
-	void AudioLevelObserver::RemoveProducer(RTC::Producer* producer)
+	void AudioLevelObserver::RemoveProducer(RTC::AbstractProducer* producer)
 	{
 		MS_TRACE();
 
@@ -88,7 +88,7 @@ namespace RTC
 		this->mapProducerDBovs.erase(producer);
 	}
 
-	void AudioLevelObserver::ReceiveRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet)
+	void AudioLevelObserver::ReceiveRtpPacket(RTC::AbstractProducer* producer, RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
@@ -107,13 +107,13 @@ namespace RTC
 		dBovs.count++;
 	}
 
-	void AudioLevelObserver::ProducerPaused(RTC::Producer* producer)
+	void AudioLevelObserver::ProducerPaused(RTC::AbstractProducer* producer)
 	{
 		// Remove from the map.
 		this->mapProducerDBovs.erase(producer);
 	}
 
-	void AudioLevelObserver::ProducerResumed(RTC::Producer* producer)
+	void AudioLevelObserver::ProducerResumed(RTC::AbstractProducer* producer)
 	{
 		// Insert into the map.
 		this->mapProducerDBovs[producer];
@@ -146,7 +146,7 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		std::map<int8_t, RTC::Producer*> mapDBovsProducer;
+		std::map<int8_t, RTC::AbstractProducer*> mapDBovsProducer;
 
 		for (auto& kv : this->mapProducerDBovs)
 		{

@@ -3,15 +3,13 @@
 
 #include "common.hpp"
 #include "Channel/Request.hpp"
+#include "RTC/AbstractProducer.hpp"
 #include "RTC/KeyFrameRequestManager.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/Packet.hpp"
 #include "RTC/RTCP/SenderReport.hpp"
 #include "RTC/RTCP/XrDelaySinceLastRr.hpp"
-#include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpHeaderExtensionIds.hpp"
-#include "RTC/RtpPacket.hpp"
-#include "RTC/RtpStreamRecv.hpp"
 #include <json.hpp>
 #include <map>
 #include <string>
@@ -21,26 +19,8 @@ using json = nlohmann::json;
 
 namespace RTC
 {
-	class Producer : public RTC::RtpStreamRecv::Listener, public RTC::KeyFrameRequestManager::Listener
+	class Producer : public AbstractProducer, public RTC::RtpStreamRecv::Listener, public RTC::KeyFrameRequestManager::Listener
 	{
-	public:
-		class Listener
-		{
-		public:
-			virtual void OnProducerPaused(RTC::Producer* producer)  = 0;
-			virtual void OnProducerResumed(RTC::Producer* producer) = 0;
-			virtual void OnProducerNewRtpStream(
-			  RTC::Producer* producer, RTC::RtpStream* rtpStream, uint32_t mappedSsrc) = 0;
-			virtual void OnProducerRtpStreamScore(
-			  RTC::Producer* producer, RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) = 0;
-			virtual void OnProducerRtcpSenderReport(
-			  RTC::Producer* producer, RTC::RtpStream* rtpStream, bool first)                         = 0;
-			virtual void OnProducerRtpPacketReceived(RTC::Producer* producer, RTC::RtpPacket* packet) = 0;
-			virtual void OnProducerSendRtcpPacket(RTC::Producer* producer, RTC::RTCP::Packet* packet) = 0;
-			virtual void OnProducerNeedWorstRemoteFractionLost(
-			  RTC::Producer* producer, uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) = 0;
-		};
-
 	private:
 		struct RtpEncodingMapping
 		{
@@ -64,14 +44,6 @@ namespace RTC
 			uint16_t rotation{ 0 };
 		};
 
-	public:
-		enum class ReceiveRtpPacketResult
-		{
-			DISCARDED = 0,
-			MEDIA     = 1,
-			RETRANSMISSION
-		};
-
 	private:
 		struct TraceEventTypes
 		{
@@ -83,7 +55,7 @@ namespace RTC
 		};
 
 	public:
-		Producer(const std::string& id, RTC::Producer::Listener* listener, json& data);
+		Producer(const std::string& id, RTC::AbstractProducer::Listener* listener, json& data);
 		virtual ~Producer();
 
 	public:
@@ -96,14 +68,6 @@ namespace RTC
 		//
 		virtual void HandleRequest(Channel::Request* request);
 
-		RTC::Media::Kind GetKind() const
-		{
-			return this->kind;
-		}
-		const RTC::RtpParameters& GetRtpParameters() const
-		{
-			return this->rtpParameters;
-		}
 		const struct RTC::RtpHeaderExtensionIds& GetRtpHeaderExtensionIds() const
 		{
 			return this->rtpHeaderExtensionIds;
@@ -111,18 +75,6 @@ namespace RTC
 		RTC::RtpParameters::Type GetType() const
 		{
 			return this->type;
-		}
-		bool IsPaused() const
-		{
-			return this->paused;
-		}
-		const std::map<RTC::RtpStreamRecv*, uint32_t>& GetRtpStreams()
-		{
-			return this->mapRtpStreamMappedSsrc;
-		}
-		const std::vector<uint8_t>* GetRtpStreamScores() const
-		{
-			return std::addressof(this->rtpStreamScores);
 		}
 
 		//
@@ -162,28 +114,15 @@ namespace RTC
 	public:
 		void OnKeyFrameNeeded(RTC::KeyFrameRequestManager* keyFrameRequestManager, uint32_t ssrc) override;
 
-	public:
-		// Passed by argument.
-		const std::string id;
-
-	protected:
-		bool paused{ false };
-
 	private:
-		// Passed by argument.
-		RTC::Producer::Listener* listener{ nullptr };
 		// Allocated by this.
 		std::map<uint32_t, RTC::RtpStreamRecv*> mapSsrcRtpStream;
 		RTC::KeyFrameRequestManager* keyFrameRequestManager{ nullptr };
 		// Others.
-		RTC::Media::Kind kind;
-		RTC::RtpParameters rtpParameters;
 		RTC::RtpParameters::Type type{ RTC::RtpParameters::Type::NONE };
 		struct RtpMapping rtpMapping;
 		std::vector<RTC::RtpStreamRecv*> rtpStreamByEncodingIdx;
-		std::vector<uint8_t> rtpStreamScores;
 		std::map<uint32_t, RTC::RtpStreamRecv*> mapRtxSsrcRtpStream;
-		std::map<RTC::RtpStreamRecv*, uint32_t> mapRtpStreamMappedSsrc;
 		std::map<uint32_t, uint32_t> mapMappedSsrcSsrc;
 		struct RTC::RtpHeaderExtensionIds rtpHeaderExtensionIds;
 		RTC::RtpPacket* currentRtpPacket{ nullptr };

@@ -19,8 +19,10 @@ namespace RTC
 {
 	/* Instance methods. */
 
-	Producer::Producer(const std::string& id, RTC::Producer::Listener* listener, json& data)
-	  : id(id), listener(listener)
+	Producer::Producer(const std::string & id, 
+					   RTC::AbstractProducer::Listener * listener, 
+					   json & data)
+	  : AbstractProducer(id, listener)
 	{
 		MS_TRACE();
 
@@ -595,7 +597,7 @@ namespace RTC
 		}
 	}
 
-	Producer::ReceiveRtpPacketResult Producer::ReceiveRtpPacket(RTC::RtpPacket* packet)
+	ReceiveRtpPacketResult Producer::ReceiveRtpPacket(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 

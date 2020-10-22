@@ -365,7 +365,7 @@ namespace RTC
 			{
 				// This may throw.
 				RTC::RtpObserver* rtpObserver = GetRtpObserverFromInternal(request->internal);
-				RTC::Producer* producer       = GetProducerFromInternal(request->internal);
+				RTC::AbstractProducer* producer       = GetProducerFromInternal(request->internal);
 
 				rtpObserver->AddProducer(producer);
 
@@ -381,7 +381,7 @@ namespace RTC
 			{
 				// This may throw.
 				RTC::RtpObserver* rtpObserver = GetRtpObserverFromInternal(request->internal);
-				RTC::Producer* producer       = GetProducerFromInternal(request->internal);
+				RTC::AbstractProducer* producer       = GetProducerFromInternal(request->internal);
 
 				rtpObserver->RemoveProducer(producer);
 
@@ -494,7 +494,7 @@ namespace RTC
 		return rtpObserver;
 	}
 
-	RTC::Producer* Router::GetProducerFromInternal(json& internal) const
+	RTC::AbstractProducer* Router::GetProducerFromInternal(json& internal) const
 	{
 		MS_TRACE();
 
@@ -508,12 +508,12 @@ namespace RTC
 		if (it == this->mapProducers.end())
 			MS_THROW_ERROR("Producer not found");
 
-		RTC::Producer* producer = it->second;
+		RTC::AbstractProducer* producer = it->second;
 
 		return producer;
 	}
 
-	inline void Router::OnTransportNewProducer(RTC::Transport* /*transport*/, RTC::Producer* producer)
+	inline void Router::OnTransportNewProducer(RTC::Transport* /*transport*/, RTC::AbstractProducer* producer)
 	{
 		MS_TRACE();
 
@@ -532,7 +532,7 @@ namespace RTC
 		this->mapProducerRtpObservers[producer];
 	}
 
-	inline void Router::OnTransportProducerClosed(RTC::Transport* /*transport*/, RTC::Producer* producer)
+	inline void Router::OnTransportProducerClosed(RTC::Transport* /*transport*/, RTC::AbstractProducer* producer)
 	{
 		MS_TRACE();
 
@@ -577,7 +577,7 @@ namespace RTC
 		this->mapProducerRtpObservers.erase(mapProducerRtpObserversIt);
 	}
 
-	inline void Router::OnTransportProducerPaused(RTC::Transport* /*transport*/, RTC::Producer* producer)
+	inline void Router::OnTransportProducerPaused(RTC::Transport* /*transport*/, RTC::AbstractProducer* producer)
 	{
 		MS_TRACE();
 
@@ -601,7 +601,7 @@ namespace RTC
 		}
 	}
 
-	inline void Router::OnTransportProducerResumed(RTC::Transport* /*transport*/, RTC::Producer* producer)
+	inline void Router::OnTransportProducerResumed(RTC::Transport* /*transport*/, RTC::AbstractProducer* producer)
 	{
 		MS_TRACE();
 
@@ -626,7 +626,7 @@ namespace RTC
 	}
 
 	inline void Router::OnTransportProducerNewRtpStream(
-	  RTC::Transport* /*transport*/, RTC::Producer* producer, RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
+	  RTC::Transport* /*transport*/, RTC::AbstractProducer* producer, RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
 	{
 		MS_TRACE();
 
@@ -640,7 +640,7 @@ namespace RTC
 
 	inline void Router::OnTransportProducerRtpStreamScore(
 	  RTC::Transport* /*transport*/,
-	  RTC::Producer* producer,
+	  RTC::AbstractProducer* producer,
 	  RTC::RtpStream* rtpStream,
 	  uint8_t score,
 	  uint8_t previousScore)
@@ -656,7 +656,7 @@ namespace RTC
 	}
 
 	inline void Router::OnTransportProducerRtcpSenderReport(
-	  RTC::Transport* /*transport*/, RTC::Producer* producer, RTC::RtpStream* rtpStream, bool first)
+	  RTC::Transport* /*transport*/, RTC::AbstractProducer* producer, RTC::RtpStream* rtpStream, bool first)
 	{
 		MS_TRACE();
 
@@ -669,7 +669,7 @@ namespace RTC
 	}
 
 	inline void Router::OnTransportProducerRtpPacketReceived(
-	  RTC::Transport* /*transport*/, RTC::Producer* producer, RTC::RtpPacket* packet)
+	  RTC::Transport* /*transport*/, RTC::AbstractProducer* producer, RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
@@ -701,7 +701,7 @@ namespace RTC
 
 	inline void Router::OnTransportNeedWorstRemoteFractionLost(
 	  RTC::Transport* /*transport*/,
-	  RTC::Producer* producer,
+	  RTC::AbstractProducer* producer,
 	  uint32_t mappedSsrc,
 	  uint8_t& worstRemoteFractionLost)
 	{

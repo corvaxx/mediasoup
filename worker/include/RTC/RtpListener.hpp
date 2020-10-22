@@ -2,7 +2,7 @@
 #define MS_RTC_RTP_LISTENER_HPP
 
 #include "common.hpp"
-#include "RTC/Producer.hpp"
+#include "RTC/AbstractProducer.hpp"
 #include "RTC/RtpPacket.hpp"
 #include <json.hpp>
 #include <string>
@@ -16,18 +16,18 @@ namespace RTC
 	{
 	public:
 		void FillJson(json& jsonObject) const;
-		void AddProducer(RTC::Producer* producer);
-		void RemoveProducer(RTC::Producer* producer);
-		RTC::Producer* GetProducer(const RTC::RtpPacket* packet);
-		RTC::Producer* GetProducer(uint32_t ssrc) const;
+		void AddProducer(RTC::AbstractProducer * producer);
+		void RemoveProducer(RTC::AbstractProducer * producer);
+		RTC::AbstractProducer * GetProducer(const RTC::RtpPacket* packet);
+		RTC::AbstractProducer * GetProducer(uint32_t ssrc) const;
 
 	public:
 		// Table of SSRC / Producer pairs.
-		std::unordered_map<uint32_t, RTC::Producer*> ssrcTable;
+		std::unordered_map<uint32_t, RTC::AbstractProducer *> ssrcTable;
 		//  Table of MID / Producer pairs.
-		std::unordered_map<std::string, RTC::Producer*> midTable;
+		std::unordered_map<std::string, RTC::AbstractProducer *> midTable;
 		//  Table of RID / Producer pairs.
-		std::unordered_map<std::string, RTC::Producer*> ridTable;
+		std::unordered_map<std::string, RTC::AbstractProducer *> ridTable;
 	};
 } // namespace RTC
 

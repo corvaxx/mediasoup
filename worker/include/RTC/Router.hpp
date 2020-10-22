@@ -8,7 +8,7 @@
 #include "RTC/Consumer.hpp"
 #include "RTC/DataConsumer.hpp"
 #include "RTC/DataProducer.hpp"
-#include "RTC/Producer.hpp"
+#include "RTC/AbstractProducer.hpp"
 #include "RTC/RtpObserver.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStream.hpp"
@@ -39,32 +39,32 @@ namespace RTC
 		RTC::Transport* GetTransportFromInternal(json& internal) const;
 		void SetNewRtpObserverIdFromInternal(json& internal, std::string& rtpObserverId) const;
 		RTC::RtpObserver* GetRtpObserverFromInternal(json& internal) const;
-		RTC::Producer* GetProducerFromInternal(json& internal) const;
+		RTC::AbstractProducer* GetProducerFromInternal(json& internal) const;
 
 		/* Pure virtual methods inherited from RTC::Transport::Listener. */
 	public:
-		void OnTransportNewProducer(RTC::Transport* transport, RTC::Producer* producer) override;
-		void OnTransportProducerClosed(RTC::Transport* transport, RTC::Producer* producer) override;
-		void OnTransportProducerPaused(RTC::Transport* transport, RTC::Producer* producer) override;
-		void OnTransportProducerResumed(RTC::Transport* transport, RTC::Producer* producer) override;
+		void OnTransportNewProducer(RTC::Transport* transport, RTC::AbstractProducer* producer) override;
+		void OnTransportProducerClosed(RTC::Transport* transport, RTC::AbstractProducer* producer) override;
+		void OnTransportProducerPaused(RTC::Transport* transport, RTC::AbstractProducer* producer) override;
+		void OnTransportProducerResumed(RTC::Transport* transport, RTC::AbstractProducer* producer) override;
 		void OnTransportProducerNewRtpStream(
 		  RTC::Transport* transport,
-		  RTC::Producer* producer,
+		  RTC::AbstractProducer* producer,
 		  RTC::RtpStream* rtpStream,
 		  uint32_t mappedSsrc) override;
 		void OnTransportProducerRtpStreamScore(
 		  RTC::Transport* transport,
-		  RTC::Producer* producer,
+		  RTC::AbstractProducer* producer,
 		  RTC::RtpStream* rtpStream,
 		  uint8_t score,
 		  uint8_t previousScore) override;
 		void OnTransportProducerRtcpSenderReport(
-		  RTC::Transport* transport, RTC::Producer* producer, RTC::RtpStream* rtpStream, bool first) override;
+		  RTC::Transport* transport, RTC::AbstractProducer* producer, RTC::RtpStream* rtpStream, bool first) override;
 		void OnTransportProducerRtpPacketReceived(
-		  RTC::Transport* transport, RTC::Producer* producer, RTC::RtpPacket* packet) override;
+		  RTC::Transport* transport, RTC::AbstractProducer* producer, RTC::RtpPacket* packet) override;
 		void OnTransportNeedWorstRemoteFractionLost(
 		  RTC::Transport* transport,
-		  RTC::Producer* producer,
+		  RTC::AbstractProducer* producer,
 		  uint32_t mappedSsrc,
 		  uint8_t& worstRemoteFractionLost) override;
 		void OnTransportNewConsumer(
@@ -96,10 +96,10 @@ namespace RTC
 		std::unordered_map<std::string, RTC::Transport*> mapTransports;
 		std::unordered_map<std::string, RTC::RtpObserver*> mapRtpObservers;
 		// Others.
-		std::unordered_map<RTC::Producer*, std::unordered_set<RTC::Consumer*>> mapProducerConsumers;
-		std::unordered_map<RTC::Consumer*, RTC::Producer*> mapConsumerProducer;
-		std::unordered_map<RTC::Producer*, std::unordered_set<RTC::RtpObserver*>> mapProducerRtpObservers;
-		std::unordered_map<std::string, RTC::Producer*> mapProducers;
+		std::unordered_map<RTC::AbstractProducer*, std::unordered_set<RTC::Consumer*>> mapProducerConsumers;
+		std::unordered_map<RTC::Consumer*, RTC::AbstractProducer*> mapConsumerProducer;
+		std::unordered_map<RTC::AbstractProducer*, std::unordered_set<RTC::RtpObserver*>> mapProducerRtpObservers;
+		std::unordered_map<std::string, RTC::AbstractProducer*> mapProducers;
 		std::unordered_map<RTC::DataProducer*, std::unordered_set<RTC::DataConsumer*>> mapDataProducerDataConsumers;
 		std::unordered_map<RTC::DataConsumer*, RTC::DataProducer*> mapDataConsumerDataProducer;
 		std::unordered_map<std::string, RTC::DataProducer*> mapDataProducers;

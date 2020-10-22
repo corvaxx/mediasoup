@@ -11,7 +11,7 @@
 #include "RTC/DataConsumer.hpp"
 #include "RTC/DataProducer.hpp"
 #include "RTC/FileProducer.hpp"
-#include "RTC/Producer.hpp"
+#include "RTC/AbstractProducer.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/Packet.hpp"
 #include "RTC/RTCP/ReceiverReport.hpp"
@@ -35,7 +35,7 @@ using json = nlohmann::json;
 
 namespace RTC
 {
-	class Transport : public RTC::Producer::Listener,
+	class Transport : public RTC::AbstractProducer::Listener,
 	                  public RTC::Consumer::Listener,
 	                  public RTC::DataProducer::Listener,
 	                  public RTC::DataConsumer::Listener,
@@ -55,53 +55,96 @@ namespace RTC
 		class Listener
 		{
 		public:
-			virtual void OnTransportNewProducer(RTC::Transport* transport, RTC::Producer* producer) = 0;
-			virtual void OnTransportProducerClosed(RTC::Transport* transport, RTC::Producer* producer) = 0;
-			virtual void OnTransportProducerPaused(RTC::Transport* transport, RTC::Producer* producer) = 0;
-			virtual void OnTransportProducerResumed(RTC::Transport* transport, RTC::Producer* producer) = 0;
-			virtual void OnTransportProducerNewRtpStream(
-			  RTC::Transport* transport,
-			  RTC::Producer* producer,
-			  RTC::RtpStream* rtpStream,
-			  uint32_t mappedSsrc) = 0;
-			virtual void OnTransportProducerRtpStreamScore(
-			  RTC::Transport* transport,
-			  RTC::Producer* producer,
-			  RTC::RtpStream* rtpStream,
-			  uint8_t score,
-			  uint8_t previousScore) = 0;
-			virtual void OnTransportProducerRtcpSenderReport(
-			  RTC::Transport* transport, RTC::Producer* producer, RTC::RtpStream* rtpStream, bool first) = 0;
-			virtual void OnTransportProducerRtpPacketReceived(
-			  RTC::Transport* transport, RTC::Producer* producer, RTC::RtpPacket* packet) = 0;
-			virtual void OnTransportNeedWorstRemoteFractionLost(
-			  RTC::Transport* transport,
-			  RTC::Producer* producer,
-			  uint32_t mappedSsrc,
-			  uint8_t& worstRemoteFractionLost) = 0;
-			virtual void OnTransportNewConsumer(
-			  RTC::Transport* transport, RTC::Consumer* consumer, std::string& producerId) = 0;
-			virtual void OnTransportConsumerClosed(RTC::Transport* transport, RTC::Consumer* consumer) = 0;
-			virtual void OnTransportConsumerProducerClosed(
-			  RTC::Transport* transport, RTC::Consumer* consumer) = 0;
-			virtual void OnTransportConsumerKeyFrameRequested(
-			  RTC::Transport* transport, RTC::Consumer* consumer, uint32_t mappedSsrc) = 0;
-			virtual void OnTransportNewDataProducer(
-			  RTC::Transport* transport, RTC::DataProducer* dataProducer) = 0;
-			virtual void OnTransportDataProducerClosed(
-			  RTC::Transport* transport, RTC::DataProducer* dataProducer) = 0;
-			virtual void OnTransportDataProducerMessageReceived(
-			  RTC::Transport* transport,
-			  RTC::DataProducer* dataProducer,
-			  uint32_t ppid,
-			  const uint8_t* msg,
-			  size_t len) = 0;
-			virtual void OnTransportNewDataConsumer(
-			  RTC::Transport* transport, RTC::DataConsumer* dataConsumer, std::string& dataProducerId) = 0;
-			virtual void OnTransportDataConsumerClosed(
-			  RTC::Transport* transport, RTC::DataConsumer* dataConsumer) = 0;
-			virtual void OnTransportDataConsumerDataProducerClosed(
-			  RTC::Transport* transport, RTC::DataConsumer* dataConsumer) = 0;
+			//
+			virtual void OnTransportNewProducer(RTC::Transport* transport, 
+											    RTC::AbstractProducer* producer) = 0;
+
+			//
+			virtual void OnTransportProducerClosed(RTC::Transport* transport, 
+												   RTC::AbstractProducer* producer) = 0;
+
+			//
+			virtual void OnTransportProducerPaused(RTC::Transport* transport, 
+												   RTC::AbstractProducer* producer) = 0;
+
+			//
+			virtual void OnTransportProducerResumed(RTC::Transport* transport, 
+													RTC::AbstractProducer* producer) = 0;
+
+			//
+			virtual void OnTransportProducerNewRtpStream(RTC::Transport* transport,
+										    			 RTC::AbstractProducer* producer,
+													     RTC::RtpStream* rtpStream,
+													     uint32_t mappedSsrc) = 0;
+
+			//
+			virtual void OnTransportProducerRtpStreamScore(RTC::Transport* transport,
+														   RTC::AbstractProducer* producer,
+														   RTC::RtpStream* rtpStream,
+														   uint8_t score,
+														   uint8_t previousScore) = 0;
+
+			//
+			virtual void OnTransportProducerRtcpSenderReport(RTC::Transport* transport, 
+															 RTC::AbstractProducer* producer, 
+															 RTC::RtpStream* rtpStream, 
+															 bool first) = 0;
+			//
+			virtual void OnTransportProducerRtpPacketReceived(RTC::Transport* transport, 
+															  RTC::AbstractProducer* producer, 
+															  RTC::RtpPacket* packet) = 0;
+
+			//
+			virtual void OnTransportNeedWorstRemoteFractionLost(RTC::Transport* transport,
+																RTC::AbstractProducer* producer,
+																uint32_t mappedSsrc,
+																uint8_t& worstRemoteFractionLost) = 0;
+
+			//
+			virtual void OnTransportNewConsumer(RTC::Transport* transport, 
+												RTC::Consumer* consumer, 
+												std::string& producerId) = 0;
+
+			//
+			virtual void OnTransportConsumerClosed(RTC::Transport* transport, 
+												   RTC::Consumer* consumer) = 0;
+
+			//
+			virtual void OnTransportConsumerProducerClosed(RTC::Transport* transport, 
+														   RTC::Consumer* consumer) = 0;
+
+			//
+			virtual void OnTransportConsumerKeyFrameRequested(RTC::Transport* transport, 
+															  RTC::Consumer* consumer, 
+															  uint32_t mappedSsrc) = 0;
+
+			//
+			virtual void OnTransportNewDataProducer(RTC::Transport* transport, 
+													RTC::DataProducer* dataProducer) = 0;
+
+			//
+			virtual void OnTransportDataProducerClosed(RTC::Transport* transport, 
+													   RTC::DataProducer* dataProducer) = 0;
+
+			//
+			virtual void OnTransportDataProducerMessageReceived(RTC::Transport* transport,
+															    RTC::DataProducer* dataProducer,
+															    uint32_t ppid,
+															    const uint8_t* msg,
+															    size_t len) = 0;
+
+			//
+			virtual void OnTransportNewDataConsumer(RTC::Transport* transport, 
+													RTC::DataConsumer* dataConsumer, 
+													std::string& dataProducerId) = 0;
+
+			//
+			virtual void OnTransportDataConsumerClosed(RTC::Transport* transport, 
+													   RTC::DataConsumer* dataConsumer) = 0;
+
+			//
+			virtual void OnTransportDataConsumerDataProducerClosed(RTC::Transport* transport, 
+																   RTC::DataConsumer* dataConsumer) = 0;
 		};
 
 	private:
@@ -142,7 +185,7 @@ namespace RTC
 		void ReceiveRtcpPacket(RTC::RTCP::Packet* packet);
 		void ReceiveSctpData(const uint8_t* data, size_t len);
 		void SetNewProducerIdFromInternal(json& internal, std::string& producerId) const;
-		RTC::Producer* GetProducerFromInternal(json& internal) const;
+		RTC::AbstractProducer* GetProducerFromInternal(json& internal) const;
 		void SetNewConsumerIdFromInternal(json& internal, std::string& consumerId) const;
 		RTC::Consumer* GetConsumerFromInternal(json& internal) const;
 		RTC::Consumer* GetConsumerByMediaSsrc(uint32_t ssrc) const;
@@ -174,20 +217,20 @@ namespace RTC
 		void EmitTraceEventProbationType(RTC::RtpPacket* packet) const;
 		void EmitTraceEventBweType(RTC::TransportCongestionControlClient::Bitrates& bitrates) const;
 
-		/* Pure virtual methods inherited from RTC::Producer::Listener. */
+		/* Pure virtual methods inherited from RTC::AbstractProducer::Listener. */
 	public:
-		void OnProducerPaused(RTC::Producer* producer) override;
-		void OnProducerResumed(RTC::Producer* producer) override;
+		void OnProducerPaused(RTC::AbstractProducer* producer) override;
+		void OnProducerResumed(RTC::AbstractProducer* producer) override;
 		void OnProducerNewRtpStream(
-		  RTC::Producer* producer, RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
+		  RTC::AbstractProducer* producer, RTC::RtpStream* rtpStream, uint32_t mappedSsrc) override;
 		void OnProducerRtpStreamScore(
-		  RTC::Producer* producer, RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
+		  RTC::AbstractProducer* producer, RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) override;
 		void OnProducerRtcpSenderReport(
-		  RTC::Producer* producer, RTC::RtpStream* rtpStream, bool first) override;
-		void OnProducerRtpPacketReceived(RTC::Producer* producer, RTC::RtpPacket* packet) override;
-		void OnProducerSendRtcpPacket(RTC::Producer* producer, RTC::RTCP::Packet* packet) override;
+		  RTC::AbstractProducer* producer, RTC::RtpStream* rtpStream, bool first) override;
+		void OnProducerRtpPacketReceived(RTC::AbstractProducer* producer, RTC::RtpPacket* packet) override;
+		void OnProducerSendRtcpPacket(RTC::AbstractProducer* producer, RTC::RTCP::Packet* packet) override;
 		void OnProducerNeedWorstRemoteFractionLost(
-		  RTC::Producer* producer, uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) override;
+		  RTC::AbstractProducer* producer, uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) override;
 
 		/* Pure virtual methods inherited from RTC::Consumer::Listener. */
 	public:
@@ -271,7 +314,7 @@ namespace RTC
 		// Passed by argument.
 		Listener* listener{ nullptr };
 		// Allocated by this.
-		std::unordered_map<std::string, RTC::Producer*> mapProducers;
+		std::unordered_map<std::string, RTC::AbstractProducer*> mapProducers;
 		std::unordered_map<std::string, RTC::Consumer*> mapConsumers;
 		std::unordered_map<std::string, RTC::DataProducer*> mapDataProducers;
 		std::unordered_map<std::string, RTC::DataConsumer*> mapDataConsumers;

@@ -24,11 +24,11 @@ namespace RTC
 		~AudioLevelObserver() override;
 
 	public:
-		void AddProducer(RTC::Producer* producer) override;
-		void RemoveProducer(RTC::Producer* producer) override;
-		void ReceiveRtpPacket(RTC::Producer* producer, RTC::RtpPacket* packet) override;
-		void ProducerPaused(RTC::Producer* producer) override;
-		void ProducerResumed(RTC::Producer* producer) override;
+		void AddProducer(RTC::AbstractProducer* producer) override;
+		void RemoveProducer(RTC::AbstractProducer* producer) override;
+		void ReceiveRtpPacket(RTC::AbstractProducer* producer, RTC::RtpPacket* packet) override;
+		void ProducerPaused(RTC::AbstractProducer* producer) override;
+		void ProducerResumed(RTC::AbstractProducer* producer) override;
 
 	private:
 		void Paused() override;
@@ -48,7 +48,7 @@ namespace RTC
 		// Allocated by this.
 		Timer* periodicTimer{ nullptr };
 		// Others.
-		std::unordered_map<RTC::Producer*, DBovs> mapProducerDBovs;
+		std::unordered_map<RTC::AbstractProducer*, DBovs> mapProducerDBovs;
 		bool silence{ true };
 	};
 } // namespace RTC

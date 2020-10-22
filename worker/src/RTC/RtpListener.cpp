@@ -4,7 +4,7 @@
 #include "RTC/RtpListener.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
-#include "RTC/Producer.hpp"
+#include "RTC/AbstractProducer.hpp"
 
 namespace RTC
 {
@@ -50,7 +50,7 @@ namespace RTC
 		}
 	}
 
-	void RtpListener::AddProducer(RTC::Producer* producer)
+	void RtpListener::AddProducer(RTC::AbstractProducer * producer)
 	{
 		MS_TRACE();
 
@@ -135,7 +135,7 @@ namespace RTC
 		}
 	}
 
-	void RtpListener::RemoveProducer(RTC::Producer* producer)
+	void RtpListener::RemoveProducer(RTC::AbstractProducer * producer)
 	{
 		MS_TRACE();
 
@@ -166,7 +166,7 @@ namespace RTC
 		}
 	}
 
-	RTC::Producer* RtpListener::GetProducer(const RTC::RtpPacket* packet)
+	RTC::AbstractProducer * RtpListener::GetProducer(const RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
 
@@ -227,7 +227,7 @@ namespace RTC
 		return nullptr;
 	}
 
-	RTC::Producer* RtpListener::GetProducer(uint32_t ssrc) const
+	RTC::AbstractProducer * RtpListener::GetProducer(uint32_t ssrc) const
 	{
 		MS_TRACE();
 
