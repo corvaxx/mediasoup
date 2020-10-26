@@ -669,11 +669,14 @@ namespace RTC
 						std::vector<RTC::RtpPacketPtr> packets;
 						if (RTC::Codecs::Tools::ProduceRtpPacket(c, nal.first, nal.second, packet->GetTimestamp(), rtpStream->GetMimeType(), packets))
 						{
+							MS_WARN_TAG(dead, "produced %" PRIu64 " packets", packets.size());
+
 							for (RTC::RtpPacketPtr & p : packets)
 							{
 								// Process the packet.
 								if (!rtpStream->ReceivePacket(p.get()))
 								{
+									MS_WARN_TAG(dead, "not processed");
 									// May have to announce a new RTP stream to the listener.
 									if (this->mapSsrcRtpStream.size() > numRtpStreamsBefore)
 									{
