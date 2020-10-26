@@ -775,7 +775,8 @@ namespace RTC
 				SetNewProducerIdFromInternal(request->internal, producerId);
 
 				// This may throw.
-				auto* producer = new RTC::FileProducer(producerId, this, request->data);
+				// auto* producer = new RTC::FileProducer(producerId, this, request->data);
+				auto* producer = new RTC::Producer(producerId, this, request->data);
 
 				// Insert the Producer into the RtpListener.
 				// This may throw. If so, delete the Producer and throw.

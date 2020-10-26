@@ -22,10 +22,11 @@ using json = nlohmann::json;
 
 namespace RTC
 {
-	struct PackContext
+	struct ProduceContext
 	{
 		size_t      size      {0};
 		uint32_t    timestamp {0};
+		uint32_t    sequence  {0};
 	};
 
 	struct UnpackContext
@@ -44,6 +45,11 @@ namespace RTC
 	// MID header extension max length (just used when setting/updating MID
 	// extension).
 	constexpr uint8_t MidMaxLength{ 8u };
+
+	
+	class RtpPacket;
+	typedef std::shared_ptr<RtpPacket> RtpPacketPtr;
+
 
 	class RtpPacket
 	{
@@ -71,7 +77,7 @@ namespace RTC
 			uint32_t ssrc;
 		};
 
-	private:
+//	private:
 		/* Struct for RTP header extension. */
 		struct HeaderExtension
 		{
@@ -626,31 +632,36 @@ namespace RTC
 
 		void ShiftPayload(size_t payloadOffset, size_t shift, bool expand = true);
 
+		void SetBuffer(uint8_t * buf);
+
 	private:
 		void ParseExtensions();
 
 	private:
 		// Passed by argument.
-		Header* header{ nullptr };
-		uint8_t* csrcList{ nullptr };
-		HeaderExtension* headerExtension{ nullptr };
-		std::map<uint8_t, OneByteExtension*> mapOneByteExtensions;
-		std::map<uint8_t, TwoBytesExtension*> mapTwoBytesExtensions;
-		uint8_t midExtensionId{ 0u };
-		uint8_t ridExtensionId{ 0u };
-		uint8_t rridExtensionId{ 0u };
-		uint8_t absSendTimeExtensionId{ 0u };
-		uint8_t transportWideCc01ExtensionId{ 0u };
-		uint8_t frameMarking07ExtensionId{ 0u }; // NOTE: Remove once RFC.
-		uint8_t frameMarkingExtensionId{ 0u };
-		uint8_t ssrcAudioLevelExtensionId{ 0u };
-		uint8_t videoOrientationExtensionId{ 0u };
-		uint8_t* payload{ nullptr };
-		size_t payloadLength{ 0u };
-		uint8_t payloadPadding{ 0u };
-		size_t size{ 0u }; // Full size of the packet in bytes.
+		Header                               * header   { nullptr };
+		uint8_t                              * csrcList { nullptr };
+		HeaderExtension                      * headerExtension { nullptr };
+		std::map<uint8_t, OneByteExtension*>   mapOneByteExtensions;
+		std::map<uint8_t, TwoBytesExtension*>  mapTwoBytesExtensions;
+		uint8_t                                midExtensionId { 0u };
+		uint8_t                                ridExtensionId { 0u };
+		uint8_t                                rridExtensionId { 0u };
+		uint8_t                                absSendTimeExtensionId { 0u };
+		uint8_t                                transportWideCc01ExtensionId { 0u };
+		uint8_t                                frameMarking07ExtensionId { 0u }; // NOTE: Remove once RFC.
+		uint8_t                                frameMarkingExtensionId { 0u };
+		uint8_t                                ssrcAudioLevelExtensionId { 0u };
+		uint8_t                                videoOrientationExtensionId { 0u };
+		uint8_t                              * payload { nullptr };
+		size_t                                 payloadLength { 0u };
+		uint8_t                                payloadPadding { 0u };
+		size_t                                 size { 0u }; // Full size of the packet in bytes.
+		
 		// Codecs
 		std::unique_ptr<Codecs::PayloadDescriptorHandler> payloadDescriptorHandler;
+
+		uint8_t                              * buffer { nullptr };
 	};
 } // namespace RTC
 

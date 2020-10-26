@@ -42,11 +42,11 @@ namespace RTC
 				}
 			}
 
-			static bool ProduceRtpPacket(RTC::PackContext & context,
+			static bool ProduceRtpPacket(RTC::ProduceContext & context,
 										 const uint8_t * data, const size_t size, 
 										 const uint32_t timestamp,
 										 const RTC::RtpCodecMimeType & mimeType, 
-									     std::vector<RTC::RtpPacket> & packets)
+									     std::vector<RTC::RtpPacketPtr> & packets)
 			{
 				packets.clear();
 

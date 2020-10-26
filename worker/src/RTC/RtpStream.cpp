@@ -363,13 +363,24 @@ namespace RTC
 
 	RTC::UnpackContext & RtpStream::GetUnpackContext(const std::string & rid)
 	{
-		assert(rid.size() != 0 || "bad rid");
+		assert(rid.size() != 0 && "bad rid");
 
 		if (!unpackContexts.count(rid))
 		{
 			unpackContexts[rid].fileName = "/tmp/debug-out-recv-" + rid + "-" + std::to_string(time(nullptr)) + ".media";
 		}
 		return unpackContexts[rid];
+	}
+
+	RTC::ProduceContext & RtpStream::GetProduceContext(const std::string & rid)
+	{
+		assert(rid.size() != 0 && "bad rid");
+
+		if (!produceContexts.count(rid))
+		{
+			// produceContexts[rid].fileName = "/tmp/debug-out-recv-" + rid + "-" + std::to_string(time(nullptr)) + ".media";
+		}
+		return produceContexts[rid];
 	}
 
 } // namespace RTC

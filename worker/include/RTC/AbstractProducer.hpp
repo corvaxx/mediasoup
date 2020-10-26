@@ -5,6 +5,8 @@
 #define MS_RTC_ABSTRACT_PRODUCER_HPP
 
 #include "Channel/Request.hpp"
+#include "Logger.hpp" 
+#include "RTC/KeyFrameRequestManager.hpp"
 #include "RTC/RtpDictionaries.hpp"
 #include "RTC/RtpHeaderExtensionIds.hpp"
 #include "RTC/RtpPacket.hpp"
@@ -108,16 +110,16 @@ public:
     virtual ReceiveRtpPacketResult ReceiveRtpPacket(RTC::RtpPacket* packet) = 0;
 
     //
-    virtual void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report) = 0;
+    virtual void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
 
     //
-    virtual void ReceiveRtcpXrDelaySinceLastRr(RTC::RTCP::DelaySinceLastRr::SsrcInfo* ssrcInfo) = 0;
+    virtual void ReceiveRtcpXrDelaySinceLastRr(RTC::RTCP::DelaySinceLastRr::SsrcInfo* ssrcInfo);
 
     //
-    virtual void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs) = 0;
+    virtual void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs);
 
     //
-    virtual void RequestKeyFrame(uint32_t mappedSsrc) = 0;
+    virtual void RequestKeyFrame(uint32_t mappedSsrc);
 
 public:
     // Passed by argument.
@@ -125,17 +127,26 @@ public:
 
 protected:
     // Passed by argument.
-    RTC::AbstractProducer::Listener * listener{ nullptr };
+    RTC::AbstractProducer::Listener          * listener{ nullptr };
+
+    // Allocated by this.
+    RTC::KeyFrameRequestManager              * keyFrameRequestManager{ nullptr };
+    std::map<uint32_t, RTC::RtpStreamRecv *>   mapSsrcRtpStream;
 
     // Others.
-    bool paused { false };
-    RTC::RtpParameters::Type type{ RTC::RtpParameters::Type::NONE };
-    RTC::Media::Kind kind;
-
-    struct RTC::RtpHeaderExtensionIds rtpHeaderExtensionIds;
-    std::vector<uint8_t> rtpStreamScores;
-    std::map<RTC::RtpStreamRecv*, uint32_t> mapRtpStreamMappedSsrc;
-    RTC::RtpParameters rtpParameters;
+    bool                                       paused { false };
+    RTC::RtpParameters::Type                   type { RTC::RtpParameters::Type::NONE };
+    RTC::Media::Kind                           kind;
+    std::map<uint32_t, uint32_t>               mapMappedSsrcSsrc;
+    std::map<uint32_t, RTC::RtpStreamRecv *>   mapRtxSsrcRtpStream;
+    RTC::RtpPacket                           * currentRtpPacket { nullptr };
+    struct RTC::RtpHeaderExtensionIds          rtpHeaderExtensionIds;
+    std::vector<uint8_t>                       rtpStreamScores;
+    std::map<RTC::RtpStreamRecv*, uint32_t>    mapRtpStreamMappedSsrc;
+    RTC::RtpParameters                         rtpParameters;
+    // Timestamp when last RTCP was sent.
+    uint64_t                                   lastRtcpSentTime { 0u };
+    uint16_t                                   maxRtcpInterval { 0u };
 
 };
 

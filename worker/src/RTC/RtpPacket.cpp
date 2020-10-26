@@ -147,6 +147,11 @@ namespace RTC
 	RtpPacket::~RtpPacket()
 	{
 		MS_TRACE();
+
+		if (buffer)
+		{
+			delete[] buffer;
+		}
 	}
 
 	void RtpPacket::Dump() const
@@ -952,4 +957,11 @@ namespace RTC
 			}
 		}
 	}
+
+	void RtpPacket::SetBuffer(uint8_t * buf)
+	{
+		MS_ASSERT(buffer == nullptr, "beffer already set");
+		buffer = buf;
+	}
+
 } // namespace RTC

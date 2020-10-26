@@ -47,18 +47,6 @@ public:
 	//
 	virtual ReceiveRtpPacketResult ReceiveRtpPacket(RTC::RtpPacket * packet);
 
-	//
-	void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
-
-	//
-	void ReceiveRtcpXrDelaySinceLastRr(RTC::RTCP::DelaySinceLastRr::SsrcInfo* ssrcInfo);
-
-	//
-	void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs);
-
-	//
-	void RequestKeyFrame(uint32_t mappedSsrc);
-
 private:
 	std::string m_fileName;
 };

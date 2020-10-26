@@ -633,42 +633,61 @@ namespace RTC
 									rtpStream->GetCname().c_str(), rtpStream->GetRid().c_str(), 
 									packet->GetPayloadType(), packet->GetSequenceNumber());
 
-				// unpack and process packet
-				RTC::UnpackContext & c = rtpStream->GetUnpackContext(rtpStream->GetRid());
-
-				// unpack and process packet
 				std::vector<std::pair<const uint8_t *, size_t> > nalptrs;
-				if (RTC::Codecs::Tools::UnpackRtpPacket(c, packet, rtpStream->GetMimeType(), nalptrs))
 				{
-					static size_t summary = 0;
-					static const uint8_t start_code[4] = { 0, 0, 0, 1 };
+					// unpack and process packet
+					RTC::UnpackContext & c = rtpStream->GetUnpackContext(rtpStream->GetRid());
 
-					// TODO debug code, write to file
-					FILE * f = fopen(c.fileName.c_str(), "a+b");
+					if (RTC::Codecs::Tools::UnpackRtpPacket(c, packet, rtpStream->GetMimeType(), nalptrs))
+					{
+						static size_t summary = 0;
+						static const uint8_t start_code[4] = { 0, 0, 0, 1 };
+
+						// TODO debug code, write to file
+						FILE * f = fopen(c.fileName.c_str(), "a+b");
+
+						for (const std::pair<const uint8_t *, size_t> & nal : nalptrs)
+						{
+							fwrite(start_code, 1, 4, f);	
+							fwrite(nal.first, 1, nal.second, f);	
+
+							MS_WARN_TAG(dead, "write packet size %" PRIu64 " summary %" PRIu64, nal.second + 4, summary);
+						}
+
+						fclose(f);		
+					}
+				}
+
+				if (nalptrs.size() > 0)
+				{
+
+					// unpack and process packet
+					RTC::ProduceContext & c = rtpStream->GetProduceContext(rtpStream->GetRid());
 
 					for (const std::pair<const uint8_t *, size_t> & nal : nalptrs)
 					{
-						fwrite(start_code, 1, 4, f);	
-						fwrite(nal.first, 1, nal.second, f);	
-
-						MS_WARN_TAG(dead, "write packet size %" PRIu64 " summary %" PRIu64, nal.second + 4, summary);
+						std::vector<RTC::RtpPacketPtr> packets;
+						if (RTC::Codecs::Tools::ProduceRtpPacket(c, nal.first, nal.second, packet->GetTimestamp(), rtpStream->GetMimeType(), packets))
+						{
+							for (RTC::RtpPacketPtr & p : packets)
+							{
+								// Process the packet.
+								if (!rtpStream->ReceivePacket(p.get()))
+								{
+									// May have to announce a new RTP stream to the listener.
+									if (this->mapSsrcRtpStream.size() > numRtpStreamsBefore)
+									{
+										NotifyNewRtpStream(rtpStream);
+									}
+								}
+							}
+						}
 					}
-
-					fclose(f);			
 				}
 			}
 
 			result = ReceiveRtpPacketResult::MEDIA;
-
-			// Process the packet.
-			if (!rtpStream->ReceivePacket(packet))
-			{
-				// May have to announce a new RTP stream to the listener.
-				if (this->mapSsrcRtpStream.size() > numRtpStreamsBefore)
-					NotifyNewRtpStream(rtpStream);
-
-				return result;
-			}
+			return result;
 		}
 		// RTX packet.
 		else if (packet->GetSsrc() == rtpStream->GetRtxSsrc())
@@ -735,130 +754,6 @@ namespace RTC
 		this->listener->OnProducerRtpPacketReceived(this, packet);
 
 		return result;
-	}
-
-	void Producer::ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report)
-	{
-		MS_TRACE();
-
-		auto it = this->mapSsrcRtpStream.find(report->GetSsrc());
-
-		if (it != this->mapSsrcRtpStream.end())
-		{
-			auto* rtpStream = it->second;
-			bool first      = rtpStream->GetSenderReportNtpMs() == 0;
-
-			rtpStream->ReceiveRtcpSenderReport(report);
-
-			this->listener->OnProducerRtcpSenderReport(this, rtpStream, first);
-
-			return;
-		}
-
-		// If not found, check with RTX.
-		auto it2 = this->mapRtxSsrcRtpStream.find(report->GetSsrc());
-
-		if (it2 != this->mapRtxSsrcRtpStream.end())
-		{
-			auto* rtpStream = it2->second;
-
-			rtpStream->ReceiveRtxRtcpSenderReport(report);
-
-			return;
-		}
-
-		MS_DEBUG_TAG(rtcp, "RtpStream not found [ssrc:%" PRIu32 "]", report->GetSsrc());
-	}
-
-	void Producer::ReceiveRtcpXrDelaySinceLastRr(RTC::RTCP::DelaySinceLastRr::SsrcInfo* ssrcInfo)
-	{
-		MS_TRACE();
-
-		auto it = this->mapSsrcRtpStream.find(ssrcInfo->GetSsrc());
-
-		if (it == this->mapSsrcRtpStream.end())
-		{
-			MS_WARN_TAG(rtcp, "RtpStream not found [ssrc:%" PRIu32 "]", ssrcInfo->GetSsrc());
-
-			return;
-		}
-
-		auto* rtpStream = it->second;
-
-		rtpStream->ReceiveRtcpXrDelaySinceLastRr(ssrcInfo);
-	}
-
-	void Producer::GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs)
-	{
-		MS_TRACE();
-
-		if (static_cast<float>((nowMs - this->lastRtcpSentTime) * 1.15) < this->maxRtcpInterval)
-			return;
-
-		for (auto& kv : this->mapSsrcRtpStream)
-		{
-			auto* rtpStream = kv.second;
-			auto* report    = rtpStream->GetRtcpReceiverReport();
-
-			packet->AddReceiverReport(report);
-
-			auto* rtxReport = rtpStream->GetRtxRtcpReceiverReport();
-
-			if (rtxReport)
-				packet->AddReceiverReport(rtxReport);
-		}
-
-		// Add a receiver reference time report if no present in the packet.
-		if (!packet->HasReceiverReferenceTime())
-		{
-			auto ntp     = Utils::Time::TimeMs2Ntp(nowMs);
-			auto* report = new RTC::RTCP::ReceiverReferenceTime();
-
-			report->SetNtpSec(ntp.seconds);
-			report->SetNtpFrac(ntp.fractions);
-			packet->AddReceiverReferenceTime(report);
-		}
-
-		this->lastRtcpSentTime = nowMs;
-	}
-
-	void Producer::RequestKeyFrame(uint32_t mappedSsrc)
-	{
-		MS_TRACE();
-
-		if (!this->keyFrameRequestManager || this->paused)
-			return;
-
-		auto it = this->mapMappedSsrcSsrc.find(mappedSsrc);
-
-		if (it == this->mapMappedSsrcSsrc.end())
-		{
-			MS_WARN_2TAGS(rtcp, rtx, "given mappedSsrc not found, ignoring");
-
-			return;
-		}
-
-		uint32_t ssrc = it->second;
-
-		// If the current RTP packet is a key frame for the given mapped SSRC do
-		// nothing since we are gonna provide Consumers with the requested key frame
-		// right now.
-		//
-		// NOTE: We know that this may only happen before calling MangleRtpPacket()
-		// so the SSRC of the packet is still the original one and not the mapped one.
-		//
-		// clang-format off
-		if (
-			this->currentRtpPacket &&
-			this->currentRtpPacket->GetSsrc() == ssrc &&
-			this->currentRtpPacket->IsKeyFrame()
-		)
-		// clang-format on
-		{
-			return;
-		}
-
-		this->keyFrameRequestManager->KeyFrameNeeded(ssrc);
 	}
 
 	RTC::RtpStreamRecv* Producer::GetRtpStream(RTC::RtpPacket* packet)

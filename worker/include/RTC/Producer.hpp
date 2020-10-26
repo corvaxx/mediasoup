@@ -71,12 +71,6 @@ namespace RTC
 		//
 		virtual ReceiveRtpPacketResult ReceiveRtpPacket(RTC::RtpPacket* packet);
 
-		//
-		void ReceiveRtcpSenderReport(RTC::RTCP::SenderReport* report);
-		void ReceiveRtcpXrDelaySinceLastRr(RTC::RTCP::DelaySinceLastRr::SsrcInfo* ssrcInfo);
-		void GetRtcp(RTC::RTCP::CompoundPacket* packet, uint64_t nowMs);
-		void RequestKeyFrame(uint32_t mappedSsrc);
-
 	protected:
 		RTC::RtpStreamRecv* GetRtpStream(RTC::RtpPacket* packet);
 
@@ -106,18 +100,9 @@ namespace RTC
 		void OnKeyFrameNeeded(RTC::KeyFrameRequestManager* keyFrameRequestManager, uint32_t ssrc) override;
 
 	private:
-		// Allocated by this.
-		std::map<uint32_t, RTC::RtpStreamRecv*> mapSsrcRtpStream;
-		RTC::KeyFrameRequestManager* keyFrameRequestManager{ nullptr };
 		// Others.
 		struct RtpMapping rtpMapping;
 		std::vector<RTC::RtpStreamRecv*> rtpStreamByEncodingIdx;
-		std::map<uint32_t, RTC::RtpStreamRecv*> mapRtxSsrcRtpStream;
-		std::map<uint32_t, uint32_t> mapMappedSsrcSsrc;
-		RTC::RtpPacket* currentRtpPacket{ nullptr };
-		// Timestamp when last RTCP was sent.
-		uint64_t lastRtcpSentTime{ 0u };
-		uint16_t maxRtcpInterval{ 0u };
 		// Video orientation.
 		bool videoOrientationDetected{ false };
 		struct VideoOrientation videoOrientation;

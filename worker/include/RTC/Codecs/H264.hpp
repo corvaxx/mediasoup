@@ -44,10 +44,10 @@ namespace RTC
 
 			static void ProcessRtpPacket(RTC::RtpPacket * packet);
 
-			static bool ProduceRtpPacket(RTC::PackContext & context,
+			static bool ProduceRtpPacket(RTC::ProduceContext & context,
 										 const uint8_t * data, const size_t size, 
 										 const uint32_t timestamp,
-									     std::vector<RTC::RtpPacket> & packets);
+									     std::vector<RTC::RtpPacketPtr> & packets);
 			static bool UnpackRtpPacket(RTC::UnpackContext & context,
 										const RTC::RtpPacket* packet,
 										std::vector<std::pair<const uint8_t *, size_t> > & nalptrs);

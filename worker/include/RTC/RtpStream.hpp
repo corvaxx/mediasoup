@@ -152,7 +152,8 @@ namespace RTC
 			return DepLibUV::GetTimeMs() - this->activeSinceMs;
 		}
 
-		RTC::UnpackContext & GetUnpackContext(const std::string & rid);
+		RTC::UnpackContext  & GetUnpackContext(const std::string & rid);
+		RTC::ProduceContext & GetProduceContext(const std::string & rid);
 
 	protected:
 		bool UpdateSeq(RTC::RtpPacket* packet);
@@ -200,6 +201,7 @@ namespace RTC
 		RTC::RtxStream* rtxStream{ nullptr };
 
 		std::map<std::string, RTC::UnpackContext> unpackContexts;
+		std::map<std::string, RTC::ProduceContext> produceContexts;
 
 	private:
 		// Score related.
