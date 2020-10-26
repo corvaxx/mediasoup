@@ -363,7 +363,7 @@ namespace RTC
 
 	RTC::UnpackContext & RtpStream::GetUnpackContext(const std::string & rid)
 	{
-		assert(rid.size() != 0 && "bad rid");
+		// assert(rid.size() != 0 && "bad rid");
 
 		if (!unpackContexts.count(rid))
 		{
@@ -374,7 +374,7 @@ namespace RTC
 
 	RTC::ProduceContext & RtpStream::GetProduceContext(const std::string & rid)
 	{
-		assert(rid.size() != 0 && "bad rid");
+		// assert(rid.size() != 0 && "bad rid");
 
 		if (!produceContexts.count(rid))
 		{
