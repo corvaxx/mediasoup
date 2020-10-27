@@ -5,6 +5,8 @@
 #include "Logger.hpp"
 #include "RTC/SeqManager.hpp"
 
+uint32_t random32(int type);
+
 namespace RTC
 {
 	/* Static. */
@@ -361,24 +363,37 @@ namespace RTC
 		jsonObject["temporalLayers"] = this->temporalLayers;
 	}
 
-	RTC::UnpackContext & RtpStream::GetUnpackContext(const std::string & rid)
+	RTC::UnpackContext & RtpStream::GetUnpackContext1(const std::string & rid)
 	{
 		// assert(rid.size() != 0 && "bad rid");
 
-		if (!unpackContexts.count(rid))
+		if (unpackContexts1.count(rid) == 0)
 		{
-			unpackContexts[rid].fileName = "/tmp/debug-out-recv-" + rid + "-" + std::to_string(time(nullptr)) + ".media";
+			unpackContexts1[rid].fileName = "/tmp/A-debug-out-recv-" + rid + "-" + std::to_string(time(nullptr)) + ".media";
 		}
-		return unpackContexts[rid];
+		return unpackContexts1[rid];
+	}
+
+	RTC::UnpackContext & RtpStream::GetUnpackContext2(const std::string & rid)
+	{
+		// assert(rid.size() != 0 && "bad rid");
+
+		if (unpackContexts2.count(rid) == 0)
+		{
+			unpackContexts2[rid].fileName = "/tmp/B-debug-out-recv-" + rid + "-" + std::to_string(time(nullptr)) + ".media";
+		}
+		return unpackContexts2[rid];
 	}
 
 	RTC::ProduceContext & RtpStream::GetProduceContext(const std::string & rid)
 	{
 		// assert(rid.size() != 0 && "bad rid");
 
-		if (!produceContexts.count(rid))
+		if (produceContexts.count(rid) == 0)
 		{
 			// produceContexts[rid].fileName = "/tmp/debug-out-recv-" + rid + "-" + std::to_string(time(nullptr)) + ".media";
+			produceContexts[rid].ssrc     = random32(125);
+			produceContexts[rid].sequence = random32(125) % 8096;
 		}
 		return produceContexts[rid];
 	}

@@ -10,7 +10,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <time.h>
-#include <sys/utsname.h> 
+#include <sys/utsname.h>
 #include <openssl/md5.h>
 
 #define H264_NAL(v) (v & 0x1F)
@@ -22,6 +22,55 @@
 #define P_FU_END      0x40
 
 #define N_FU_HEADER 2
+
+#define RTP_PACKET_MAX_SIZE 1456
+
+unsigned long md_32(char * string, int length)
+{
+    MD5_CTX context;
+    union
+    {
+        char     c[16];
+        unsigned long x[4];
+    } digest;
+
+    MD5_Init(&context);
+    MD5_Update(&context, string, length);
+    MD5_Final((unsigned char *)&digest, &context);
+
+    unsigned long r = 0;
+    for (int i = 0; i < 3; ++i)
+    {
+        r ^= digest.x[i];
+    }
+    return r;
+}
+
+uint32_t random32(int type)
+{
+    struct {
+        int           type;
+        timeval       tv;
+        clock_t       cpu;
+        pid_t         pid;
+        unsigned long hid;
+        uid_t         uid;
+        gid_t         gid;
+        utsname       name;
+    } s;
+
+    gettimeofday(&s.tv, 0);
+    uname(&s.name);
+    s.type = type;
+    s.cpu  = clock();
+    s.pid  = getpid();
+    s.hid  = gethostid();
+    s.uid  = getuid();
+    s.gid  = getgid();
+    /* also: system uptime */
+
+    return md_32((char *)&s, sizeof(s));
+}
 
 namespace RTC
 {
@@ -163,53 +212,6 @@ namespace RTC
             packet->SetPayloadDescriptorHandler(payloadDescriptorHandler);
         }
 
-        unsigned long md_32(char * string, int length)
-        {
-            MD5_CTX context;
-            union 
-            {
-                char     c[16];
-                unsigned long x[4];
-            } digest;
-
-            MD5_Init(&context);
-            MD5_Update(&context, string, length);
-            MD5_Final((unsigned char *)&digest, &context);
-
-            unsigned long r = 0;
-            for (int i = 0; i < 3; ++i) 
-            {
-                r ^= digest.x[i];
-            }
-            return r;
-        }
-
-        uint32_t random32(int type)
-        {
-            struct {
-                int           type;
-                timeval       tv;
-                clock_t       cpu;
-                pid_t         pid;
-                unsigned long hid;
-                uid_t         uid;
-                gid_t         gid;
-                utsname       name;
-            } s;
-
-            gettimeofday(&s.tv, 0);
-            uname(&s.name);
-            s.type = type;
-            s.cpu  = clock();
-            s.pid  = getpid();
-            s.hid  = gethostid();
-            s.uid  = getuid();
-            s.gid  = getgid();
-            /* also: system uptime */
-
-            return md_32((char *)&s, sizeof(s));
-        } 
-
         int rtp_packet_serialize_header(const struct rtp_packet_t * pkt, void * data, int bytes)
         {
             // RTC::RtpPacket::RtpPacket header;
@@ -287,10 +289,10 @@ namespace RTC
             uint8_t padding = 0;
             size_t  csrcSize = 0;
 
-            std::size_t size = sizeof(RTC::RtpPacket::Header) + 
-                                csrcSize + 
+            std::size_t size = sizeof(RTC::RtpPacket::Header) +
+                                csrcSize +
                                 // (headerExtension ? 4 + extensionSize : 0) +
-                                bytes + 
+                                bytes +
                                 static_cast<size_t>(padding);
 
             uint8_t * buffer = new uint8_t[size];
@@ -303,10 +305,10 @@ namespace RTC
             header->extension      = 0;
             header->marker         = (*nalu & 0x1f) <= 5 ? 1 : 0; // ??? VCL only
             header->padding        = 0;
-            header->payloadType    = 0;
-            header->sequenceNumber = ++context.sequence;
-            header->timestamp      = context.timestamp;
-            header->ssrc           = random32(0);
+            header->payloadType    = 125;
+            header->sequenceNumber = htons(++context.sequence);
+            header->timestamp      = htonl(context.timestamp);
+            header->ssrc           = htonl(context.ssrc);
 
             // TODO no extensions, temporary
             // std::shared_ptr<RTC::RtpPacket::HeaderExtension> hext(new RTC::RtpPacket::HeaderExtension())
@@ -320,7 +322,7 @@ namespace RTC
             return packets.size();
         }
 
-        static int rtp_h264_pack_fu_a(RTC::ProduceContext & context, 
+        static int rtp_h264_pack_fu_a(RTC::ProduceContext & context,
                                       const uint8_t * nalu, const size_t _bytes,
                                       std::vector<RTC::RtpPacketPtr> & packets)
         {
@@ -336,9 +338,9 @@ namespace RTC
             size_t payloadLen = 0;
 
             // FU-A start
-            for (fu_header |= P_FU_START; bytes > 0; ++context.sequence)
+            for (fu_header |= P_FU_START; bytes > 0; )
             {
-                if (bytes + RTP_FIXED_HEADER <= context.size - N_FU_HEADER)
+                if (bytes + RTP_FIXED_HEADER <= RTP_PACKET_MAX_SIZE - N_FU_HEADER)
                 {
                     assert(0 == (fu_header & P_FU_START));
                     fu_header = P_FU_END | (fu_header & 0x1F); // FU-A end
@@ -346,7 +348,7 @@ namespace RTC
                 }
                 else
                 {
-                    payloadLen = context.size - RTP_FIXED_HEADER - N_FU_HEADER;
+                    payloadLen = RTP_PACKET_MAX_SIZE - RTP_FIXED_HEADER - N_FU_HEADER;
                 }
 
                 int size = RTP_FIXED_HEADER + N_FU_HEADER + payloadLen;
@@ -359,16 +361,16 @@ namespace RTC
                 header->extension      = 0;
                 header->marker         = (P_FU_END & fu_header) ? 1 : 0; // set marker flag
                 header->padding        = 0;
-                header->payloadType    = 0;
-                header->sequenceNumber = ++context.sequence;
-                header->timestamp      = context.timestamp;
-                header->ssrc           = random32(0);
+                header->payloadType    = 125;
+                header->sequenceNumber = htons(++context.sequence);
+                header->timestamp      = htonl(context.timestamp);
+                header->ssrc           = htonl(context.ssrc);
 
                 // fu_indicator + fu_header
                 buffer[RTP_FIXED_HEADER + 0] = fu_indicator;
                 buffer[RTP_FIXED_HEADER + 1] = fu_header;
 
-                memcpy(buffer + RTP_FIXED_HEADER, nalu, payloadLen);
+                memcpy(buffer + RTP_FIXED_HEADER + N_FU_HEADER, nalu, payloadLen);
 
                 bytes -= payloadLen;
                 nalu  += payloadLen;
@@ -382,8 +384,8 @@ namespace RTC
             return packets.size();
         }
 
-        bool H264::ProduceRtpPacket(RTC::ProduceContext & context, 
-                                    const uint8_t * data, const size_t size, 
+        bool H264::ProduceRtpPacket(RTC::ProduceContext & context,
+                                    const uint8_t * data, const size_t size,
                                     const uint32_t timestamp,
                                     std::vector<RTC::RtpPacketPtr> & packets)
         {
@@ -405,7 +407,7 @@ namespace RTC
 
                 p2 = h264_nalu_find(p1 + 1, pend);
                 size_t nalu_size = p2 - p1;
-                
+
                 // filter suffix '00' bytes
                 if (p2 != pend)
                 {
@@ -417,13 +419,15 @@ namespace RTC
                     --nalu_size;
                 }
 
-                if (nalu_size + RTP_FIXED_HEADER <= context.size)
+                if (nalu_size + RTP_FIXED_HEADER <= RTP_PACKET_MAX_SIZE)
                 {
-                    // single NAl unit packet 
+                    // single NAl unit packet
+                    // MS_WARN_TAG(dead, "produce single nal unit");
                     r = rtp_h264_pack_nalu(context, p1, nalu_size, packets);
                 }
                 else
                 {
+                    // MS_WARN_TAG(dead, "produce FU");
                     r = rtp_h264_pack_fu_a(context, p1, nalu_size, packets);
                 }
             }
@@ -461,7 +465,7 @@ namespace RTC
         // |                               :    ...OPTIONAL RTP padding    |
         // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
         bool rtp_h264_unpack_stap(RTC::UnpackContext & context,
-                                  const uint8_t * ptr, int bytes, bool is_stap_b, 
+                                  const uint8_t * ptr, int bytes, bool is_stap_b,
                                   std::vector<std::pair<const uint8_t *, size_t> > & nalptrs)
         {
             MS_TRACE();
@@ -539,7 +543,7 @@ namespace RTC
                 assert(0);
                 return false;
             }
-            
+
             ptr += 3; // MTAP16/MTAP24 HDR + DONB
 
             uint16_t len = 0;
@@ -628,8 +632,10 @@ else
                 context.size += bytes - n;
             }
 
-            if(FU_END(fuheader))
+            if (FU_END(fuheader))
             {
+                // MS_WARN_TAG(dead, "FU END");
+
                 if(context.size > 0)
                 {
                     nalptrs.emplace_back(std::make_pair(context.ptr, context.size));
@@ -645,7 +651,7 @@ else
         }
 
         bool H264::UnpackRtpPacket(RTC::UnpackContext & context,
-                                   const RTC::RtpPacket * packet, 
+                                   const RTC::RtpPacket * packet,
                                    std::vector<std::pair<const uint8_t *, size_t> > & nalptrs)
         {
             MS_TRACE();
@@ -672,31 +678,31 @@ else
                         return false; // packet discard
 
                     case 24: // STAP-A
-                        MS_WARN_TAG(dead, "STAP-A %" PRIu64, len);
+                        // MS_WARN_TAG(dead, "STAP-A %" PRIu64, len);
                         rtp_h264_unpack_stap(context, buf, len, false, nalptrs);
                         break;
                     case 25: // STAP-B
-                        MS_WARN_TAG(dead, "STAP-B %" PRIu64, len);
+                        // MS_WARN_TAG(dead, "STAP-B %" PRIu64, len);
                         rtp_h264_unpack_stap(context, buf, len, true, nalptrs);
                         break;
                     case 26: // MTAP16
-                        MS_WARN_TAG(dead, "MTAP16 %" PRIu64, len);
+                        // MS_WARN_TAG(dead, "MTAP16 %" PRIu64, len);
                         rtp_h264_unpack_mtap(context, buf, len, false, nalptrs);
                         break;
                     case 27: // MTAP24
-                        MS_WARN_TAG(dead, "MTAP24 %" PRIu64, len);
+                        // MS_WARN_TAG(dead, "MTAP24 %" PRIu64, len);
                         rtp_h264_unpack_mtap(context, buf, len, true, nalptrs);
                         break;
                     case 28: // FU-A
-                        MS_WARN_TAG(dead, "FU_A %" PRIu64, len);
+                        // MS_WARN_TAG(dead, "FU_A %" PRIu64, len);
                         rtp_h264_unpack_fu(context, buf, len, false, nalptrs);
                         break;
                     case 29: // FU-B
-                        MS_WARN_TAG(dead, "FU_B %" PRIu64, len);
+                        // MS_WARN_TAG(dead, "FU_B %" PRIu64, len);
                         rtp_h264_unpack_fu(context, buf, len, true, nalptrs);
                         break;
                     default: // 1-23 NAL unit
-                        MS_WARN_TAG(dead, "NAL %d %" PRIu64, type, len);
+                        // MS_WARN_TAG(dead, "NAL %d %" PRIu64, type, len);
                         nalptrs.emplace_back(buf, len);
                         context.flags = 0;
                         break;

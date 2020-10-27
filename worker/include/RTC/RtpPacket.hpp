@@ -26,7 +26,8 @@ namespace RTC
 	{
 		size_t      size      {0};
 		uint32_t    timestamp {0};
-		uint32_t    sequence  {0};
+		uint16_t    sequence  {0};
+		uint32_t    ssrc      {0};
 	};
 
 	struct UnpackContext
