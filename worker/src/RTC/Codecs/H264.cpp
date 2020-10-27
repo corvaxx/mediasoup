@@ -310,6 +310,8 @@ namespace RTC
             header->timestamp      = htonl(context.timestamp);
             header->ssrc           = htonl(context.ssrc);
 
+            // MS_WARN_TAG(dead, "PRODUCE PACKET SEQ %d", context.sequence);
+
             // TODO no extensions, temporary
             // std::shared_ptr<RTC::RtpPacket::HeaderExtension> hext(new RTC::RtpPacket::HeaderExtension())
             // RTC::RtpPacket::HeaderExtension * headerExtension = nullptr;
@@ -365,6 +367,8 @@ namespace RTC
                 header->sequenceNumber = htons(++context.sequence);
                 header->timestamp      = htonl(context.timestamp);
                 header->ssrc           = htonl(context.ssrc);
+
+                // MS_WARN_TAG(dead, "PRODUCE PACKET SEQ %d", context.sequence);
 
                 // fu_indicator + fu_header
                 buffer[RTP_FIXED_HEADER + 0] = fu_indicator;

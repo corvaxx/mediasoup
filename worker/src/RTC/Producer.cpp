@@ -634,92 +634,103 @@ namespace RTC
                 //                     packet->GetPayloadType(), packet->GetSequenceNumber(),
                 //                     packet->GetSsrc());
 
-                std::vector<std::pair<const uint8_t *, size_t> > nalptrs;
+                // std::vector<std::pair<const uint8_t *, size_t> > nalptrs;
+                // {
+                //     // unpack and process packet
+                //     RTC::UnpackContext & c = rtpStream->GetUnpackContext1(rtpStream->GetRid());
+
+                //     if (RTC::Codecs::Tools::UnpackRtpPacket(c, packet, rtpStream->GetMimeType(), nalptrs))
+                //     {
+                //         static size_t summary = 0;
+                //         static const uint8_t start_code[4] = { 0, 0, 0, 1 };
+
+                //         // TODO debug code, write to file
+                //         FILE * f = fopen(c.fileName.c_str(), "a+b");
+
+                //         for (const std::pair<const uint8_t *, size_t> & nal : nalptrs)
+                //         {
+                //             fwrite(start_code, 1, 4, f);    
+                //             fwrite(nal.first, 1, nal.second, f);    
+
+                //             // MS_WARN_TAG(dead, "write packet size %" PRIu64 " summary %" PRIu64, nal.second + 4, summary);
+                //         }
+
+                //         fclose(f);      
+                //     }
+                // }
+
+                if (!rtpStream->ReceivePacket(packet))
                 {
-                    // unpack and process packet
-                    RTC::UnpackContext & c = rtpStream->GetUnpackContext1(rtpStream->GetRid());
-
-                    if (RTC::Codecs::Tools::UnpackRtpPacket(c, packet, rtpStream->GetMimeType(), nalptrs))
+                    MS_WARN_TAG(dead, "not processed");
+                    // May have to announce a new RTP stream to the listener.
+                    if (this->mapSsrcRtpStream.size() > numRtpStreamsBefore)
                     {
-                        static size_t summary = 0;
-                        static const uint8_t start_code[4] = { 0, 0, 0, 1 };
-
-                        // TODO debug code, write to file
-                        FILE * f = fopen(c.fileName.c_str(), "a+b");
-
-                        for (const std::pair<const uint8_t *, size_t> & nal : nalptrs)
-                        {
-                            fwrite(start_code, 1, 4, f);    
-                            fwrite(nal.first, 1, nal.second, f);    
-
-                            // MS_WARN_TAG(dead, "write packet size %" PRIu64 " summary %" PRIu64, nal.second + 4, summary);
-                        }
-
-                        fclose(f);      
+                        NotifyNewRtpStream(rtpStream);
                     }
                 }
 
-                if (nalptrs.size() > 0)
-                {
-                    // unpack and process packet
-                    RTC::ProduceContext & c = rtpStream->GetProduceContext(rtpStream->GetRid());
+                // if (nalptrs.size() > 0)
+                // {
+                //     // unpack and process packet
+                //     RTC::ProduceContext & c = rtpStream->GetProduceContext(rtpStream->GetRid());
 
-                    for (const std::pair<const uint8_t *, size_t> & nal : nalptrs)
-                    {
-                        std::vector<uint8_t> v(nal.second + 4);
-                        v[0] = v[1] = v[2] = 0;
-                        v[3] = 1;
-                        memcpy(&v[4], nal.first, nal.second);
+                //     for (const std::pair<const uint8_t *, size_t> & nal : nalptrs)
+                //     {
+                //         std::vector<uint8_t> v(nal.second + 4);
+                //         v[0] = v[1] = v[2] = 0;
+                //         v[3] = 1;
+                //         memcpy(&v[4], nal.first, nal.second);
 
-                        std::vector<RTC::RtpPacketPtr> packets;
-                        if (RTC::Codecs::Tools::ProduceRtpPacket(c, &v[0], nal.second + 4, packet->GetTimestamp(), rtpStream->GetMimeType(), packets))
-                        {
-                            // MS_WARN_TAG(dead, "produced %" PRIu64 " packets", packets.size());
+                //         std::vector<RTC::RtpPacketPtr> packets;
+                //         if (RTC::Codecs::Tools::ProduceRtpPacket(c, &v[0], nal.second + 4, packet->GetTimestamp(), rtpStream->GetMimeType(), packets))
+                //         {
+                //             // MS_WARN_TAG(dead, "produced %" PRIu64 " packets", packets.size());
 
-                            for (RTC::RtpPacketPtr & p : packets)
-                            {
-                                // MS_WARN_TAG(dead, "2 stream %s rid %s unpack packet type %d sequence %d ssrc %d" , 
-                                //                     rtpStream->GetCname().c_str(), rtpStream->GetRid().c_str(), 
-                                //                     p->GetPayloadType(), p->GetSequenceNumber(),
-                                //                     p->GetSsrc());
+                //             for (RTC::RtpPacketPtr & p : packets)
+                //             {
+                //                 // MS_WARN_TAG(dead, "2 stream %s rid %s unpack packet type %d sequence %d ssrc %d" , 
+                //                 //                     rtpStream->GetCname().c_str(), rtpStream->GetRid().c_str(), 
+                //                 //                     p->GetPayloadType(), p->GetSequenceNumber(),
+                //                 //                     p->GetSsrc());
 
-                                // // unpack and process packet
-                                // RTC::UnpackContext & c2 = rtpStream->GetUnpackContext2(rtpStream->GetRid());
+                //                 // // unpack and process packet
+                //                 // RTC::UnpackContext & c2 = rtpStream->GetUnpackContext2(rtpStream->GetRid());
 
-                                // if (RTC::Codecs::Tools::UnpackRtpPacket(c2, p.get(), rtpStream->GetMimeType(), nalptrs))
-                                // {
-                                //     static size_t summary = 0;
-                                //     static const uint8_t start_code[4] = { 0, 0, 0, 1 };
+                //                 // if (RTC::Codecs::Tools::UnpackRtpPacket(c2, p.get(), rtpStream->GetMimeType(), nalptrs))
+                //                 // {
+                //                 //     static size_t summary = 0;
+                //                 //     static const uint8_t start_code[4] = { 0, 0, 0, 1 };
 
-                                //     // TODO debug code, write to file
-                                //     FILE * f = fopen(c2.fileName.c_str(), "a+b");
+                //                 //     // TODO debug code, write to file
+                //                 //     FILE * f = fopen(c2.fileName.c_str(), "a+b");
 
-                                //     for (const std::pair<const uint8_t *, size_t> & nal : nalptrs)
-                                //     {
-                                //         fwrite(start_code, 1, 4, f);    
-                                //         fwrite(nal.first, 1, nal.second, f);    
+                //                 //     for (const std::pair<const uint8_t *, size_t> & nal : nalptrs)
+                //                 //     {
+                //                 //         fwrite(start_code, 1, 4, f);    
+                //                 //         fwrite(nal.first, 1, nal.second, f);    
 
-                                //         // MS_WARN_TAG(dead, "write packet size %" PRIu64 " summary %" PRIu64, nal.second + 4, summary);
-                                //     }
+                //                 //         // MS_WARN_TAG(dead, "write packet size %" PRIu64 " summary %" PRIu64, nal.second + 4, summary);
+                //                 //     }
 
-                                //     fclose(f);      
-                                // }
+                //                 //     fclose(f);      
+                //                 // }
 
 
-                                // Process the packet.
-                                if (!rtpStream->ReceivePacket(p.get()))
-                                {
-                                    MS_WARN_TAG(dead, "not processed");
-                                    // May have to announce a new RTP stream to the listener.
-                                    if (this->mapSsrcRtpStream.size() > numRtpStreamsBefore)
-                                    {
-                                        NotifyNewRtpStream(rtpStream);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+                //                 // Process the packet.
+                //                 if (!rtpStream->ReceivePacket(p.get()))
+                //                 {
+                //                     MS_WARN_TAG(dead, "not processed");
+                //                     // May have to announce a new RTP stream to the listener.
+                //                     if (this->mapSsrcRtpStream.size() > numRtpStreamsBefore)
+                //                     {
+                //                         NotifyNewRtpStream(rtpStream);
+                //                     }
+                //                 }
+                //             }
+                //         }
+                //     }
+                // } // if nalptrs
+
             }
 
             result = ReceiveRtpPacketResult::MEDIA;
