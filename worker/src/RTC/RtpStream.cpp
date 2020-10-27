@@ -392,7 +392,7 @@ namespace RTC
 		if (produceContexts.count(rid) == 0)
 		{
 			// produceContexts[rid].fileName = "/tmp/debug-out-recv-" + rid + "-" + std::to_string(time(nullptr)) + ".media";
-			produceContexts[rid].ssrc     = random32(125);
+			produceContexts[rid].ssrc     = params.ssrc;
 			produceContexts[rid].sequence = random32(125) % 8096;
 		}
 		return produceContexts[rid];
