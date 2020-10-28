@@ -296,8 +296,8 @@ namespace RTC
                                 static_cast<size_t>(padding);
 
             // TODO corrupted if alloc uint8_t[size] 
-            // uint8_t * buffer = new uint8_t[size];
-            uint8_t * buffer = new uint8_t[RTP_PAYLOAD_MAX_SIZE];
+            uint8_t * buffer = new uint8_t[size + 32];
+            // uint8_t * buffer = new uint8_t[RTP_PAYLOAD_MAX_SIZE];
 
             memcpy(buffer + sizeof(RTC::RtpPacket::Header), nalu, bytes);
 
@@ -359,8 +359,8 @@ namespace RTC
                 int size = RTP_FIXED_HEADER + N_FU_HEADER + payloadLen;
                 
                 // TODO corrupted if alloc uint8_t[size] 
-                // uint8_t * buffer = new uint8_t[size];
-                uint8_t * buffer = new uint8_t[RTP_PAYLOAD_MAX_SIZE];
+                uint8_t * buffer = new uint8_t[size + 32];
+                // uint8_t * buffer = new uint8_t[RTP_PAYLOAD_MAX_SIZE];
 
                 RTC::RtpPacket::Header * header = reinterpret_cast<RTC::RtpPacket::Header *>(buffer);
 

@@ -28,7 +28,9 @@ namespace RTC
 		uint32_t    timestamp   {0};
 		uint16_t    sequence    {0};
 		uint32_t    ssrc        {0};
-		uint8_t     payloadType {0};
+
+		// TODO from codec
+		uint8_t     payloadType {125};
 	};
 
 	struct UnpackContext

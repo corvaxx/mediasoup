@@ -650,7 +650,7 @@ namespace RTC
         {
             // unpack and process packet
             RTC::ProduceContext & c = rtpStream->GetProduceContext(rtpStream->GetRid());
-            c.payloadType = packet->GetPayloadType();
+            // c.payloadType = packet->GetPayloadType();
 
             for (const std::pair<const uint8_t *, size_t> & nal : nalptrs)
             {
@@ -666,10 +666,10 @@ namespace RTC
 
                     for (RTC::RtpPacketPtr & p : packets)
                     {
-                        // MS_WARN_TAG(dead, "2 stream %s rid %s unpack packet type %d sequence %d ssrc %d" , 
-                        //                     rtpStream->GetCname().c_str(), rtpStream->GetRid().c_str(), 
-                        //                     p->GetPayloadType(), p->GetSequenceNumber(),
-                        //                     p->GetSsrc());
+                        MS_WARN_TAG(dead, "2 stream %s rid %s unpack packet type %d sequence %d ssrc %d" , 
+                                            rtpStream->GetCname().c_str(), rtpStream->GetRid().c_str(), 
+                                            p->GetPayloadType(), p->GetSequenceNumber(),
+                                            p->GetSsrc());
 
                         // // unpack and process packet
                         // RTC::UnpackContext & c2 = rtpStream->GetUnpackContext2(rtpStream->GetRid());
