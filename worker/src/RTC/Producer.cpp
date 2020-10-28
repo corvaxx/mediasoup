@@ -590,6 +590,36 @@ namespace RTC
                 break;
             }
 
+            case Channel::Request::MethodId::PRODUCER_SET_TRANSLATE_MODE:
+            {
+                MS_WARN_TAG(dead, "PRODUCER_SET_TRANSLATE_MODE");
+
+                auto jit = request->data.find("translateMode");
+                if (jit == request->data.end() || !jit->is_string())
+                {
+                    MS_THROW_TYPE_ERROR("wrong type (not an string)");
+                }
+
+                std::string mode = jit->get<std::string>();
+
+                MS_WARN_TAG(dead, "PRODUCE MODE %s", mode.c_str());
+
+                if (mode == "direct")
+                {
+                    translateMode = direct;
+                }
+                else if (mode == "unpackAndProduce")
+                {
+                    translateMode = unpackAndProduce;
+                }
+                else
+                {
+                    MS_THROW_ERROR("unknown mode");
+                }
+
+                break;
+            }
+
             default:
             {
                 MS_THROW_ERROR("unknown method '%s'", request->method.c_str());
@@ -600,6 +630,11 @@ namespace RTC
     ReceiveRtpPacketResult Producer::ReceiveRtpPacket(RTC::RtpPacket* packet)
     {
         MS_TRACE();
+
+        if (translateMode == direct)
+        {
+            return ReceiveRtpPacketInternal(packet);
+        }
 
         auto* rtpStream = GetRtpStream(packet);
         if (!rtpStream)

@@ -21,6 +21,13 @@ namespace RTC
 {
 	class Producer : public AbstractProducer, public RTC::RtpStreamRecv::Listener, public RTC::KeyFrameRequestManager::Listener
 	{
+	public:
+		enum TranslateMode
+		{
+			direct           = 0,
+			unpackAndProduce = 1
+		};
+
 	private:
 		struct RtpEncodingMapping
 		{
@@ -108,6 +115,8 @@ namespace RTC
 		bool videoOrientationDetected{ false };
 		struct VideoOrientation videoOrientation;
 		struct TraceEventTypes traceEventTypes;
+
+		TranslateMode translateMode { direct };
 	};
 } // namespace RTC
 
