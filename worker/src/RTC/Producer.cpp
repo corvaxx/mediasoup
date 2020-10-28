@@ -614,6 +614,8 @@ namespace RTC
             return ReceiveRtpPacketInternal(packet);
         }
 
+        ReceiveRtpPacketResult result = ReceiveRtpPacketResult::MEDIA;
+        
         // MS_WARN_TAG(rtp, "received MEDIA packet stream name %s", rtpStream->GetCname().c_str());
 
         MS_WARN_TAG(dead, "1 stream %s rid %s unpack packet type %d sequence %d ssrc %d" , 
@@ -628,21 +630,21 @@ namespace RTC
 
             if (RTC::Codecs::Tools::UnpackRtpPacket(c, packet, rtpStream->GetMimeType(), nalptrs))
             {
-                static size_t summary = 0;
-                static const uint8_t start_code[4] = { 0, 0, 0, 1 };
+                // static size_t summary = 0;
+                // static const uint8_t start_code[4] = { 0, 0, 0, 1 };
 
-                // TODO debug code, write to file
-                FILE * f = fopen(c.fileName.c_str(), "a+b");
+                // // TODO debug code, write to file
+                // FILE * f = fopen(c.fileName.c_str(), "a+b");
 
-                for (const std::pair<const uint8_t *, size_t> & nal : nalptrs)
-                {
-                    fwrite(start_code, 1, 4, f);    
-                    fwrite(nal.first, 1, nal.second, f);    
+                // for (const std::pair<const uint8_t *, size_t> & nal : nalptrs)
+                // {
+                //     fwrite(start_code, 1, 4, f);    
+                //     fwrite(nal.first, 1, nal.second, f);    
 
-                    // MS_WARN_TAG(dead, "write packet size %" PRIu64 " summary %" PRIu64, nal.second + 4, summary);
-                }
+                //     // MS_WARN_TAG(dead, "write packet size %" PRIu64 " summary %" PRIu64, nal.second + 4, summary);
+                // }
 
-                fclose(f);      
+                // fclose(f);      
             }
         }
 
@@ -694,7 +696,7 @@ namespace RTC
                         // }
 
                         // Process the packet.
-                        ReceiveRtpPacketResult result = ReceiveRtpPacketInternal(p.get()); 
+                        result = ReceiveRtpPacketInternal(p.get()); 
                         if (result != ReceiveRtpPacketResult::MEDIA)
                         {
                             return result;
@@ -704,6 +706,8 @@ namespace RTC
             }
 
         } // if nalptrs
+
+        return result;
     }
 
     ReceiveRtpPacketResult Producer::ReceiveRtpPacketInternal(RTC::RtpPacket* packet)
