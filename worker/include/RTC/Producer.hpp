@@ -70,6 +70,7 @@ namespace RTC
 
 		//
 		virtual ReceiveRtpPacketResult ReceiveRtpPacket(RTC::RtpPacket* packet);
+		ReceiveRtpPacketResult ReceiveRtpPacketInternal(RTC::RtpPacket* packet);
 
 	protected:
 		RTC::RtpStreamRecv* GetRtpStream(RTC::RtpPacket* packet);

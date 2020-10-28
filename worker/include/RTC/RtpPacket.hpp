@@ -24,16 +24,17 @@ namespace RTC
 {
 	struct ProduceContext
 	{
-		size_t      size      {0};
-		uint32_t    timestamp {0};
-		uint16_t    sequence  {0};
-		uint32_t    ssrc      {0};
+		size_t      size        {0};
+		uint32_t    timestamp   {0};
+		uint16_t    sequence    {0};
+		uint32_t    ssrc        {0};
+		uint8_t     payloadType {0};
 	};
 
 	struct UnpackContext
 	{
-		uint32_t    flags     {0};
-		size_t      size      {0};
+		uint32_t    flags       {0};
+		size_t      size        {0};
 		std::string fileName;
 		uint8_t     ptr[RTP_PAYLOAD_MAX_SIZE];
 	};

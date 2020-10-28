@@ -295,7 +295,10 @@ namespace RTC
                                 bytes +
                                 static_cast<size_t>(padding);
 
-            uint8_t * buffer = new uint8_t[size];
+            // TODO corrupted if alloc uint8_t[size] 
+            // uint8_t * buffer = new uint8_t[size];
+            uint8_t * buffer = new uint8_t[RTP_PAYLOAD_MAX_SIZE];
+
             memcpy(buffer + sizeof(RTC::RtpPacket::Header), nalu, bytes);
 
             RTC::RtpPacket::Header * header = reinterpret_cast<RTC::RtpPacket::Header *>(buffer);
@@ -305,7 +308,7 @@ namespace RTC
             header->extension      = 0;
             header->marker         = (*nalu & 0x1f) <= 5 ? 1 : 0; // ??? VCL only
             header->padding        = 0;
-            header->payloadType    = 125;
+            header->payloadType    = context.payloadType;
             header->sequenceNumber = htons(++context.sequence);
             header->timestamp      = htonl(context.timestamp);
             header->ssrc           = htonl(context.ssrc);
@@ -354,7 +357,10 @@ namespace RTC
                 }
 
                 int size = RTP_FIXED_HEADER + N_FU_HEADER + payloadLen;
-                uint8_t * buffer = new uint8_t[size];
+                
+                // TODO corrupted if alloc uint8_t[size] 
+                // uint8_t * buffer = new uint8_t[size];
+                uint8_t * buffer = new uint8_t[RTP_PAYLOAD_MAX_SIZE];
 
                 RTC::RtpPacket::Header * header = reinterpret_cast<RTC::RtpPacket::Header *>(buffer);
 
@@ -363,7 +369,7 @@ namespace RTC
                 header->extension      = 0;
                 header->marker         = (P_FU_END & fu_header) ? 1 : 0; // set marker flag
                 header->padding        = 0;
-                header->payloadType    = 125;
+                header->payloadType    = context.payloadType;
                 header->sequenceNumber = htons(++context.sequence);
                 header->timestamp      = htonl(context.timestamp);
                 header->ssrc           = htonl(context.ssrc);
