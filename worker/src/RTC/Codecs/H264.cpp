@@ -212,64 +212,6 @@ namespace RTC
             packet->SetPayloadDescriptorHandler(payloadDescriptorHandler);
         }
 
-        int rtp_packet_serialize_header(const struct rtp_packet_t * pkt, void * data, int bytes)
-        {
-            // RTC::RtpPacket::RtpPacket header;
-
-            // int hdrlen;
-            // uint32_t i;
-            // uint8_t* ptr;
-
-            // if (RTP_VERSION != pkt->rtp.v || 0 != (pkt->extlen % 4))
-            // {
-            //  assert(0); // RTP version field must equal 2 (p66)
-            //  return -1;
-            // }
-
-            // // RFC3550 5.1 RTP Fixed Header Fields(p12)
-            // hdrlen = RTP_FIXED_HEADER + pkt->rtp.cc * 4 + (pkt->rtp.x ? 4 : 0);
-            // if (bytes < hdrlen + pkt->extlen)
-            //  return -1;
-
-            // ptr = (uint8_t *)data;
-            // nbo_write_rtp_header(ptr, &pkt->rtp);
-            // ptr += RTP_FIXED_HEADER;
-
-            // // pkt contributing source
-            // for (i = 0; i < pkt->rtp.cc; i++, ptr += 4)
-            // {
-            //  nbo_w32(ptr, pkt->csrc[i]);
-            // }
-
-            // // pkt header extension
-            // if (1 == pkt->rtp.x)
-            // {
-            //  // 5.3.1 RTP Header Extension
-            //  assert(0 == (pkt->extlen % 4));
-            //  nbo_w16(ptr, pkt->reserved);
-            //  nbo_w16(ptr + 2, pkt->extlen / 4);
-            //  memcpy(ptr + 4, pkt->extension, pkt->extlen);
-            //  ptr += pkt->extlen + 4;
-            // }
-
-            // return hdrlen + pkt->extlen;
-            return 0;
-        }
-
-        int rtp_packet_serialize(const struct rtp_packet_t * pkt, void * data, int bytes)
-        {
-            return 0;
-
-            // int hdrlen;
-
-            // hdrlen = rtp_packet_serialize_header(pkt, data, bytes);
-            // if (hdrlen < RTP_FIXED_HEADER || hdrlen + pkt->payloadlen > bytes)
-            //  return -1;
-
-            // memcpy(((uint8_t*)data) + hdrlen, pkt->payload, pkt->payloadlen);
-            // return hdrlen + pkt->payloadlen;
-        }
-
         const uint8_t * h264_nalu_find(const uint8_t * p, const uint8_t* end)
         {
             for (p += 2; p + 1 < end; ++p)
