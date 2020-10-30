@@ -661,7 +661,7 @@ namespace RTC
         std::vector<std::pair<const uint8_t *, size_t> > nalptrs;
         {
             // unpack and process packet
-            RTC::UnpackContext & c = rtpStream->GetUnpackContext1(rtpStream->GetRid());
+            RTC::UnpackContext & c = rtpStream->GetUnpackContext(rtpStream->GetRid());
 
             if (RTC::Codecs::Tools::UnpackRtpPacket(c, packet, rtpStream->GetMimeType(), nalptrs))
             {

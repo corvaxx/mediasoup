@@ -363,26 +363,15 @@ namespace RTC
 		jsonObject["temporalLayers"] = this->temporalLayers;
 	}
 
-	RTC::UnpackContext & RtpStream::GetUnpackContext1(const std::string & rid)
+	RTC::UnpackContext & RtpStream::GetUnpackContext(const std::string & rid)
 	{
 		// assert(rid.size() != 0 && "bad rid");
 
-		if (unpackContexts1.count(rid) == 0)
+		if (unpackContexts.count(rid) == 0)
 		{
-			unpackContexts1[rid].fileName = "/tmp/A-debug-out-recv-" + rid + "-" + std::to_string(time(nullptr)) + ".media";
+			unpackContexts[rid].fileName = "/tmp/debug-out-recv-" + rid + "-" + std::to_string(time(nullptr)) + ".media";
 		}
-		return unpackContexts1[rid];
-	}
-
-	RTC::UnpackContext & RtpStream::GetUnpackContext2(const std::string & rid)
-	{
-		// assert(rid.size() != 0 && "bad rid");
-
-		if (unpackContexts2.count(rid) == 0)
-		{
-			unpackContexts2[rid].fileName = "/tmp/B-debug-out-recv-" + rid + "-" + std::to_string(time(nullptr)) + ".media";
-		}
-		return unpackContexts2[rid];
+		return unpackContexts[rid];
 	}
 
 	RTC::ProduceContext & RtpStream::GetProduceContext(const std::string & rid)
