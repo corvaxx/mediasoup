@@ -175,6 +175,10 @@ export class Producer extends EnhancedEventEmitter
 	// Paused flag.
 	private _paused = false;
 
+	// Translate mode
+	private _translateMode = 'direct';
+
+
 	// Current score.
 	private _score: ProducerScore[] = [];
 
@@ -435,6 +439,28 @@ export class Producer extends EnhancedEventEmitter
 		await this._channel.request(
 			'producer.enableTraceEvent', this._internal, reqData);
 	}
+
+	/**
+	 * Get translate mode
+	 */
+	get translateMode(): string
+	{
+		return this._translateMode;
+	}
+
+    /**
+     * Set translate mode
+     */
+    async setTranslateMode(translateMode: string) : Promise<void>
+    {
+        logger.debug('setTranslateMode()');
+
+        const reqData = { translateMode };
+
+        await this._channel.request(
+        	'producer.setTranslateMode', this._internal, reqData);
+        this._translateMode = translateMode;
+    }
 
 	/**
 	 * Send RTP packet (just valid for Producers created on a DirectTransport).

@@ -120,6 +120,7 @@ export declare class Producer extends EnhancedEventEmitter {
     private _closed;
     private readonly _appData?;
     private _paused;
+    private _translateMode;
     private _score;
     private readonly _observer;
     /**
@@ -221,6 +222,14 @@ export declare class Producer extends EnhancedEventEmitter {
      * Enable 'trace' event.
      */
     enableTraceEvent(types?: ProducerTraceEventType[]): Promise<void>;
+    /**
+     * Get translate mode
+     */
+    get translateMode(): string;
+    /**
+     * Set translate mode
+     */
+    setTranslateMode(translateMode: string): Promise<void>;
     /**
      * Send RTP packet (just valid for Producers created on a DirectTransport).
      */
