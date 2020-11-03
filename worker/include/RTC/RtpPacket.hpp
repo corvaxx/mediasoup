@@ -29,6 +29,23 @@ using json = nlohmann::json;
 
 namespace RTC
 {
+	template<class T, class D = std::default_delete<T>>
+	struct shared_ptr_with_deleter : public std::shared_ptr<T>
+	{
+		explicit shared_ptr_with_deleter(T* t = nullptr)
+		  : std::shared_ptr<T>(t, D()) {}
+
+		void reset(T* t = nullptr) { std::shared_ptr<T>::reset(t, D());  }
+	};
+
+	struct AVDeleter 
+	{                                
+		void operator()( AVFrame * ptr ) { if (ptr) av_frame_free(&ptr); } 
+	};
+
+	typedef shared_ptr_with_deleter<AVFrame, AVDeleter> AVFramePtr; 
+
+
 	struct ProduceContext
 	{
 		size_t      size          { 0 };
@@ -57,11 +74,8 @@ namespace RTC
         std::vector<uint8_t> sps;
         std::vector<uint8_t> pps;
 
-        AVFrame         * frame         { nullptr };
-
         // TODO resource leak, need to smartpointers
 	};
-
 
 	// Max RTP length.
 	constexpr size_t RtpBufferSize{ 65536u };

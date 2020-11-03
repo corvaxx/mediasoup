@@ -53,7 +53,8 @@ namespace RTC
 										std::vector<std::pair<const uint8_t *, size_t> > & nalptrs);
 
 			static bool DecodePacket(RTC::DecodeContext & context,
-										const uint8_t * data, const size_t & size);
+										const uint8_t * data, const size_t & size,
+										std::vector<AVFramePtr> & frames);
 
 		public:
 			class EncodingContext : public RTC::Codecs::EncodingContext

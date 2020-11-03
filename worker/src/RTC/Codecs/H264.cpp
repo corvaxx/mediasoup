@@ -682,12 +682,14 @@ else
         }
 
         bool H264::DecodePacket(RTC::DecodeContext & context,
-                                 const uint8_t * data, const size_t & size)
+                                 const uint8_t * data, const size_t & size,
+                                 std::vector<AVFramePtr> & frames)
         {
             MS_TRACE();
 
-            uint8_t type = data[0] & 0x1f;
-            MS_WARN_TAG(dead, "DECODE type %d", type);
+            // 4 byte header
+            uint8_t type = data[4] & 0x1f;
+            // MS_WARN_TAG(dead, "DECODE type %d", type);
 
             if (type ==7)
             {
@@ -711,8 +713,10 @@ else
                 pkt.data = const_cast<uint8_t *>(data);
                 pkt.size = size;
 
+                AVFramePtr frame(av_frame_alloc());
+
                 int gotFrame = 0;
-                int length = avcodec_decode_video2(context.codecContext, context.frame, &gotFrame, &pkt);
+                int length = avcodec_decode_video2(context.codecContext, frame.get(), &gotFrame, &pkt);
                 if (length < 0)
                 {
                     // MS_ASSERT(false, "avcodec_decode_video2 failed");
@@ -720,60 +724,14 @@ else
                 }
                 if (gotFrame)
                 {
-                    MS_WARN_TAG(dead, "DecodePacket FRAME");
+                    // MS_WARN_TAG(dead, "DecodePacket FRAME");
+                    frames.emplace_back(frame);
                 }
 
                 av_free_packet(&pkt);
             }
 
-            // TODO ring buffer needed
-            // MS_ASSERT(context.tail + size > context.buf + RTP_PAYLOAD_MAX_SIZE, "no memory for decode");
-            // memcpy(context.tail, data, size);
-            // context.tail += size;
-
-            // AVPacket pkt;
-            // av_init_packet(&pkt);
-
-            // pkt.data = nullptr;
-            // pkt.size = 0;
-
-            // if (av_read_frame(context.formatContext, &pkt) == 0)
-            // {
-            //     MS_WARN_TAG(dead, "READ FRAME");
-
-            //     memmove(context.buf, context.buf + size, RTP_PAYLOAD_MAX_SIZE - size);
-            // }
-            // else
-            // {
-            //     MS_WARN_TAG(dead, "NO FRAME");
-            // }
-
-            // av_packet_unref(&pkt);
-
-
-
-            // AVPacket pkt;
-            // av_init_packet(&pkt);
-
-            // // TODO const_cast
-            // pkt.data = const_cast<uint8_t *>(data);
-            // pkt.size = size;
-
-            // int gotFrame = 0;
-            // int length = avcodec_decode_video2(context.codecContext, context.frame, &gotFrame, &pkt);
-            // if (length < 0)
-            // {
-            //     MS_ASSERT(false, "avcodec_decode_video2 failed");
-            //     return false;
-            // }
-            // if (gotFrame)
-            // {
-            //     MS_WARN_TAG(dead, "DecodePacket FRAME");
-            // }
-
-            // av_free_packet(&pkt);
-
-            return true;
+            return frames.size() > 0;
         }
 
         /* Instance methods. */

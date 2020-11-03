@@ -425,8 +425,6 @@ namespace RTC
                 MS_WARN_TAG(dead, "codec OK");
                 c.isOpened = true;
             }
-
-			c.frame        = av_frame_alloc();
 		}
 		return decodeContexts[rid];
 	}

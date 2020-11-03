@@ -145,7 +145,8 @@ namespace RTC
 
             static bool DecodePacket(RTC::DecodeContext & context,
                                         const RTC::RtpCodecMimeType & mimeType, 
-                                        const uint8_t * data, const size_t & size)
+                                        const uint8_t * data, const size_t & size,
+                                        std::vector<AVFramePtr> & frames)
             {
                 switch (mimeType.type)
                 {
@@ -162,7 +163,7 @@ namespace RTC
 
                             case RTC::RtpCodecMimeType::Subtype::H264:
                             {
-                                return RTC::Codecs::H264::DecodePacket(context, data, size);
+                                return RTC::Codecs::H264::DecodePacket(context, data, size, frames);
                             }
 
                             default:
