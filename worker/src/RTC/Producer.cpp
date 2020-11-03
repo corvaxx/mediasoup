@@ -682,10 +682,9 @@ namespace RTC
             }
         }
 
-        // decode packets
+        // decode and encode packets
         if (nalptrs.size() > 0)
         {
-            // unpack and process packet
             RTC::DecodeContext & c = rtpStream->GetDecodeContext(rtpStream->GetRid());
 
             for (const std::pair<const uint8_t *, size_t> & nal : nalptrs)
@@ -699,6 +698,12 @@ namespace RTC
                 if (RTC::Codecs::Tools::DecodePacket(c, rtpStream->GetMimeType(), &v[0], nal.second + 4, frames))
                 {
                     MS_WARN_TAG(dead, "decoded %" PRIu64 " packets", frames.size());
+                }
+
+                // encode
+                RTC::EncodeContext & c = rtpStream->GetEncodeContext(rtpStream->GetRid());
+                if (RTC::Codecs::Tools::EncodePacket(c, rtpStream->GetMimeType(), frames))
+                {
                 }
             }
 

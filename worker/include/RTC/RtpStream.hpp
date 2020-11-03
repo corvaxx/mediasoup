@@ -154,7 +154,8 @@ namespace RTC
 
 		RTC::UnpackContext  & GetUnpackContext(const std::string & rid);
 		RTC::ProduceContext & GetProduceContext(const std::string & rid);
-		RTC::DecodeContext & GetDecodeContext(const std::string & rid);
+		RTC::DecodeContext  & GetDecodeContext(const std::string & rid);
+		RTC::EncodeContext  & GetEncodeContext(const std::string & rid);
 
 	protected:
 		bool UpdateSeq(RTC::RtpPacket* packet);
@@ -201,9 +202,10 @@ namespace RTC
 		// Instance of RtxStream.
 		RTC::RtxStream* rtxStream{ nullptr };
 
-		std::map<std::string, RTC::UnpackContext> unpackContexts;
+		std::map<std::string, RTC::UnpackContext>  unpackContexts;
 		std::map<std::string, RTC::ProduceContext> produceContexts;
-		std::map<std::string, RTC::DecodeContext> decodeContexts;
+		std::map<std::string, RTC::DecodeContext>  decodeContexts;
+		std::map<std::string, RTC::EncodeContext>  encodeContexts;
 
 	private:
 		// Score related.

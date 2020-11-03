@@ -40,10 +40,12 @@ namespace RTC
 
 	struct AVDeleter 
 	{                                
-		void operator()( AVFrame * ptr ) { if (ptr) av_frame_free(&ptr); } 
+		void operator()( AVFrame        * ptr ) { if (ptr) av_frame_free(&ptr); } 
+		void operator()( AVCodecContext * ptr ) { if (ptr) avcodec_close(ptr); av_free(ptr); } 
 	};
 
-	typedef shared_ptr_with_deleter<AVFrame, AVDeleter> AVFramePtr; 
+	typedef shared_ptr_with_deleter<AVFrame,        AVDeleter> AVFramePtr; 
+	typedef shared_ptr_with_deleter<AVCodecContext, AVDeleter> AVCodecContextPtr; 
 
 
 	struct ProduceContext
@@ -67,14 +69,18 @@ namespace RTC
 
 	struct DecodeContext
 	{
-		AVCodec         * codec         { nullptr };
-        AVCodecContext  * codecContext  { nullptr };
-        bool              isOpened      { false };
+		AVCodec            * codec         { nullptr };
+        AVCodecContextPtr    codecContext;
+        bool                 isOpened      { false };
 
         std::vector<uint8_t> sps;
         std::vector<uint8_t> pps;
+	};
 
-        // TODO resource leak, need to smartpointers
+	struct EncodeContext
+	{
+        std::vector<uint8_t> sps;
+        std::vector<uint8_t> pps;
 	};
 
 	// Max RTP length.

@@ -412,10 +412,10 @@ namespace RTC
 
 			MS_WARN_TAG(dead, "found codec %s %s", c.codec->name, c.codec->long_name);
 
-			c.codecContext = avcodec_alloc_context3(c.codec);
+			c.codecContext.reset(avcodec_alloc_context3(c.codec));
 			MS_ASSERT(c.codecContext, "alloc context failed");
 
-            int result = avcodec_open2(c.codecContext, c.codec, nullptr);
+            int result = avcodec_open2(c.codecContext.get(), c.codec, nullptr);
             if (result < 0)
             {
                 MS_WARN_TAG(dead, "codec not opened %x", result);
@@ -427,6 +427,15 @@ namespace RTC
             }
 		}
 		return decodeContexts[rid];
+	}
+
+	RTC::EncodeContext  & RtpStream::GetEncodeContext(const std::string & rid)
+	{
+		if (encodeContexts.count(rid) == 0)
+		{
+			EncodeContext & c = encodeContexts[rid];
+		}
+		return encodeContexts[rid];
 	}
 
 

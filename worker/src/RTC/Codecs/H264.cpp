@@ -716,7 +716,7 @@ else
                 AVFramePtr frame(av_frame_alloc());
 
                 int gotFrame = 0;
-                int length = avcodec_decode_video2(context.codecContext, frame.get(), &gotFrame, &pkt);
+                int length = avcodec_decode_video2(context.codecContext.get(), frame.get(), &gotFrame, &pkt);
                 if (length < 0)
                 {
                     // MS_ASSERT(false, "avcodec_decode_video2 failed");
@@ -732,6 +732,14 @@ else
             }
 
             return frames.size() > 0;
+        }
+
+        bool H264::EncodePacket(RTC::EncodeContext & context,
+                                const std::vector<AVFramePtr> & frames)
+        {
+            MS_TRACE();
+
+            return false;
         }
 
         /* Instance methods. */

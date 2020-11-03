@@ -56,6 +56,9 @@ namespace RTC
 										const uint8_t * data, const size_t & size,
 										std::vector<AVFramePtr> & frames);
 
+            static bool EncodePacket(RTC::EncodeContext & context,
+                                        const std::vector<AVFramePtr> & frames);
+
 		public:
 			class EncodingContext : public RTC::Codecs::EncodingContext
 			{
