@@ -54,6 +54,9 @@ namespace RTC
         AVCodecContext  * codecContext  { nullptr };
         bool              isOpened      { false };
 
+        std::vector<uint8_t> sps;
+        std::vector<uint8_t> pps;
+
         AVFrame         * frame         { nullptr };
 
         // TODO resource leak, need to smartpointers
