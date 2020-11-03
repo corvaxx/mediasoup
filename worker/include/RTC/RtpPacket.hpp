@@ -54,19 +54,9 @@ namespace RTC
         AVCodecContext  * codecContext  { nullptr };
         bool              isOpened      { false };
 
-        std::vector<uint8_t> sps;
-        std::vector<uint8_t> pps;
-
         AVFrame         * frame         { nullptr };
 
-  //       AVIOContext     * ioContext     { nullptr };
-  //       AVFormatContext * formatContext { nullptr };
-
-  //       uint8_t           buf[RTP_PAYLOAD_MAX_SIZE];
-		// uint8_t         * ptr           { buf };
-		// uint8_t         * tail          { buf };
-
-        // TODO resource leak, need to destruct
+        // TODO resource leak, need to smartpointers
 	};
 
 

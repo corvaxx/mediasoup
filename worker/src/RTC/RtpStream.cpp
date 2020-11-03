@@ -392,56 +392,19 @@ namespace RTC
 		return produceContexts[rid];
 	}
 
-	// int streamRead(void * ptr, uint8_t * buf, int bufSize)
-	// {
-
-	// 	DecodeContext * context = static_cast<DecodeContext *>(ptr);
-
- //        int size = context->tail - context->ptr;
-
- //        MS_WARN_TAG(dead, "STREAM READ %" PRIu32, bufSize, size);
-
- //        size = std::min(bufSize, size);
-
-	// 	memcpy(buf, context->ptr, size);
-
-	//     return size;
-	// }
-
-	// int64_t streamSeek(void * ptr, int64_t pos, int origin)
-	// {
- //        MS_WARN_TAG(dead, "STREAM SEEK");
-
-	// 	DecodeContext * context = static_cast<DecodeContext *>(ptr);
-
-	//     // Origin == [STREAM_SEEK_SET | STREAM_SEEK_CUR | STREAM_SEEK_END]
-	 
-	//     uint64_t out = 0;
-	//     return out;
-	// }
-
 	RTC::DecodeContext & RtpStream::GetDecodeContext(const std::string & rid)
 	{
-		av_register_all();
+		if (decodeContexts.size() == 0)
+		{
+			av_register_all();
+	        av_log_set_level(AV_LOG_DEBUG);
+	    }
 		
 		// assert(rid.size() != 0 && "bad rid");
 
 		if (decodeContexts.count(rid) == 0)
 		{
 			DecodeContext & c = decodeContexts[rid];
-
-			// c.ioContext = avio_alloc_context(c.ptr, RTP_PAYLOAD_MAX_SIZE, 
-			// 								0 /*read-only*/, &c, 
-			// 								streamRead, nullptr /*streamWrite*/, streamSeek);
-
-			// c.formatContext = avformat_alloc_context();
-
-			// c.formatContext->pb     = c.ioContext;
-			// c.formatContext->flags |= AVFMT_FLAG_CUSTOM_IO;
-
-			// int result = avformat_open_input(&c.formatContext, "", nullptr, nullptr);
-
-			// MS_ASSERT(result >= 0, "avformat_open_input failed");
 
 			// TODO codec id must be variable ( from stream ?)
 			c.codec        = avcodec_find_decoder(AV_CODEC_ID_CYUV /*AV_CODEC_ID_H264*/); // WTF ???
@@ -451,9 +414,6 @@ namespace RTC
 
 			c.codecContext = avcodec_alloc_context3(c.codec);
 			MS_ASSERT(c.codecContext, "alloc context failed");
-
-			// c.codecContext->flags  |= AV_CODEC_FLAG_TRUNCATED; 
-			// c.codecContext->flags2 |= CODEC_FLAG2_CHUNKS;
 
             int result = avcodec_open2(c.codecContext, c.codec, nullptr);
             if (result < 0)
