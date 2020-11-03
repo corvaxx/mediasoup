@@ -9,6 +9,13 @@
 #include <string>
 #include <vector>
 
+extern "C"
+{
+    #include <libavcodec/avcodec.h>
+    #include <libavformat/avio.h>
+    #include <libavformat/avformat.h>
+}
+
 using json = nlohmann::json;
 
 // some packets lost before the packet
@@ -24,21 +31,42 @@ namespace RTC
 {
 	struct ProduceContext
 	{
-		size_t      size        {0};
-		uint32_t    timestamp   {0};
-		uint16_t    sequence    {0};
-		uint32_t    ssrc        {0};
+		size_t      size          { 0 };
+		uint32_t    lastTimestamp { 0 };
+		uint16_t    sequence      { 0 };
+		uint32_t    ssrc          { 0 };
 
 		// TODO from codec
-		uint8_t     payloadType {125};
+		uint8_t     payloadType   { 125 };
 	};
 
 	struct UnpackContext
 	{
-		uint32_t    flags       {0};
-		size_t      size        {0};
+		uint32_t    flags         { 0 };
+		size_t      size          { 0 };
 		std::string fileName;
 		uint8_t     ptr[RTP_PAYLOAD_MAX_SIZE];
+	};
+
+	struct DecodeContext
+	{
+		AVCodec         * codec         { nullptr };
+        AVCodecContext  * codecContext  { nullptr };
+        bool              isOpened      { false };
+
+        std::vector<uint8_t> sps;
+        std::vector<uint8_t> pps;
+
+        AVFrame         * frame         { nullptr };
+
+  //       AVIOContext     * ioContext     { nullptr };
+  //       AVFormatContext * formatContext { nullptr };
+
+  //       uint8_t           buf[RTP_PAYLOAD_MAX_SIZE];
+		// uint8_t         * ptr           { buf };
+		// uint8_t         * tail          { buf };
+
+        // TODO resource leak, need to destruct
 	};
 
 

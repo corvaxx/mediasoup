@@ -11,6 +11,11 @@
 #include "RTC/PlainTransport.hpp"
 #include "RTC/WebRtcTransport.hpp"
 
+extern "C"
+{
+    #include <libavcodec/avcodec.h>
+}
+
 namespace RTC
 {
 	/* Instance methods. */
@@ -18,6 +23,8 @@ namespace RTC
 	Router::Router(const std::string& id) : id(id)
 	{
 		MS_TRACE();
+
+		avcodec_register_all();
 	}
 
 	Router::~Router()

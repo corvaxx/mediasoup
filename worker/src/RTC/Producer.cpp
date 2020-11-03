@@ -653,10 +653,9 @@ namespace RTC
         
         // MS_WARN_TAG(rtp, "received MEDIA packet stream name %s", rtpStream->GetCname().c_str());
 
-        MS_WARN_TAG(dead, "1 stream %s rid %s unpack packet type %d sequence %d ssrc %d" , 
-                            rtpStream->GetCname().c_str(), rtpStream->GetRid().c_str(), 
-                            packet->GetPayloadType(), packet->GetSequenceNumber(),
-                            packet->GetSsrc());
+        // MS_WARN_TAG(dead, "1 stream %s rid %s unpack packet timestamp %" PRIu32, 
+        //                     rtpStream->GetCname().c_str(), rtpStream->GetRid().c_str(), 
+        //                     packet->GetTimestamp());
 
         std::vector<std::pair<const uint8_t *, size_t> > nalptrs;
         {
@@ -665,7 +664,7 @@ namespace RTC
 
             if (RTC::Codecs::Tools::UnpackRtpPacket(c, packet, rtpStream->GetMimeType(), nalptrs))
             {
-                // static size_t summary = 0;
+                // // static size_t summary = 0;
                 // static const uint8_t start_code[4] = { 0, 0, 0, 1 };
 
                 // // TODO debug code, write to file
@@ -683,6 +682,28 @@ namespace RTC
             }
         }
 
+        // decode packets
+        if (nalptrs.size() > 0)
+        {
+            // unpack and process packet
+            RTC::DecodeContext & c = rtpStream->GetDecodeContext(rtpStream->GetRid());
+
+            for (const std::pair<const uint8_t *, size_t> & nal : nalptrs)
+            {
+                std::vector<uint8_t> v(nal.second + 4);
+                v[0] = v[1] = v[2] = 0;
+                v[3] = 1;
+                memcpy(&v[4], nal.first, nal.second);
+
+                if (RTC::Codecs::Tools::DecodePacket(c, rtpStream->GetMimeType(), &v[0], nal.second + 4))
+                {
+
+                }
+            }
+
+        } // if (nalptrs.size() > 0)
+
+        // produce packets from unpacked
         if (nalptrs.size() > 0)
         {
             // unpack and process packet
@@ -699,14 +720,13 @@ namespace RTC
                 std::vector<RTC::RtpPacketPtr> packets;
                 if (RTC::Codecs::Tools::ProduceRtpPacket(c, &v[0], nal.second + 4, packet->GetTimestamp(), rtpStream->GetMimeType(), packets))
                 {
-                    MS_WARN_TAG(dead, "produced %" PRIu64 " packets", packets.size());
+                    // MS_WARN_TAG(dead, "produced %" PRIu64 " packets", packets.size());
 
                     for (RTC::RtpPacketPtr & p : packets)
                     {
-                        MS_WARN_TAG(dead, "2 stream %s rid %s unpack packet type %d sequence %d ssrc %d" , 
-                                            rtpStream->GetCname().c_str(), rtpStream->GetRid().c_str(), 
-                                            p->GetPayloadType(), p->GetSequenceNumber(),
-                                            p->GetSsrc());
+                        // MS_WARN_TAG(dead, "2 stream %s rid %s produced packet timestamp %" PRIu32, 
+                        //                     rtpStream->GetCname().c_str(), rtpStream->GetRid().c_str(), 
+                        //                     packet->GetTimestamp());
 
                         // // unpack and process packet
                         // RTC::UnpackContext & c2 = rtpStream->GetUnpackContext2(rtpStream->GetRid());
@@ -1084,6 +1104,11 @@ namespace RTC
       RTC::RtpPacket* packet, const RTC::RtpCodecParameters& mediaCodec, size_t encodingIdx)
     {
         MS_TRACE();
+
+        if (encodingIdx > 0)
+        {
+            return nullptr;
+        }
 
         uint32_t ssrc = packet->GetSsrc();
 

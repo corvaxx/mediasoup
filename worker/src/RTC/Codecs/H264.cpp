@@ -13,6 +13,11 @@
 #include <sys/utsname.h>
 #include <openssl/md5.h>
 
+extern "C"
+{
+    #include <libavcodec/avcodec.h>
+}
+
 #define H264_NAL(v) (v & 0x1F)
 #define FU_START(v) (v & 0x80)
 #define FU_END(v)   (v & 0x40)
@@ -226,6 +231,7 @@ namespace RTC
 
         int rtp_h264_pack_nalu(RTC::ProduceContext & context,
                                const uint8_t * nalu, const size_t bytes,
+                               const uint32_t timestamp,
                                std::vector<RTC::RtpPacketPtr> & packets)
         {
             uint8_t padding = 0;
@@ -237,7 +243,7 @@ namespace RTC
                                 bytes +
                                 static_cast<size_t>(padding);
 
-            // TODO corrupted if alloc uint8_t[size] 
+            // TODO corrupted if alloc uint8_t[size]
             uint8_t * buffer = new uint8_t[size + 32];
             // uint8_t * buffer = new uint8_t[RTP_PAYLOAD_MAX_SIZE];
 
@@ -252,7 +258,7 @@ namespace RTC
             header->padding        = 0;
             header->payloadType    = context.payloadType;
             header->sequenceNumber = htons(++context.sequence);
-            header->timestamp      = htonl(context.timestamp);
+            header->timestamp      = htonl(timestamp);
             header->ssrc           = htonl(context.ssrc);
 
             // MS_WARN_TAG(dead, "PRODUCE PACKET SEQ %d", context.sequence);
@@ -271,6 +277,7 @@ namespace RTC
 
         static int rtp_h264_pack_fu_a(RTC::ProduceContext & context,
                                       const uint8_t * nalu, const size_t _bytes,
+                                      const uint32_t timestamp,
                                       std::vector<RTC::RtpPacketPtr> & packets)
         {
             // RFC6184 5.3. NAL Unit Header Usage: Table 2 (p15)
@@ -299,8 +306,8 @@ namespace RTC
                 }
 
                 int size = RTP_FIXED_HEADER + N_FU_HEADER + payloadLen;
-                
-                // TODO corrupted if alloc uint8_t[size] 
+
+                // TODO corrupted if alloc uint8_t[size]
                 uint8_t * buffer = new uint8_t[size + 32];
                 // uint8_t * buffer = new uint8_t[RTP_PAYLOAD_MAX_SIZE];
 
@@ -313,7 +320,7 @@ namespace RTC
                 header->padding        = 0;
                 header->payloadType    = context.payloadType;
                 header->sequenceNumber = htons(++context.sequence);
-                header->timestamp      = htonl(context.timestamp);
+                header->timestamp      = htonl(timestamp);
                 header->ssrc           = htonl(context.ssrc);
 
                 // MS_WARN_TAG(dead, "PRODUCE PACKET SEQ %d", context.sequence);
@@ -333,6 +340,16 @@ namespace RTC
                 fu_header &= 0x1F; // clear flags
             }
 
+            // if (context.lastTimestamp != 0)
+            // {
+            //     uint32_t delta = (timestamp - context.lastTimestamp) / packets.size();
+            //     for (RTC::RtpPacketPtr & p : packets)
+            //     {
+            //         p->SetTimestamp(context.lastTimestamp += delta);
+            //     }
+            // }
+            // context.lastTimestamp = timestamp;
+
             return packets.size();
         }
 
@@ -345,7 +362,7 @@ namespace RTC
 
             packets.clear();
 
-            context.timestamp = timestamp; //(uint32_t)time * KHz; // ms -> 90KHZ
+            // context.timestamp = timestamp; //(uint32_t)time * KHz; // ms -> 90KHZ
 
             int r = 0;
             const uint8_t * pend = data + size;
@@ -375,12 +392,12 @@ namespace RTC
                 {
                     // single NAl unit packet
                     // MS_WARN_TAG(dead, "produce single nal unit");
-                    r = rtp_h264_pack_nalu(context, p1, nalu_size, packets);
+                    r = rtp_h264_pack_nalu(context, p1, nalu_size, timestamp, packets);
                 }
                 else
                 {
                     // MS_WARN_TAG(dead, "produce FU");
-                    r = rtp_h264_pack_fu_a(context, p1, nalu_size, packets);
+                    r = rtp_h264_pack_fu_a(context, p1, nalu_size, timestamp, packets);
                 }
             }
 
@@ -660,6 +677,127 @@ else
                         break;
                 }
             }
+
+            return true;
+        }
+
+        bool H264::DecodePacket(RTC::DecodeContext & context,
+                                 const uint8_t * data, const size_t & size)
+        {
+            MS_TRACE();
+
+            uint8_t type = data[0] & 0x1f;
+            MS_WARN_TAG(dead, "DECODE type %d", type);
+
+            av_log_set_level(AV_LOG_DEBUG);
+
+            // if (type ==7)
+            // {
+            //     // SPS
+
+            //     if (context.isOpened)
+            //     {
+            //         avcodec_close(context.codecContext);
+            //         context.isOpened = false;   
+            //     }
+
+            //     context.sps.resize(size + FF_INPUT_BUFFER_PADDING_SIZE);
+            //     memcpy(&context.sps[0], data, size);
+
+            //     context.codecContext->debug          = ~0;
+            //     context.codecContext->extradata      = &context.sps[0];
+            //     context.codecContext->extradata_size = size + FF_INPUT_BUFFER_PADDING_SIZE;
+
+            //     int result = avcodec_open2(context.codecContext, context.codec, nullptr);
+            //     if (result < 0)
+            //     {
+            //         MS_WARN_TAG(dead, "codec not opened %x", result);
+            //     }
+            //     else
+            //     {
+            //         MS_WARN_TAG(dead, "codec OK");
+            //         context.isOpened = true;
+            //     }
+            // }
+            // else if (type == 8)
+            // {
+            //     // PPS
+            //     context.pps.resize(size + FF_INPUT_BUFFER_PADDING_SIZE, 0);
+            //     memcpy(&context.pps[0], data, size);
+
+            //     // TODO ignore ???
+            // }
+
+            if (context.isOpened)
+            {
+                AVPacket pkt;
+                av_init_packet(&pkt);
+
+                // TODO const_cast
+                pkt.data = const_cast<uint8_t *>(data);
+                pkt.size = size;
+
+                int gotFrame = 0;
+                int length = avcodec_decode_video2(context.codecContext, context.frame, &gotFrame, &pkt);
+                if (length < 0)
+                {
+                    // MS_ASSERT(false, "avcodec_decode_video2 failed");
+                    return false;
+                }
+                if (gotFrame)
+                {
+                    MS_WARN_TAG(dead, "DecodePacket FRAME");
+                }
+
+                av_free_packet(&pkt);
+            }
+
+            // TODO ring buffer needed
+            // MS_ASSERT(context.tail + size > context.buf + RTP_PAYLOAD_MAX_SIZE, "no memory for decode");
+            // memcpy(context.tail, data, size);
+            // context.tail += size;
+
+            // AVPacket pkt;
+            // av_init_packet(&pkt);
+
+            // pkt.data = nullptr;
+            // pkt.size = 0;
+
+            // if (av_read_frame(context.formatContext, &pkt) == 0)
+            // {
+            //     MS_WARN_TAG(dead, "READ FRAME");
+
+            //     memmove(context.buf, context.buf + size, RTP_PAYLOAD_MAX_SIZE - size);
+            // }
+            // else
+            // {
+            //     MS_WARN_TAG(dead, "NO FRAME");
+            // }
+
+            // av_packet_unref(&pkt);
+
+
+
+            // AVPacket pkt;
+            // av_init_packet(&pkt);
+
+            // // TODO const_cast
+            // pkt.data = const_cast<uint8_t *>(data);
+            // pkt.size = size;
+
+            // int gotFrame = 0;
+            // int length = avcodec_decode_video2(context.codecContext, context.frame, &gotFrame, &pkt);
+            // if (length < 0)
+            // {
+            //     MS_ASSERT(false, "avcodec_decode_video2 failed");
+            //     return false;
+            // }
+            // if (gotFrame)
+            // {
+            //     MS_WARN_TAG(dead, "DecodePacket FRAME");
+            // }
+
+            // av_free_packet(&pkt);
 
             return true;
         }

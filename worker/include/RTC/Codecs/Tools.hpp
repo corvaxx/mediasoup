@@ -143,6 +143,53 @@ namespace RTC
                 return true;
             }
 
+            static bool DecodePacket(RTC::DecodeContext & context,
+                                        const RTC::RtpCodecMimeType & mimeType, 
+                                        const uint8_t * data, const size_t & size)
+            {
+                switch (mimeType.type)
+                {
+                    case RTC::RtpCodecMimeType::Type::VIDEO:
+                    {
+                        switch (mimeType.subtype)
+                        {
+                            case RTC::RtpCodecMimeType::Subtype::VP8:
+                            case RTC::RtpCodecMimeType::Subtype::VP9:
+                            {
+                                assert(false || "unsupported codec");
+                                break;
+                            }
+
+                            case RTC::RtpCodecMimeType::Subtype::H264:
+                            {
+                                return RTC::Codecs::H264::DecodePacket(context, data, size);
+                            }
+
+                            default:
+                            {
+                                // MS_WARN_TAG(dead, "unsupported mime sub %d", static_cast<int>(mimeType.subtype));
+                                break;
+                            }
+
+                        }
+                        break;
+                    }
+                    case RTC::RtpCodecMimeType::Type::AUDIO:
+                    {
+                        // MS_WARN_TAG(dead, "Type::AUDIO (not implemented)");
+                        break;
+                    }
+
+                    default:
+                    {
+                        // MS_WARN_TAG(dead, "unsupported mime %d", static_cast<int>(mimeType.type));
+                        break;
+                    }
+                }
+
+                return true;
+            }
+
             static void ProcessRtpPacket(RTC::RtpPacket* packet, const RTC::RtpCodecMimeType& mimeType)
             {
                 switch (mimeType.type)
