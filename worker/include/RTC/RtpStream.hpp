@@ -153,6 +153,7 @@ namespace RTC
 		}
 
 		RTC::UnpackContext  & GetUnpackContext(const std::string & rid);
+		RTC::UnpackContext  & GetUnpackContext2(const std::string & rid);
 		RTC::ProduceContext & GetProduceContext(const std::string & rid);
 		RTC::DecodeContext  & GetDecodeContext(const std::string & rid, bool onlyExisting = false);
 		RTC::EncodeContext  & GetEncodeContext(const std::string & rid);
@@ -203,6 +204,7 @@ namespace RTC
 		RTC::RtxStream* rtxStream{ nullptr };
 
 		std::map<std::string, RTC::UnpackContext>  unpackContexts;
+		std::map<std::string, RTC::UnpackContext>  unpackContexts2;
 		std::map<std::string, RTC::ProduceContext> produceContexts;
 		std::map<std::string, RTC::DecodeContext>  decodeContexts;
 		std::map<std::string, RTC::EncodeContext>  encodeContexts;

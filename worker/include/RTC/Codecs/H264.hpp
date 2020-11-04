@@ -57,7 +57,8 @@ namespace RTC
 										std::vector<AVFramePtr> & frames);
 
             static bool EncodePacket(RTC::EncodeContext & context,
-                                        const std::vector<AVFramePtr> & frames);
+                                        const std::vector<AVFramePtr> & frames,
+                                        std::vector<AVPacketPtr> & packets);
 
 		public:
 			class EncodingContext : public RTC::Codecs::EncodingContext

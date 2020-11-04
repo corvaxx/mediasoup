@@ -25,7 +25,8 @@ namespace RTC
 		enum TranslateMode
 		{
 			direct           = 0,
-			unpackAndProduce = 1
+			unpackAndProduce = 1,
+			decodeAndEncode  = 2
 		};
 
 	private:

@@ -724,7 +724,7 @@ else
                 }
                 if (gotFrame)
                 {
-                    MS_WARN_TAG(dead, "DecodePacket FRAME %dx%d %d %d %d", frame->width, frame->height, frame->key_frame, frame->sample_rate, frame->linesize[0]);
+                    // MS_WARN_TAG(dead, "DecodePacket FRAME %dx%d %d %d %d", frame->width, frame->height, frame->key_frame, frame->sample_rate, frame->linesize[0]);
                     frames.emplace_back(frame);
                 }
             }
@@ -733,7 +733,8 @@ else
         }
 
         bool H264::EncodePacket(RTC::EncodeContext & context,
-                                const std::vector<AVFramePtr> & frames)
+                                const std::vector<AVFramePtr> & frames,
+                                std::vector<AVPacketPtr> & packets)
         {
             MS_TRACE();
 
@@ -751,18 +752,18 @@ else
                     int length = avcodec_encode_video2(context.codecContext.get(), pkt.get(), frame.get(), &gotPacket);
                     if (length < 0)
                     {
-                        // MS_ASSERT(false, "avcodec_decode_video2 failed");
+                        MS_WARN_TAG(dead, "avcodec_decode_video2 failed");
                         return false;
                     }
                     if (gotPacket)
                     {
-                        MS_WARN_TAG(dead, "EncodePacket GOT PACKET");
-                        // frames.emplace_back(frame);
+                        // MS_WARN_TAG(dead, "EncodePacket GOT PACKET");
+                        packets.emplace_back(pkt);
                     }
                 }
             }
 
-            return false;
+            return packets.size() > 0;
         }
 
         /* Instance methods. */
