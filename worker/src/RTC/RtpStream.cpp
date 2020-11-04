@@ -409,7 +409,7 @@ namespace RTC
 			DecodeContext & c = decodeContexts[rid];
 
 			// TODO codec id must be variable ( from stream ?)
-			c.codec        = avcodec_find_decoder(AV_CODEC_ID_CYUV /*AV_CODEC_ID_H264*/); // WTF ???
+			c.codec        = avcodec_find_decoder(AV_CODEC_ID_H264);
 			MS_ASSERT(c.codec, "no codec");
 
 			MS_WARN_TAG(dead, "found codec %s %s", c.codec->name, c.codec->long_name);
@@ -441,7 +441,7 @@ namespace RTC
 			EncodeContext & c = encodeContexts[rid];
 
 			// TODO codec id must be variable ( from stream ?)
-			c.codec        = avcodec_find_encoder(AV_CODEC_ID_CYUV /*AV_CODEC_ID_H264*/); // WTF ???
+			c.codec        = avcodec_find_encoder(AV_CODEC_ID_H264);
 			MS_ASSERT(c.codec, "no codec");
 
 			MS_WARN_TAG(dead, "found codec %s %s", c.codec->name, c.codec->long_name);
