@@ -706,17 +706,17 @@ else
 
             if (context.isOpened)
             {
-                AVPacket pkt;
-                av_init_packet(&pkt);
+                AVPacketPtr pkt(new AVPacket);
+                av_init_packet(pkt.get());
 
                 // TODO const_cast
-                pkt.data = const_cast<uint8_t *>(data);
-                pkt.size = size;
+                pkt->data = const_cast<uint8_t *>(data);
+                pkt->size = size;
 
                 AVFramePtr frame(av_frame_alloc());
 
                 int gotFrame = 0;
-                int length = avcodec_decode_video2(context.codecContext.get(), frame.get(), &gotFrame, &pkt);
+                int length = avcodec_decode_video2(context.codecContext.get(), frame.get(), &gotFrame, pkt.get());
                 if (length < 0)
                 {
                     // MS_ASSERT(false, "avcodec_decode_video2 failed");
@@ -724,11 +724,9 @@ else
                 }
                 if (gotFrame)
                 {
-                    // MS_WARN_TAG(dead, "DecodePacket FRAME");
+                    MS_WARN_TAG(dead, "DecodePacket FRAME %dx%d %d %d %d", frame->width, frame->height, frame->key_frame, frame->sample_rate, frame->linesize[0]);
                     frames.emplace_back(frame);
                 }
-
-                av_free_packet(&pkt);
             }
 
             return frames.size() > 0;
@@ -738,6 +736,31 @@ else
                                 const std::vector<AVFramePtr> & frames)
         {
             MS_TRACE();
+
+            if (context.isOpened)
+            {
+                for (const AVFramePtr & frame : frames)
+                {
+                    AVPacketPtr pkt(new AVPacket);
+                    av_init_packet(pkt.get());
+
+                    pkt->data = nullptr;
+                    pkt->size = 0;
+
+                    int gotPacket = 0;
+                    int length = avcodec_encode_video2(context.codecContext.get(), pkt.get(), frame.get(), &gotPacket);
+                    if (length < 0)
+                    {
+                        // MS_ASSERT(false, "avcodec_decode_video2 failed");
+                        return false;
+                    }
+                    if (gotPacket)
+                    {
+                        MS_WARN_TAG(dead, "EncodePacket GOT PACKET");
+                        // frames.emplace_back(frame);
+                    }
+                }
+            }
 
             return false;
         }

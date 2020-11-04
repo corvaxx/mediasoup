@@ -392,7 +392,7 @@ namespace RTC
 		return produceContexts[rid];
 	}
 
-	RTC::DecodeContext & RtpStream::GetDecodeContext(const std::string & rid)
+	RTC::DecodeContext & RtpStream::GetDecodeContext(const std::string & rid, bool onlyExisting)
 	{
 		if (decodeContexts.size() == 0)
 		{
@@ -404,6 +404,8 @@ namespace RTC
 
 		if (decodeContexts.count(rid) == 0)
 		{
+			MS_ASSERT(!onlyExisting, "context not exists");
+
 			DecodeContext & c = decodeContexts[rid];
 
 			// TODO codec id must be variable ( from stream ?)
@@ -418,7 +420,8 @@ namespace RTC
             int result = avcodec_open2(c.codecContext.get(), c.codec, nullptr);
             if (result < 0)
             {
-                MS_WARN_TAG(dead, "codec not opened %x", result);
+            	char errstr[80];
+                MS_WARN_TAG(dead, "codec not opened %x %s", result, av_make_error_string(errstr, 80, result));
             }
             else
             {
@@ -433,7 +436,39 @@ namespace RTC
 	{
 		if (encodeContexts.count(rid) == 0)
 		{
+			// DecodeContext & dc = GetDecodeContext(rid, true);
+
 			EncodeContext & c = encodeContexts[rid];
+
+			// TODO codec id must be variable ( from stream ?)
+			c.codec        = avcodec_find_encoder(AV_CODEC_ID_CYUV /*AV_CODEC_ID_H264*/); // WTF ???
+			MS_ASSERT(c.codec, "no codec");
+
+			MS_WARN_TAG(dead, "found codec %s %s", c.codec->name, c.codec->long_name);
+
+			c.codecContext.reset(avcodec_alloc_context3(c.codec));
+			MS_ASSERT(c.codecContext, "alloc context failed");
+
+			c.codecContext->width        = 320;                  // dc.codecContext->width;
+			c.codecContext->height       = 180;                  // dc.codecContext->height;
+			c.codecContext->time_base    = (AVRational){1, 25};  // dc.codecContext->time_base;
+			c.codecContext->pix_fmt      = AV_PIX_FMT_YUV420P;   // dc.codecContext->pix_fmt;
+
+            MS_WARN_TAG(dead, "codec params %dx%d timebase %d-%d", 
+            			c.codecContext->width, c.codecContext->height,
+            			c.codecContext->time_base.num, c.codecContext->time_base.den);
+
+            int result = avcodec_open2(c.codecContext.get(), c.codec, nullptr);
+            if (result < 0)
+            {
+            	char errstr[80];
+                MS_WARN_TAG(dead, "codec not opened %x %s", result, av_make_error_string(errstr, 80, result));
+            }
+            else
+            {
+                MS_WARN_TAG(dead, "codec OK");
+                c.isOpened = true;
+            }
 		}
 		return encodeContexts[rid];
 	}

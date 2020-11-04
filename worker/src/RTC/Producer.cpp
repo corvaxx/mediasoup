@@ -697,13 +697,15 @@ namespace RTC
                 std::vector<AVFramePtr> frames;
                 if (RTC::Codecs::Tools::DecodePacket(c, rtpStream->GetMimeType(), &v[0], nal.second + 4, frames))
                 {
-                    MS_WARN_TAG(dead, "decoded %" PRIu64 " packets", frames.size());
+                    MS_WARN_TAG(dead, "decoded %" PRIu64 " frames", frames.size());
                 }
 
                 // encode
                 RTC::EncodeContext & c = rtpStream->GetEncodeContext(rtpStream->GetRid());
                 if (RTC::Codecs::Tools::EncodePacket(c, rtpStream->GetMimeType(), frames))
                 {
+
+                    MS_WARN_TAG(dead, "encoded %" PRIu64 " packets", frames.size());
                 }
             }
 

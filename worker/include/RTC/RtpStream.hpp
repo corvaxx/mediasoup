@@ -154,7 +154,7 @@ namespace RTC
 
 		RTC::UnpackContext  & GetUnpackContext(const std::string & rid);
 		RTC::ProduceContext & GetProduceContext(const std::string & rid);
-		RTC::DecodeContext  & GetDecodeContext(const std::string & rid);
+		RTC::DecodeContext  & GetDecodeContext(const std::string & rid, bool onlyExisting = false);
 		RTC::EncodeContext  & GetEncodeContext(const std::string & rid);
 
 	protected:
