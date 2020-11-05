@@ -370,55 +370,41 @@ namespace RTC
 		jsonObject["temporalLayers"] = this->temporalLayers;
 	}
 
-	RTC::UnpackContext & RtpStream::GetUnpackContext(const std::string & rid)
+	RTC::UnpackContext & RtpStream::GetUnpackContext(const uint32_t & ssrc)
 	{
-		// assert(rid.size() != 0 && "bad rid");
-
-		if (unpackContexts.count(rid) == 0)
+		if (unpackContexts.count(ssrc) == 0)
 		{
-			unpackContexts[rid].fileName = "/tmp/debug-out-recv-" + rid + "-" + std::to_string(time(nullptr)) + ".media";
+			unpackContexts[ssrc].fileName = "/tmp/debug-out-recv-" + std::to_string(ssrc) + "-" + std::to_string(time(nullptr)) + ".media";
 		}
-		return unpackContexts[rid];
+		return unpackContexts[ssrc];
 	}
 
-	RTC::UnpackContext & RtpStream::GetUnpackContext2(const std::string & rid)
+	RTC::UnpackContext & RtpStream::GetUnpackContext2(const uint32_t & ssrc)
 	{
-		// assert(rid.size() != 0 && "bad rid");
-
-		if (unpackContexts2.count(rid) == 0)
+		if (unpackContexts2.count(ssrc) == 0)
 		{
-			unpackContexts2[rid].fileName = "/tmp/debug-out-recv-" + rid + "-" + std::to_string(time(nullptr)) + ".media";
+			unpackContexts2[ssrc].fileName = "/tmp/debug-out-recv-" + std::to_string(ssrc) + "-" + std::to_string(time(nullptr)) + ".media";
 		}
-		return unpackContexts2[rid];
+		return unpackContexts2[ssrc];
 	}
 
-	RTC::ProduceContext & RtpStream::GetProduceContext(const std::string & rid)
+	RTC::ProduceContext & RtpStream::GetProduceContext(const uint32_t & ssrc)
 	{
-		// assert(rid.size() != 0 && "bad rid");
-
-		if (produceContexts.count(rid) == 0)
+		if (produceContexts.count(ssrc) == 0)
 		{
-			produceContexts[rid].ssrc     = params.ssrc;
-			produceContexts[rid].sequence = random32(125) % 8096;
+			produceContexts[ssrc].ssrc     = params.ssrc;
+			produceContexts[ssrc].sequence = random32(125) % 8096;
 		}
-		return produceContexts[rid];
+		return produceContexts[ssrc];
 	}
 
-	RTC::DecodeContext & RtpStream::GetDecodeContext(const std::string & rid, bool onlyExisting)
+	RTC::DecodeContext & RtpStream::GetDecodeContext(const uint32_t & ssrc, bool onlyExisting)
 	{
-		if (decodeContexts.size() == 0)
-		{
-			av_register_all();
-	        // av_log_set_level(AV_LOG_DEBUG);
-	    }
-		
-		// assert(rid.size() != 0 && "bad rid");
-
-		if (decodeContexts.count(rid) == 0)
+		if (decodeContexts.count(ssrc) == 0)
 		{
 			MS_ASSERT(!onlyExisting, "context not exists");
 
-			DecodeContext & c = decodeContexts[rid];
+			DecodeContext & c = decodeContexts[ssrc];
 
 			// TODO codec id must be variable ( from stream ?)
 			c.codec        = avcodec_find_decoder(AV_CODEC_ID_H264);
@@ -441,18 +427,18 @@ namespace RTC
                 c.isOpened = true;
             }
 		}
-		return decodeContexts[rid];
+		return decodeContexts[ssrc];
 	}
 
-	RTC::EncodeContext  & RtpStream::GetEncodeContext(const std::string & rid)
+	RTC::EncodeContext  & RtpStream::GetEncodeContext(const uint32_t & ssrc)
 	{
-		if (encodeContexts.count(rid) == 0)
+		if (encodeContexts.count(ssrc) == 0)
 		{
-			DecodeContext & dc = GetDecodeContext(rid, true);
+			DecodeContext & dc = GetDecodeContext(ssrc, true);
 
 			MS_ASSERT(dc.frameWidth != 0 && dc.frameHeight != 0, "incorrect frame size");
 
-			EncodeContext & c = encodeContexts[rid];
+			EncodeContext & c = encodeContexts[ssrc];
 
 			// TODO codec id must be variable ( from stream ?)
 			c.codec        = avcodec_find_encoder(AV_CODEC_ID_H264);
@@ -506,7 +492,7 @@ namespace RTC
                 MS_WARN_TAG(dead, "jpeg codec OK");
             }
 		}
-		return encodeContexts[rid];
+		return encodeContexts[ssrc];
 	}
 
 

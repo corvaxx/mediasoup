@@ -152,11 +152,11 @@ namespace RTC
 			return DepLibUV::GetTimeMs() - this->activeSinceMs;
 		}
 
-		RTC::UnpackContext  & GetUnpackContext(const std::string & rid);
-		RTC::UnpackContext  & GetUnpackContext2(const std::string & rid);
-		RTC::ProduceContext & GetProduceContext(const std::string & rid);
-		RTC::DecodeContext  & GetDecodeContext(const std::string & rid, bool onlyExisting = false);
-		RTC::EncodeContext  & GetEncodeContext(const std::string & rid);
+		RTC::UnpackContext  & GetUnpackContext(const uint32_t & ssrc);
+		RTC::UnpackContext  & GetUnpackContext2(const uint32_t & ssrc);
+		RTC::ProduceContext & GetProduceContext(const uint32_t & ssrc);
+		RTC::DecodeContext  & GetDecodeContext(const uint32_t & ssrc, bool onlyExisting = false);
+		RTC::EncodeContext  & GetEncodeContext(const uint32_t & ssrc);
 
 	protected:
 		bool UpdateSeq(RTC::RtpPacket* packet);
@@ -203,11 +203,11 @@ namespace RTC
 		// Instance of RtxStream.
 		RTC::RtxStream* rtxStream{ nullptr };
 
-		std::map<std::string, RTC::UnpackContext>  unpackContexts;
-		std::map<std::string, RTC::UnpackContext>  unpackContexts2;
-		std::map<std::string, RTC::ProduceContext> produceContexts;
-		std::map<std::string, RTC::DecodeContext>  decodeContexts;
-		std::map<std::string, RTC::EncodeContext>  encodeContexts;
+		std::map<uint32_t, RTC::UnpackContext>  unpackContexts;
+		std::map<uint32_t, RTC::UnpackContext>  unpackContexts2;
+		std::map<uint32_t, RTC::ProduceContext> produceContexts;
+		std::map<uint32_t, RTC::DecodeContext>  decodeContexts;
+		std::map<uint32_t, RTC::EncodeContext>  encodeContexts;
 
 	private:
 		// Score related.

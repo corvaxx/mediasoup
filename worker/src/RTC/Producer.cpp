@@ -692,7 +692,7 @@ namespace RTC
         std::vector<std::pair<const uint8_t *, size_t> > nalptrs;
         {
             // unpack and process packet
-            RTC::UnpackContext & c = rtpStream->GetUnpackContext(rtpStream->GetRid());
+            RTC::UnpackContext & c = rtpStream->GetUnpackContext(rtpStream->GetSsrc());
 
             if (RTC::Codecs::Tools::UnpackRtpPacket(c, packet, rtpStream->GetMimeType(), nalptrs))
             {
@@ -718,7 +718,7 @@ namespace RTC
         std::vector<AVPacketPtr> packets;
         if (nalptrs.size() > 0 && translateMode == decodeAndEncode)
         {
-            RTC::DecodeContext & c = rtpStream->GetDecodeContext(rtpStream->GetRid());
+            RTC::DecodeContext & c = rtpStream->GetDecodeContext(rtpStream->GetSsrc());
 
             for (const std::pair<const uint8_t *, size_t> & nal : nalptrs)
             {
@@ -735,7 +735,7 @@ namespace RTC
 
                 if (frames.size() > 0)
                 {                
-                    RTC::EncodeContext & ec = rtpStream->GetEncodeContext(rtpStream->GetRid());
+                    RTC::EncodeContext & ec = rtpStream->GetEncodeContext(rtpStream->GetSsrc());
 
                     // dump to jpeg
                     // for (AVFramePtr & frame : frames)
@@ -765,7 +765,7 @@ namespace RTC
         if (nalptrs.size() > 0)
         {
             // unpack and process packet
-            RTC::ProduceContext & c = rtpStream->GetProduceContext(rtpStream->GetRid());
+            RTC::ProduceContext & c = rtpStream->GetProduceContext(rtpStream->GetSsrc());
             // c.payloadType = packet->GetPayloadType();
 
             for (const std::pair<const uint8_t *, size_t> & nal : nalptrs)
