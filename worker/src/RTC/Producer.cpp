@@ -733,17 +733,17 @@ namespace RTC
                     // MS_WARN_TAG(dead, "decoded %" PRIu64 " frames", frames.size());
                 }
 
-                RTC::EncodeContext & ec = rtpStream->GetEncodeContext(rtpStream->GetRid());
-
-                // dump to jpeg
-                // for (AVFramePtr & frame : frames)
-                // {
-                //     dumpFrame(ec, frame);
-                // }
-
                 if (frames.size() > 0)
                 {                
+                    RTC::EncodeContext & ec = rtpStream->GetEncodeContext(rtpStream->GetRid());
+
+                    // dump to jpeg
+                    // for (AVFramePtr & frame : frames)
+                    // {
+                    //     dumpFrame(ec, frame);
+                    // }
                     // encode
+                    
                     if (RTC::Codecs::Tools::EncodePacket(ec, rtpStream->GetMimeType(), frames, packets))
                     {
                         // MS_WARN_TAG(dead, "encoded %" PRIu64 " packets", frames.size());

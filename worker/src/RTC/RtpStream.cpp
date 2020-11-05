@@ -450,6 +450,8 @@ namespace RTC
 		{
 			DecodeContext & dc = GetDecodeContext(rid, true);
 
+			MS_ASSERT(dc.frameWidth != 0 && dc.frameHeight != 0, "incorrect frame size");
+
 			EncodeContext & c = encodeContexts[rid];
 
 			// TODO codec id must be variable ( from stream ?)
