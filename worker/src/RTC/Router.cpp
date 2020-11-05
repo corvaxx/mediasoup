@@ -25,6 +25,7 @@ namespace RTC
 		MS_TRACE();
 
 		avcodec_register_all();
+		// av_log_set_level(AV_LOG_DEBUG);
 	}
 
 	Router::~Router()
