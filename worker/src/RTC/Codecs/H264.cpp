@@ -706,18 +706,18 @@ else
             uint8_t type = data[4] & 0x1f;
             // MS_WARN_TAG(dead, "DECODE type %d", type);
 
-            if (type ==7)
-            {
-                // SPS
-                context.sps.resize(size);
-                memcpy(&context.sps[0], data, size);
-            }
-            else if (type == 8)
-            {
-                // PPS
-                context.pps.resize(size);
-                memcpy(&context.pps[0], data, size);
-            }
+            // if (type ==7)
+            // {
+            //     // SPS
+            //     context.sps.resize(size);
+            //     memcpy(&context.sps[0], data, size);
+            // }
+            // else if (type == 8)
+            // {
+            //     // PPS
+            //     context.pps.resize(size);
+            //     memcpy(&context.pps[0], data, size);
+            // }
 
             if (context.isOpened)
             {

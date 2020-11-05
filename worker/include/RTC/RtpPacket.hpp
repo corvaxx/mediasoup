@@ -75,9 +75,6 @@ namespace RTC
         AVCodecContextPtr    codecContext;
         bool                 isOpened      { false };
 
-        std::vector<uint8_t> sps;
-        std::vector<uint8_t> pps;
-
         AVCodec            * jpegCodec     { nullptr };
         AVCodecContextPtr    jpegContext;
 	};
@@ -87,9 +84,6 @@ namespace RTC
 		AVCodec            * codec         { nullptr };
         AVCodecContextPtr    codecContext;
         bool                 isOpened      { false };
-
-        std::vector<uint8_t> sps;
-        std::vector<uint8_t> pps;
 	};
 
 	// Max RTP length.
