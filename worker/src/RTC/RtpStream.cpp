@@ -11,6 +11,7 @@ extern "C"
 {
 	#include <libavcodec/avcodec.h>
 	#include <libavformat/avformat.h>
+	#include <libavutil/opt.h>
 }
 
 namespace RTC
@@ -487,6 +488,9 @@ namespace RTC
             MS_WARN_TAG(dead, "codec params %dx%d timebase %d-%d", 
             			c.codecContext->width, c.codecContext->height,
             			c.codecContext->time_base.num, c.codecContext->time_base.den);
+
+			av_opt_set(c.codecContext->priv_data, "preset", "veryfast", 0);
+			av_opt_set(c.codecContext->priv_data, "tune",   "zerolatency", 0);
 
             int result = avcodec_open2(c.codecContext.get(), c.codec, nullptr);
             if (result < 0)
