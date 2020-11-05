@@ -755,25 +755,35 @@ else
 
             if (context.isOpened)
             {
-                int gotPacket = 0;
-
                 for (const AVFramePtr & frame : frames)
                 {
-                    AVPacketPtr pkt(new AVPacket);
-                    av_init_packet(pkt.get());
-
-                    pkt->data = nullptr;
-                    pkt->size = 0;
-
                     // use avcodec_send_frame / avcodec_receive_packet instead
-                    int result = avcodec_encode_video2(context.codecContext.get(), pkt.get(), frame.get(), &gotPacket);
+                    int result = avcodec_send_frame(context.codecContext.get(), frame.get());
                     if (result < 0)
                     {
-                        MS_WARN_TAG(dead, "avcodec_encode_video2 failed");
+                        char errstr[80];
+                        MS_WARN_TAG(dead, "avcodec_send_frame failed %x %s", result, av_make_error_string(errstr, 80, result));
                         return false;
                     }
-                    if (gotPacket)
+                    while (true)
                     {
+                        AVPacketPtr pkt(new AVPacket);
+                        av_init_packet(pkt.get());
+
+                        pkt->data = nullptr;
+                        pkt->size = 0;
+
+                        result = avcodec_receive_packet(context.codecContext.get(), pkt.get());
+                        if (result < 0)
+                        {
+                            if (result != 0xfffffff5)
+                            {
+                                char errstr[80];
+                                MS_WARN_TAG(dead, "avcodec_receive_packet failed %x %s", result, av_make_error_string(errstr, 80, result));
+                            }
+                            return false;
+                        }
+
                         MS_WARN_TAG(dead, "EncodePacket GOT PACKET");
                         packets.emplace_back(pkt);
                     }
