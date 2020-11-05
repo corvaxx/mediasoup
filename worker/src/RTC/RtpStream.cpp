@@ -440,25 +440,6 @@ namespace RTC
                 MS_WARN_TAG(dead, "codec OK");
                 c.isOpened = true;
             }
-
-            c.jpegCodec = avcodec_find_encoder(AV_CODEC_ID_MJPEG);
-            c.jpegContext.reset(avcodec_alloc_context3(c.jpegCodec));
-
-		    c.jpegContext->height  = 180;
-		    c.jpegContext->width   = 320;
-		    c.jpegContext->time_base    = (AVRational){1, 25}; 
-            c.jpegContext->pix_fmt = AV_PIX_FMT_YUVJ420P;
-
-			result = avcodec_open2(c.jpegContext.get(), c.jpegCodec, NULL);
-            if (result < 0)
-            {
-            	char errstr[80];
-                MS_WARN_TAG(dead, "jpeg codec not opened %x %s", result, av_make_error_string(errstr, 80, result));
-            }
-            else
-            {
-                MS_WARN_TAG(dead, "jpeg codec OK");
-            }
 		}
 		return decodeContexts[rid];
 	}
@@ -467,7 +448,7 @@ namespace RTC
 	{
 		if (encodeContexts.count(rid) == 0)
 		{
-			// DecodeContext & dc = GetDecodeContext(rid, true);
+			DecodeContext & dc = GetDecodeContext(rid, true);
 
 			EncodeContext & c = encodeContexts[rid];
 
@@ -480,8 +461,8 @@ namespace RTC
 			c.codecContext.reset(avcodec_alloc_context3(c.codec));
 			MS_ASSERT(c.codecContext, "alloc context failed");
 
-		    c.codecContext->height  = 180;
-		    c.codecContext->width   = 320;
+		    c.codecContext->width        = dc.frameWidth  == 0 ? 320 : dc.frameWidth;
+		    c.codecContext->height       = dc.frameHeight == 0 ? 180 : dc.frameHeight;
 			c.codecContext->time_base    = (AVRational){1, 25};
 			c.codecContext->pix_fmt      = AV_PIX_FMT_YUV420P;
 
@@ -502,6 +483,25 @@ namespace RTC
             {
                 MS_WARN_TAG(dead, "codec OK");
                 c.isOpened = true;
+            }
+
+            c.jpegCodec = avcodec_find_encoder(AV_CODEC_ID_MJPEG);
+            c.jpegContext.reset(avcodec_alloc_context3(c.jpegCodec));
+
+		    c.jpegContext->width        = dc.frameWidth  == 0 ? 320 : dc.frameWidth;
+		    c.jpegContext->height       = dc.frameHeight == 0 ? 180 : dc.frameHeight;
+		    c.jpegContext->time_base    = (AVRational){1, 25}; 
+            c.jpegContext->pix_fmt = AV_PIX_FMT_YUVJ420P;
+
+			result = avcodec_open2(c.jpegContext.get(), c.jpegCodec, NULL);
+            if (result < 0)
+            {
+            	char errstr[80];
+                MS_WARN_TAG(dead, "jpeg codec not opened %x %s", result, av_make_error_string(errstr, 80, result));
+            }
+            else
+            {
+                MS_WARN_TAG(dead, "jpeg codec OK");
             }
 		}
 		return encodeContexts[rid];

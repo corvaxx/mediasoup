@@ -75,8 +75,8 @@ namespace RTC
         AVCodecContextPtr    codecContext;
         bool                 isOpened      { false };
 
-        AVCodec            * jpegCodec     { nullptr };
-        AVCodecContextPtr    jpegContext;
+        int                  frameWidth    { 0 };
+        int                  frameHeight   { 0 };
 	};
 
 	struct EncodeContext
@@ -84,6 +84,9 @@ namespace RTC
 		AVCodec            * codec         { nullptr };
         AVCodecContextPtr    codecContext;
         bool                 isOpened      { false };
+
+        AVCodec            * jpegCodec     { nullptr };
+        AVCodecContextPtr    jpegContext;
 	};
 
 	// Max RTP length.

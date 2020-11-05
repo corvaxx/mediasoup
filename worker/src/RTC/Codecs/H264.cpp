@@ -739,7 +739,11 @@ else
                 }
                 if (gotFrame)
                 {
-                    // MS_WARN_TAG(dead, "DecodePacket FRAME %dx%d %d %d %d", frame->width, frame->height, frame->key_frame, frame->sample_rate, frame->linesize[0]);
+                    context.frameWidth  = frame->width;   
+                    context.frameHeight = frame->height;
+
+                    // MS_WARN_TAG(dead, "DecodePacket FRAME %dx%d %d", frame->width, frame->height, frame->key_frame);
+                    
                     frames.emplace_back(frame);
                 }
             }

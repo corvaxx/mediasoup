@@ -631,7 +631,7 @@ namespace RTC
         }
     }
 
-    void dumpFrame(RTC::DecodeContext & context, AVFramePtr & frame)
+    void dumpFrame(RTC::EncodeContext & context, AVFramePtr & frame)
     {
         MS_TRACE();
 
@@ -733,17 +733,18 @@ namespace RTC
                     // MS_WARN_TAG(dead, "decoded %" PRIu64 " frames", frames.size());
                 }
 
+                RTC::EncodeContext & ec = rtpStream->GetEncodeContext(rtpStream->GetRid());
+
                 // dump to jpeg
                 // for (AVFramePtr & frame : frames)
                 // {
-                //     dumpFrame(c, frame);
+                //     dumpFrame(ec, frame);
                 // }
 
                 if (frames.size() > 0)
                 {                
                     // encode
-                    RTC::EncodeContext & c = rtpStream->GetEncodeContext(rtpStream->GetRid());
-                    if (RTC::Codecs::Tools::EncodePacket(c, rtpStream->GetMimeType(), frames, packets))
+                    if (RTC::Codecs::Tools::EncodePacket(ec, rtpStream->GetMimeType(), frames, packets))
                     {
                         // MS_WARN_TAG(dead, "encoded %" PRIu64 " packets", frames.size());
                     }
@@ -1166,11 +1167,6 @@ namespace RTC
       RTC::RtpPacket* packet, const RTC::RtpCodecParameters& mediaCodec, size_t encodingIdx)
     {
         MS_TRACE();
-
-        if (encodingIdx > 0)
-        {
-            return nullptr;
-        }
 
         uint32_t ssrc = packet->GetSsrc();
 
