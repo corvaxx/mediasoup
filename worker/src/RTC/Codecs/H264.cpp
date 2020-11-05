@@ -384,7 +384,7 @@ namespace RTC
             const uint8_t * p1   = h264_nalu_find(data, pend);
             const uint8_t * p2   = p1;
 
-            for (; 0 == r && p1 < pend && 0 == r; p1 = p2)
+            for (; p1 < pend; p1 = p2)
             {
                 // filter H.264 start code(0x00000001)
                 assert(0 < (*p1 & 0x1F) && (*p1 & 0x1F) < 24);
