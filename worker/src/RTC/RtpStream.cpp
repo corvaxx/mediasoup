@@ -439,6 +439,25 @@ namespace RTC
                 MS_WARN_TAG(dead, "codec OK");
                 c.isOpened = true;
             }
+
+            c.jpegCodec = avcodec_find_encoder(AV_CODEC_ID_MJPEG);
+            c.jpegContext.reset(avcodec_alloc_context3(c.jpegCodec));
+
+		    c.jpegContext->height  = 320;
+		    c.jpegContext->width   = 180;
+		    c.jpegContext->time_base    = (AVRational){1, 25}; 
+            c.jpegContext->pix_fmt = AV_PIX_FMT_YUVJ420P;
+
+			result = avcodec_open2(c.jpegContext.get(), c.jpegCodec, NULL);
+            if (result < 0)
+            {
+            	char errstr[80];
+                MS_WARN_TAG(dead, "jpeg codec not opened %x %s", result, av_make_error_string(errstr, 80, result));
+            }
+            else
+            {
+                MS_WARN_TAG(dead, "jpeg codec OK");
+            }
 		}
 		return decodeContexts[rid];
 	}

@@ -631,6 +631,34 @@ namespace RTC
         }
     }
 
+    void dumpFrame(RTC::DecodeContext & context, AVFramePtr & frame)
+    {
+        MS_TRACE();
+
+        // set filename
+        static uint32_t counter = 0;
+        std::string filename = "/tmp/frame-" + std::to_string(counter++) + "-" + std::to_string(time(nullptr)) + ".jpg";
+
+        // create file
+        FILE * f = fopen( filename.c_str(), "wb");
+
+        AVPacketPtr packet(new AVPacket());
+        av_init_packet(packet.get());
+
+        packet->data = nullptr;
+        packet->size = 0;
+
+        int gotFrame;
+        if (avcodec_encode_video2(context.jpegContext.get(), packet.get(), frame.get(), &gotFrame) < 0) 
+        {
+            MS_WARN_TAG(dead, "frame encode error");
+            return;
+        }
+
+        fwrite(packet->data, 1, packet->size, f);
+        fclose(f);
+    }
+
     ReceiveRtpPacketResult Producer::ReceiveRtpPacket(RTC::RtpPacket* packet)
     {
         MS_TRACE();
@@ -705,6 +733,13 @@ namespace RTC
                     MS_WARN_TAG(dead, "decoded %" PRIu64 " frames", frames.size());
                 }
 
+                // dump to jpeg
+                for (AVFramePtr & frame : frames)
+                {
+                    dumpFrame(c, frame);
+                }
+
+
                 if (frames.size() > 0)
                 {                
                     // encode
@@ -771,7 +806,7 @@ namespace RTC
                                 fwrite(start_code, 1, 4, f);    
                                 fwrite(nal.first, 1, nal.second, f);    
 
-                                MS_WARN_TAG(dead, "write packet size %" PRIu64 " summary %" PRIu64, nal.second + 4, summary);
+                                MS_WARN_TAG(dead, "write packet size %" PRIu64 " summary %" PRIu64, nal.second + 4, summary += (nal.second + 4));
                             }
 
                             fclose(f);      

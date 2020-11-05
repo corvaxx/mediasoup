@@ -77,6 +77,9 @@ namespace RTC
 
         std::vector<uint8_t> sps;
         std::vector<uint8_t> pps;
+
+        AVCodec            * jpegCodec     { nullptr };
+        AVCodecContextPtr    jpegContext;
 	};
 
 	struct EncodeContext
