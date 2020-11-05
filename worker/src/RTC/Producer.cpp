@@ -734,11 +734,10 @@ namespace RTC
                 }
 
                 // dump to jpeg
-                for (AVFramePtr & frame : frames)
-                {
-                    dumpFrame(c, frame);
-                }
-
+                // for (AVFramePtr & frame : frames)
+                // {
+                //     dumpFrame(c, frame);
+                // }
 
                 if (frames.size() > 0)
                 {                
@@ -775,12 +774,12 @@ namespace RTC
                 v[3] = 1;
                 memcpy(&v[4], nal.first, nal.second);
 
-                std::vector<RTC::RtpPacketPtr> packets;
-                if (RTC::Codecs::Tools::ProduceRtpPacket(c, &v[0], nal.second + 4, packet->GetTimestamp(), rtpStream->GetMimeType(), packets))
+                std::vector<RTC::RtpPacketPtr> produced;
+                if (RTC::Codecs::Tools::ProduceRtpPacket(c, &v[0], nal.second + 4, packet->GetTimestamp(), rtpStream->GetMimeType(), produced))
                 {
-                    MS_WARN_TAG(dead, "produced %" PRIu64 " packets", packets.size());
+                    MS_WARN_TAG(dead, "produced %" PRIu64 " packets", produced.size());
 
-                    for (RTC::RtpPacketPtr & p : packets)
+                    for (RTC::RtpPacketPtr & p : produced)
                     {
                         MS_WARN_TAG(dead, "2 stream %s rid %s produced packet timestamp %" PRIu32, 
                                             rtpStream->GetCname().c_str(), rtpStream->GetRid().c_str(), 
@@ -789,7 +788,8 @@ namespace RTC
                         // unpack and process packet
                         RTC::UnpackContext & c2 = rtpStream->GetUnpackContext2(rtpStream->GetRid());
 
-                        if (!RTC::Codecs::Tools::UnpackRtpPacket(c2, p.get(), rtpStream->GetMimeType(), nalptrs))
+                        std::vector<std::pair<const uint8_t *, size_t> > nalptrs2;
+                        if (!RTC::Codecs::Tools::UnpackRtpPacket(c2, p.get(), rtpStream->GetMimeType(), nalptrs2))
                         {
                             MS_WARN_TAG(dead, "unpack failed");
                         }
@@ -801,7 +801,7 @@ namespace RTC
                             // TODO debug code, write to file
                             FILE * f = fopen(c2.fileName.c_str(), "a+b");
 
-                            for (const std::pair<const uint8_t *, size_t> & nal : nalptrs)
+                            for (const std::pair<const uint8_t *, size_t> & nal : nalptrs2)
                             {
                                 fwrite(start_code, 1, 4, f);    
                                 fwrite(nal.first, 1, nal.second, f);    

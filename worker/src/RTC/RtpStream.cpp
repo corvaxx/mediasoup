@@ -443,8 +443,8 @@ namespace RTC
             c.jpegCodec = avcodec_find_encoder(AV_CODEC_ID_MJPEG);
             c.jpegContext.reset(avcodec_alloc_context3(c.jpegCodec));
 
-		    c.jpegContext->height  = 320;
-		    c.jpegContext->width   = 180;
+		    c.jpegContext->height  = 180;
+		    c.jpegContext->width   = 320;
 		    c.jpegContext->time_base    = (AVRational){1, 25}; 
             c.jpegContext->pix_fmt = AV_PIX_FMT_YUVJ420P;
 
@@ -479,10 +479,10 @@ namespace RTC
 			c.codecContext.reset(avcodec_alloc_context3(c.codec));
 			MS_ASSERT(c.codecContext, "alloc context failed");
 
-			c.codecContext->width        = 320;                  // dc.codecContext->width;
-			c.codecContext->height       = 180;                  // dc.codecContext->height;
-			c.codecContext->time_base    = (AVRational){1, 25};  // dc.codecContext->time_base;
-			c.codecContext->pix_fmt      = AV_PIX_FMT_YUV420P;   // dc.codecContext->pix_fmt;
+		    c.codecContext->height  = 180;
+		    c.codecContext->width   = 320;
+			c.codecContext->time_base    = (AVRational){1, 25};
+			c.codecContext->pix_fmt      = AV_PIX_FMT_YUV420P;
 
             MS_WARN_TAG(dead, "codec params %dx%d timebase %d-%d", 
             			c.codecContext->width, c.codecContext->height,

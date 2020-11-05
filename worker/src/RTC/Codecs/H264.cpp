@@ -740,6 +740,8 @@ else
 
             if (context.isOpened)
             {
+                int gotPacket = 0;
+
                 for (const AVFramePtr & frame : frames)
                 {
                     AVPacketPtr pkt(new AVPacket);
@@ -748,19 +750,38 @@ else
                     pkt->data = nullptr;
                     pkt->size = 0;
 
-                    int gotPacket = 0;
-                    int length = avcodec_encode_video2(context.codecContext.get(), pkt.get(), frame.get(), &gotPacket);
-                    if (length < 0)
+                    // use avcodec_send_frame / avcodec_receive_packet instead
+                    int result = avcodec_encode_video2(context.codecContext.get(), pkt.get(), frame.get(), &gotPacket);
+                    if (result < 0)
                     {
-                        MS_WARN_TAG(dead, "avcodec_decode_video2 failed");
+                        MS_WARN_TAG(dead, "avcodec_encode_video2 failed");
                         return false;
                     }
                     if (gotPacket)
                     {
-                        // MS_WARN_TAG(dead, "EncodePacket GOT PACKET");
+                        MS_WARN_TAG(dead, "EncodePacket GOT PACKET");
                         packets.emplace_back(pkt);
                     }
                 }
+
+                // delayed frames
+                // for (gotPacket = 1; gotPacket; ) 
+                // {
+                //     AVPacketPtr pkt(new AVPacket);
+                //     av_init_packet(pkt.get());
+
+                //     int result = avcodec_encode_video2(context.codecContext.get(), pkt.get(), nullptr, &gotPacket);
+                //     if (result < 0) 
+                //     {
+                //         MS_WARN_TAG(dead, "avcodec_encode_video2 delayed packet failed");
+                //         return false;
+                //     }
+                //     if (gotPacket) 
+                //     {
+                //         MS_WARN_TAG(dead, "EncodePacket GOT DELAYED PACKET");
+                //         packets.emplace_back(pkt);
+                //     }
+                // }
             }
 
             return packets.size() > 0;
