@@ -217,6 +217,15 @@ namespace RTC
             packet->SetPayloadDescriptorHandler(payloadDescriptorHandler);
         }
 
+        void bin2hex(char * s, const uint8_t * p, size_t len)
+        {
+            int i;
+            for (i = 0; i < len; ++i)
+            {
+                sprintf(s + (i * 2), "%02x", (unsigned int) p[i]);
+            }
+        }
+
         const uint8_t * h264_nalu_find(const uint8_t * p, const uint8_t* end)
         {
             for (p += 2; p + 1 < end; ++p)
@@ -359,6 +368,12 @@ namespace RTC
                                     std::vector<RTC::RtpPacketPtr> & packets)
         {
             MS_TRACE();
+
+            // {
+            //     char tmp[800] = {0};
+            //     bin2hex(tmp, data, std::min(static_cast<size_t>(200), size));
+            //     MS_WARN_TAG(dead, "%s", tmp);
+            // }
 
             packets.clear();
 
