@@ -458,8 +458,13 @@ namespace RTC
             			c.codecContext->width, c.codecContext->height,
             			c.codecContext->time_base.num, c.codecContext->time_base.den);
 
-			av_opt_set(c.codecContext->priv_data, "preset", "veryfast", 0);
-			av_opt_set(c.codecContext->priv_data, "tune",   "zerolatency", 0);
+			// av_opt_set(c.codecContext->priv_data, "profile", "baseline", 0);
+			// av_opt_set(c.codecContext->priv_data, "preset", "medium", 0);
+			// av_opt_set(c.codecContext->priv_data, "tune",   "zerolatency", 0);
+			// c.codecContext->level = ;
+
+			c.codecContext->max_b_frames = 1;
+			c.codecContext->gop_size     = 1;
 
             int result = avcodec_open2(c.codecContext.get(), c.codec, nullptr);
             if (result < 0)
