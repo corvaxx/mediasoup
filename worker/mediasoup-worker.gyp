@@ -243,6 +243,10 @@
       'include',
       'deps/json/single_include/nlohmann'
     ],
+    'libraries': 
+    [ 
+      '-lavdevice', '-lavformat', '-lavcodec', '-lavutil' 
+    ],
     'conditions':
     [
       # FIPS.
@@ -283,7 +287,7 @@
       }],
 
       [ 'OS in "linux freebsd"', {
-        'ldflags': [ '-Wl,--whole-archive <(libopenssl) -lavcodec -lavdevice -lavfilter -lavformat -lavutil -lpostproc -lswresample -lswscale -Wl,--no-whole-archive' ]
+        'ldflags': [ '-Wl,--whole-archive <(libopenssl) -Wl,--no-whole-archive' ]
       }],
 
       [ 'OS in "freebsd"', {
