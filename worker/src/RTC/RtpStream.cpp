@@ -463,8 +463,9 @@ namespace RTC
 			// av_opt_set(c.codecContext->priv_data, "tune",   "zerolatency", 0);
 			// c.codecContext->level = ;
 
-			c.codecContext->max_b_frames = 1;
-			c.codecContext->gop_size     = 1;
+			c.codecContext->max_b_frames =  0;
+			c.codecContext->gop_size     =  6;
+			c.codecContext->qcompress    = .8;
 
             int result = avcodec_open2(c.codecContext.get(), c.codec, nullptr);
             if (result < 0)
