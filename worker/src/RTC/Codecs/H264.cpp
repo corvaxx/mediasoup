@@ -761,6 +761,11 @@ else
             {
                 for (const AVFramePtr & frame : frames)
                 {
+                    // MS_WARN_TAG(dead, "frame %dx%d linesize %d-%d-%d", frame->width, frame->height, frame->linesize[0], frame->linesize[1], frame->linesize[2]);
+                    
+                    memset(frame->data[1], 0x80, frame->linesize[1] * frame->height / 2);
+                    memset(frame->data[2], 0x80, frame->linesize[2] * frame->height / 2);
+                    
                     // use avcodec_send_frame / avcodec_receive_packet instead
                     int result = avcodec_send_frame(context.codecContext.get(), frame.get());
                     if (result < 0)
