@@ -458,14 +458,37 @@ namespace RTC
             			c.codecContext->width, c.codecContext->height,
             			c.codecContext->time_base.num, c.codecContext->time_base.den);
 
-			// av_opt_set(c.codecContext->priv_data, "profile", "baseline", 0);
+			// MS_ASSERT(av_opt_set(c.codecContext->priv_data, "preset", "ultrafast", AV_OPT_SEARCH_CHILDREN) == 0, "preset");
 			// av_opt_set(c.codecContext->priv_data, "preset", "medium", 0);
 			// av_opt_set(c.codecContext->priv_data, "tune",   "zerolatency", 0);
 			// c.codecContext->level = ;
 
-			c.codecContext->max_b_frames =  0;
-			c.codecContext->gop_size     =  6;
+			// c.codecContext->coder_type = 1;
+			// c.codecContext->me_subpel_quality = 7;
+			// c.codecContext->me_range = 16;
+			// c.codecContext->keyint_min = 25; 
+			// c.codecContext->i_quant_factor = 0.71;
+			// c.codecContext->b_frame_strategy = 1;
 			// c.codecContext->qcompress    = .6;
+			c.codecContext->max_b_frames      = 0;
+			c.codecContext->refs              = 3;
+			c.codecContext->gop_size          = 25;
+			c.codecContext->thread_count      = 1;
+			c.codecContext->delay             = 0;
+			c.codecContext->me_subpel_quality = 4; 
+
+			// sliced-threads:
+			// quantizer=15:no-mbtree:sync-lookahead=0:rc-lookahead=0
+			// bad option 'speed-preset': '2'
+			// bad option 'dct8x8': 'true'
+			// bad value for 'pass': 'qual'
+			// bad option 'quantizer': '15' 
+			// bad option 'key-int-max': '60'
+			MS_ASSERT(av_opt_set(c.codecContext->priv_data, "x264opts", "no-mbtree:sync-lookahead=0:rc-lookahead=0", 0) == 0, "x264opts");
+
+			// MS_ASSERT(av_opt_set(c.codecContext.get(), "rc-lookahead",   "0", AV_OPT_SEARCH_CHILDREN) == 0, "rc-lookahead");
+			// MS_ASSERT(av_opt_set(c.codecContext.get(), "b-frames",        "0", AV_OPT_SEARCH_CHILDREN) == 0, "bframes");
+			// MS_ASSERT(av_opt_set(c.codecContext.get(), "sync-lookahead", "0", AV_OPT_SEARCH_CHILDREN) == 0, "sync-lookahead");
 
             int result = avcodec_open2(c.codecContext.get(), c.codec, nullptr);
             if (result < 0)
