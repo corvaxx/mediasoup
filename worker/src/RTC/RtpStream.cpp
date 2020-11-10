@@ -484,7 +484,7 @@ namespace RTC
 			// bad value for 'pass': 'qual'
 			// bad option 'quantizer': '15' 
 			// bad option 'key-int-max': '60'
-			MS_ASSERT(av_opt_set(c.codecContext->priv_data, "x264opts", "no-mbtree:sync-lookahead=0:rc-lookahead=0", 0) == 0, "x264opts");
+			MS_ASSERT(av_opt_set(c.codecContext->priv_data, "x264opts", "sliced-threads:no-mbtree:sync-lookahead=0:rc-lookahead=0", 0) == 0, "x264opts");
 
 			// MS_ASSERT(av_opt_set(c.codecContext.get(), "rc-lookahead",   "0", AV_OPT_SEARCH_CHILDREN) == 0, "rc-lookahead");
 			// MS_ASSERT(av_opt_set(c.codecContext.get(), "b-frames",        "0", AV_OPT_SEARCH_CHILDREN) == 0, "bframes");
