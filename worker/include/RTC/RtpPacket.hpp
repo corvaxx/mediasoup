@@ -89,6 +89,7 @@ namespace RTC
         AVCodecContextPtr    jpegContext;
 	};
 
+
 	// Max RTP length.
 	constexpr size_t RtpBufferSize{ 65536u };
 	// Max MTU size.

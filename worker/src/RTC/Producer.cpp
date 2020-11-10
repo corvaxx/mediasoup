@@ -14,6 +14,8 @@
 #include <cstring>  // std::memcpy()
 #include <iterator> // std::ostream_iterator
 #include <sstream>  // std::ostringstream
+#include <chrono>
+#include <iostream>
 
 namespace RTC
 {
@@ -631,33 +633,33 @@ namespace RTC
         }
     }
 
-    void dumpFrame(RTC::EncodeContext & context, AVFramePtr & frame)
-    {
-        MS_TRACE();
+    // void dumpFrame(RTC::EncodeContext & context, AVFramePtr & frame)
+    // {
+    //     MS_TRACE();
 
-        // set filename
-        static uint32_t counter = 0;
-        std::string filename = "/tmp/frame-" + std::to_string(counter++) + "-" + std::to_string(time(nullptr)) + ".jpg";
+    //     // set filename
+    //     static uint32_t counter = 0;
+    //     std::string filename = "/tmp/frame-" + std::to_string(counter++) + "-" + std::to_string(time(nullptr)) + ".jpg";
 
-        // create file
-        FILE * f = fopen( filename.c_str(), "wb");
+    //     // create file
+    //     FILE * f = fopen( filename.c_str(), "wb");
 
-        AVPacketPtr packet(new AVPacket());
-        av_init_packet(packet.get());
+    //     AVPacketPtr packet(new AVPacket());
+    //     av_init_packet(packet.get());
 
-        packet->data = nullptr;
-        packet->size = 0;
+    //     packet->data = nullptr;
+    //     packet->size = 0;
 
-        int gotFrame;
-        if (avcodec_encode_video2(context.jpegContext.get(), packet.get(), frame.get(), &gotFrame) < 0) 
-        {
-            MS_WARN_TAG(dead, "frame encode error");
-            return;
-        }
+    //     int gotFrame;
+    //     if (avcodec_encode_video2(context.jpegContext.get(), packet.get(), frame.get(), &gotFrame) < 0) 
+    //     {
+    //         MS_WARN_TAG(dead, "frame encode error");
+    //         return;
+    //     }
 
-        fwrite(packet->data, 1, packet->size, f);
-        fclose(f);
-    }
+    //     fwrite(packet->data, 1, packet->size, f);
+    //     fclose(f);
+    // }
 
     ReceiveRtpPacketResult Producer::ReceiveRtpPacket(RTC::RtpPacket* packet)
     {
@@ -685,12 +687,13 @@ namespace RTC
         
         // MS_WARN_TAG(rtp, "received MEDIA packet stream name %s", rtpStream->GetCname().c_str());
 
-        // MS_WARN_TAG(dead, "1 stream %s rid %s unpack packet timestamp %" PRIu32, 
-        //                     rtpStream->GetCname().c_str(), rtpStream->GetRid().c_str(), 
-        //                     packet->GetTimestamp());
+        MS_WARN_TAG(dead, "1 stream %s ssrc %" PRIu32 " unpack packet timestamp %" PRIu32 " type %" PRIu32, 
+                            rtpStream->GetCname().c_str(), rtpStream->GetSsrc(),
+                            packet->GetTimestamp(), packet->GetPayloadType());
 
         std::vector<std::pair<const uint8_t *, size_t> > nalptrs;
         {
+
             // unpack and process packet
             RTC::UnpackContext & c = rtpStream->GetUnpackContext(rtpStream->GetSsrc());
 
@@ -742,8 +745,9 @@ namespace RTC
                     // {
                     //     dumpFrame(ec, frame);
                     // }
+
                     // encode
-                    
+
                     if (RTC::Codecs::Tools::EncodePacket(ec, rtpStream->GetMimeType(), frames, packets))
                     {
                         // MS_WARN_TAG(dead, "encoded %" PRIu64 " packets", frames.size());
@@ -782,12 +786,12 @@ namespace RTC
 
                     for (RTC::RtpPacketPtr & p : produced)
                     {
-                        // MS_WARN_TAG(dead, "2 stream %s rid %s produced packet timestamp %" PRIu32, 
-                        //                     rtpStream->GetCname().c_str(), rtpStream->GetRid().c_str(), 
+                        // MS_WARN_TAG(dead, "2 stream %s rid %" PRIu32 " produced packet timestamp %" PRIu32, 
+                        //                     rtpStream->GetCname().c_str(), rtpStream->GetSsrc(), 
                         //                     packet->GetTimestamp());
 
-                        // unpack and process packet
-                        // RTC::UnpackContext & c2 = rtpStream->GetUnpackContext2(rtpStream->GetRid());
+                        // // unpack and process packet
+                        // RTC::UnpackContext & c2 = rtpStream->GetUnpackContext2(rtpStream->GetSsrc());
 
                         // std::vector<std::pair<const uint8_t *, size_t> > nalptrs2;
                         // if (!RTC::Codecs::Tools::UnpackRtpPacket(c2, p.get(), rtpStream->GetMimeType(), nalptrs2))
