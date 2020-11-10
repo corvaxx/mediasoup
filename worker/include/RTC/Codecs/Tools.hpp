@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "RTC/Codecs/H264.hpp"
+#include "RTC/Codecs/opus.hpp"
 #include "RTC/Codecs/PayloadDescriptorHandler.hpp"
 #include "RTC/Codecs/VP8.hpp"
 #include "RTC/Codecs/VP9.hpp"
@@ -70,7 +71,7 @@ namespace RTC
 
                             default:
                             {
-                                // MS_WARN_TAG(dead, "unsupported mime sub %d", static_cast<int>(mimeType.subtype));
+                                MS_WARN_TAG(dead, "unsupported mime sub %d", static_cast<int>(mimeType.subtype));
                                 break;
                             }
 
@@ -79,13 +80,24 @@ namespace RTC
                     }
                     case RTC::RtpCodecMimeType::Type::AUDIO:
                     {
-                        // MS_WARN_TAG(dead, "Type::AUDIO (not implemented)");
+                        switch (mimeType.subtype)
+                        {
+                            case RTC::RtpCodecMimeType::Subtype::OPUS:
+                            {
+                                return RTC::Codecs::Opus::ProduceRtpPacket(context, data, size, timestamp, packets);
+                            }
+                            default:
+                            {
+                                MS_WARN_TAG(dead, "unsupported mime sub %d", static_cast<int>(mimeType.subtype));
+                                break;
+                            }
+                        }
                         break;
                     }
 
                     default:
                     {
-                        // MS_WARN_TAG(dead, "unsupported mime %d", static_cast<int>(mimeType.type));
+                        MS_WARN_TAG(dead, "unsupported mime %d", static_cast<int>(mimeType.type));
                         break;
                     }
                 }
@@ -120,7 +132,7 @@ namespace RTC
 
                             default:
                             {
-                                // MS_WARN_TAG(dead, "unsupported mime sub %d", static_cast<int>(mimeType.subtype));
+                                MS_WARN_TAG(dead, "unsupported mime sub %d", static_cast<int>(mimeType.subtype));
                                 break;
                             }
 
@@ -129,13 +141,24 @@ namespace RTC
                     }
                     case RTC::RtpCodecMimeType::Type::AUDIO:
                     {
-                        // MS_WARN_TAG(dead, "Type::AUDIO (not implemented)");
+                        switch (mimeType.subtype)
+                        {
+                            case RTC::RtpCodecMimeType::Subtype::OPUS:
+                            {
+                                return RTC::Codecs::Opus::UnpackRtpPacket(context, packet, nalptrs);
+                            }
+                            default:
+                            {
+                                MS_WARN_TAG(dead, "unsupported mime sub %d", static_cast<int>(mimeType.subtype));
+                                break;
+                            }
+                        }
                         break;
                     }
 
                     default:
                     {
-                        // MS_WARN_TAG(dead, "unsupported mime %d", static_cast<int>(mimeType.type));
+                        MS_WARN_TAG(dead, "unsupported mime %d", static_cast<int>(mimeType.type));
                         break;
                     }
                 }
@@ -168,7 +191,7 @@ namespace RTC
 
                             default:
                             {
-                                // MS_WARN_TAG(dead, "unsupported mime sub %d", static_cast<int>(mimeType.subtype));
+                                MS_WARN_TAG(dead, "unsupported mime sub %d", static_cast<int>(mimeType.subtype));
                                 break;
                             }
 
@@ -177,13 +200,24 @@ namespace RTC
                     }
                     case RTC::RtpCodecMimeType::Type::AUDIO:
                     {
-                        // MS_WARN_TAG(dead, "Type::AUDIO (not implemented)");
+                        switch (mimeType.subtype)
+                        {
+                            case RTC::RtpCodecMimeType::Subtype::OPUS:
+                            {
+                                return RTC::Codecs::Opus::DecodePacket(context, data, size, frames);
+                            }
+                            default:
+                            {
+                                MS_WARN_TAG(dead, "unsupported mime sub %d", static_cast<int>(mimeType.subtype));
+                                break;
+                            }
+                        }
                         break;
                     }
 
                     default:
                     {
-                        // MS_WARN_TAG(dead, "unsupported mime %d", static_cast<int>(mimeType.type));
+                        MS_WARN_TAG(dead, "unsupported mime %d", static_cast<int>(mimeType.type));
                         break;
                     }
                 }
@@ -216,7 +250,7 @@ namespace RTC
 
                             default:
                             {
-                                // MS_WARN_TAG(dead, "unsupported mime sub %d", static_cast<int>(mimeType.subtype));
+                                MS_WARN_TAG(dead, "unsupported mime sub %d", static_cast<int>(mimeType.subtype));
                                 break;
                             }
 
@@ -225,13 +259,24 @@ namespace RTC
                     }
                     case RTC::RtpCodecMimeType::Type::AUDIO:
                     {
-                        // MS_WARN_TAG(dead, "Type::AUDIO (not implemented)");
+                        switch (mimeType.subtype)
+                        {
+                            case RTC::RtpCodecMimeType::Subtype::OPUS:
+                            {
+                                return RTC::Codecs::Opus::EncodePacket(context, frames, packets);
+                            }
+                            default:
+                            {
+                                MS_WARN_TAG(dead, "unsupported mime sub %d", static_cast<int>(mimeType.subtype));
+                                break;
+                            }
+                        }
                         break;
                     }
 
                     default:
                     {
-                        // MS_WARN_TAG(dead, "unsupported mime %d", static_cast<int>(mimeType.type));
+                        MS_WARN_TAG(dead, "unsupported mime %d", static_cast<int>(mimeType.type));
                         break;
                     }
                 }
@@ -270,7 +315,11 @@ namespace RTC
 
                             default:;
                         }
-                    }
+                    } // RTC::RtpCodecMimeType::Type::VIDEO
+
+                    case RTC::RtpCodecMimeType::Type::AUDIO:
+                    {
+                    } // RTC::RtpCodecMimeType::Type::AUDIO
 
                     default:;
                 }
