@@ -270,7 +270,7 @@ namespace RTC
             header->timestamp      = htonl(timestamp);
             header->ssrc           = htonl(context.ssrc);
 
-            // MS_WARN_TAG(dead, "PRODUCE PACKET SEQ %d", context.sequence);
+            // MS_WARN_TAG(dead, "PRODUCE PACKET SEQ %d size %d", context.sequence, size);
 
             // TODO no extensions, temporary
             // std::shared_ptr<RTC::RtpPacket::HeaderExtension> hext(new RTC::RtpPacket::HeaderExtension())
@@ -332,7 +332,7 @@ namespace RTC
                 header->timestamp      = htonl(timestamp);
                 header->ssrc           = htonl(context.ssrc);
 
-                // MS_WARN_TAG(dead, "PRODUCE PACKET SEQ %d", context.sequence);
+                // MS_WARN_TAG(dead, "PRODUCE PACKET SEQ %d size %d", context.sequence, size);
 
                 // fu_indicator + fu_header
                 buffer[RTP_FIXED_HEADER + 0] = fu_indicator;
@@ -658,7 +658,7 @@ else
                 {
                     case 0: // reserved
                     case 31: // reserved
-                        assert(false || "reserved");
+                        MS_ASSERT(false, "reserved");
                         return false; // packet discard
 
                     case 24: // STAP-A
