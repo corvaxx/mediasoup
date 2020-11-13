@@ -22,6 +22,8 @@ namespace RTC
 			  RTC::RtpStreamRecv* rtpStream, RTC::RTCP::Packet* packet) = 0;
 			virtual void OnRtpStreamNeedWorstRemoteFractionLost(
 			  RTC::RtpStreamRecv* rtpStream, uint8_t& worstRemoteFractionLost) = 0;
+			virtual void OnRtpStreamResendPackets(
+			  RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t> & seqNumbers) = 0;
 		};
 
 	public:
