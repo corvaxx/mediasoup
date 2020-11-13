@@ -1751,7 +1751,7 @@ namespace RTC
         {
             MS_WARN_TAG(dead, "NACK REQ %" PRIu16, *it);
 
-            RTC::ProduceContext & c = rtpStream->GetProduceContext(GetSsrc());
+            RTC::ProduceContext & c = rtpStream->GetProduceContext(GetSsrc(), true);
             if (c.produced.count(*it))
             {
                 RTC::RtpPacketPtr p = c.produced[*it];
