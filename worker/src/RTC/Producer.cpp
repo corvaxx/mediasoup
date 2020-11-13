@@ -784,7 +784,8 @@ namespace RTC
         {
             // unpack and process packet
             RTC::ProduceContext & c = rtpStream->GetProduceContext(rtpStream->GetSsrc());
-            // c.payloadType = packet->GetPayloadType();
+            c.payloadType = packet->GetPayloadType();
+            // c.sequence    = packet->GetSequenceNumber();
 
             for (const std::pair<const uint8_t *, size_t> & nal : nalptrs)
             {
