@@ -1742,21 +1742,23 @@ namespace RTC
         this->listener->OnProducerNeedWorstRemoteFractionLost(this, mappedSsrc, worstRemoteFractionLost);
     }
 
-    void OnRtpStreamResendPackets(
+    void Producer::OnRtpStreamResendPackets(
               RTC::RtpStreamRecv * rtpStream, const std::vector<uint16_t> & seqNumbers)
     {
         MS_TRACE();
 
-        for (const auto &it = seqNumbers.begin(); it != seqNumbers.end(); ++it)
+        for (auto it = seqNumbers.begin(); it != seqNumbers.end(); ++it)
         {
             MS_WARN_TAG(dead, "NACK REQ %" PRIu16, *it);
 
-            RTC::ProduceContext & c = rtpStream->GetProduceContext(GetSsrc(), true);
+            RTC::ProduceContext & c = rtpStream->GetProduceContext(rtpStream->GetSsrc(), true);
             if (c.produced.count(*it))
             {
                 RTC::RtpPacketPtr p = c.produced[*it];
 
-                p.RtxEncode(c.payloadType, rtpStream->GetSsrc(), ++c.sequence);
+                p->RtxEncode(c.payloadType, rtpStream->GetRtxSsrc(), ++c.sequence);
+
+                ReceiveRtpPacketInternal(p.get());
             }
         }
     }
