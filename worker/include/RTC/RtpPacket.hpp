@@ -29,6 +29,9 @@ using json = nlohmann::json;
 
 namespace RTC
 {
+	class RtpPacket;
+	typedef std::shared_ptr<RtpPacket> RtpPacketPtr;
+
 	template<class T, class D = std::default_delete<T>>
 	struct shared_ptr_with_deleter : public std::shared_ptr<T>
 	{
@@ -59,6 +62,8 @@ namespace RTC
 
 		// TODO from codec
 		uint8_t     payloadType   { 125 };
+
+		std::map<uint16_t, RtpPacketPtr> produced;
 	};
 
 	struct UnpackContext
@@ -97,10 +102,6 @@ namespace RTC
 	// MID header extension max length (just used when setting/updating MID
 	// extension).
 	constexpr uint8_t MidMaxLength{ 8u };
-
-	
-	class RtpPacket;
-	typedef std::shared_ptr<RtpPacket> RtpPacketPtr;
 
 
 	class RtpPacket
