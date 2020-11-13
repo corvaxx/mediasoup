@@ -680,18 +680,30 @@ namespace RTC
             return ReceiveRtpPacketResult::DISCARDED;
         }
 
-        if (packet->GetSsrc() != rtpStream->GetSsrc())
+        if (packet->GetSsrc() != rtpStream->GetSsrc() && packet->GetSsrc() != rtpStream->GetRtxSsrc())
         {
+            MS_ABORT("found stream does not match received packet");
+        }
+
+        if (packet->GetSsrc() == rtpStream->GetRtxSsrc())
+        {
+            // rtx packet
+            MS_WARN_TAG(dead, "RTX stream %s ssrc %" PRIu32 " unpack packet timestamp %" PRIu32 " type %" PRIu32 " seq %" PRIu16, 
+                                rtpStream->GetCname().c_str(), rtpStream->GetSsrc(),
+                                packet->GetTimestamp(), packet->GetPayloadType(), packet->GetSequenceNumber());
+
             return ReceiveRtpPacketInternal(packet);
         }
+
+        // media packet
 
         ReceiveRtpPacketResult result = ReceiveRtpPacketResult::MEDIA;
         
         // MS_WARN_TAG(rtp, "received MEDIA packet stream name %s", rtpStream->GetCname().c_str());
 
-        MS_WARN_TAG(dead, "1 stream %s ssrc %" PRIu32 " unpack packet timestamp %" PRIu32 " type %" PRIu32, 
+        MS_WARN_TAG(dead, "1 stream %s ssrc %" PRIu32 " unpack packet timestamp %" PRIu32 " type %" PRIu32 " seq %" PRIu16, 
                             rtpStream->GetCname().c_str(), rtpStream->GetSsrc(),
-                            packet->GetTimestamp(), packet->GetPayloadType());
+                            packet->GetTimestamp(), packet->GetPayloadType(), packet->GetSequenceNumber());
 
         std::vector<std::pair<const uint8_t *, size_t> > nalptrs;
         {
