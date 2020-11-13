@@ -17,6 +17,8 @@
 #include <chrono>
 #include <iostream>
 
+uint32_t random32(int type);
+
 namespace RTC
 {
     /* Instance methods. */
@@ -816,6 +818,13 @@ namespace RTC
 
                         //     fclose(f);      
                         // }
+
+                        if (random32(0) % 32 == 0)
+                        {
+                            MS_WARN_TAG(dead, "DROPPED");
+                            return result;    
+
+                        }
 
                         // Process the packet.
                         result = ReceiveRtpPacketInternal(p.get()); 
