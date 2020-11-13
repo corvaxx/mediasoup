@@ -388,10 +388,12 @@ namespace RTC
 		return unpackContexts2[ssrc];
 	}
 
-	RTC::ProduceContext & RtpStream::GetProduceContext(const uint32_t & ssrc)
+	RTC::ProduceContext & RtpStream::GetProduceContext(const uint32_t & ssrc, bool onlyExisting)
 	{
 		if (produceContexts.count(ssrc) == 0)
 		{
+			MS_ASSERT(!onlyExisting, "context not exists");
+
 			produceContexts[ssrc].ssrc     = params.ssrc;
 			produceContexts[ssrc].sequence = random32(125) % 8096;
 		}
