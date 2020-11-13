@@ -801,9 +801,13 @@ namespace RTC
 
                     for (RTC::RtpPacketPtr & p : produced)
                     {
-                        // MS_WARN_TAG(dead, "2 stream %s rid %" PRIu32 " produced packet timestamp %" PRIu32, 
-                        //                     rtpStream->GetCname().c_str(), rtpStream->GetSsrc(), 
-                        //                     packet->GetTimestamp());
+                        MS_ASSERT(c.produced.count(p->GetSequenceNumber()) == 0, "duplicate sequence");
+
+                        c.produced[p->GetSequenceNumber()] = p;
+
+                        MS_WARN_TAG(dead, "2 stream %s ssrs %" PRIu32 " produced packet timestamp %" PRIu32 " type %" PRIu32 " seq %" PRIu16, 
+                                            rtpStream->GetCname().c_str(), rtpStream->GetSsrc(), 
+                                            p->GetTimestamp(), p->GetPayloadType(), p->GetSequenceNumber());
 
                         // // unpack and process packet
                         // RTC::UnpackContext & c2 = rtpStream->GetUnpackContext2(rtpStream->GetSsrc());
