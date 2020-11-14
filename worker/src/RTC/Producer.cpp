@@ -1752,14 +1752,17 @@ namespace RTC
             MS_WARN_TAG(dead, "NACK REQ %" PRIu16, *it);
 
             RTC::ProduceContext & c = rtpStream->GetProduceContext(rtpStream->GetSsrc(), true);
-            if (c.produced.count(*it))
+            if (!c.produced.count(*it))
             {
-                RTC::RtpPacketPtr p = c.produced[*it];
-
-                p->RtxEncode(rtpStream->GetRtxPayloadType(), rtpStream->GetRtxSsrc(), ++c.sequence);
-
-                ReceiveRtpPacket(p.get());
+                MS_WARN_TAG(dead, "PACKET NOT FOUND %" PRIu16, *it);
+                continue;
             }
+
+            RTC::RtpPacketPtr p = c.produced[*it];
+
+            p->RtxEncode(rtpStream->GetRtxPayloadType(), rtpStream->GetRtxSsrc(), ++c.sequence);
+
+            ReceiveRtpPacket(p.get());
         }
     }
 
