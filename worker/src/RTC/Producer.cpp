@@ -1754,7 +1754,7 @@ namespace RTC
             RTC::ProduceContext & c = rtpStream->GetProduceContext(rtpStream->GetSsrc(), true);
             if (!c.produced.count(*it))
             {
-                MS_WARN_TAG(dead, "PACKET NOT FOUND %" PRIu16, *it);
+                MS_WARN_TAG(dead, "PACKET NOT FOUND %" PRIu16 " for stream %" PRIu32, *it, rtpStream->GetSsrc());
                 continue;
             }
 
