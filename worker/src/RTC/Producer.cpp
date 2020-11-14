@@ -1742,8 +1742,8 @@ namespace RTC
         this->listener->OnProducerNeedWorstRemoteFractionLost(this, mappedSsrc, worstRemoteFractionLost);
     }
 
-    void Producer::OnRtpStreamResendPackets(
-              RTC::RtpStreamRecv * rtpStream, const std::vector<uint16_t> & seqNumbers)
+    void Producer::OnRtpStreamResendPackets(RTC::RtpStreamRecv * rtpStream, 
+                                            const std::vector<uint16_t> & seqNumbers)
     {
         MS_TRACE();
 
@@ -1756,9 +1756,9 @@ namespace RTC
             {
                 RTC::RtpPacketPtr p = c.produced[*it];
 
-                p->RtxEncode(c.payloadType, rtpStream->GetRtxSsrc(), ++c.sequence);
+                p->RtxEncode(rtpStream->GetRtxPayloadType(), rtpStream->GetRtxSsrc(), ++c.sequence);
 
-                ReceiveRtpPacketInternal(p.get());
+                ReceiveRtpPacket(p.get());
             }
         }
     }
