@@ -836,12 +836,12 @@ namespace RTC
                         //     fclose(f);      
                         // }
 
-                        if (random32(0) % 32 == 0)
-                        {
-                            MS_WARN_TAG(dead, "DROPPED");
-                            return result;    
+                        // if (random32(0) % 32 == 0)
+                        // {
+                        //     MS_WARN_TAG(dead, "DROPPED");
+                        //     return result;    
 
-                        }
+                        // }
 
                         // Process the packet.
                         result = ReceiveRtpPacketInternal(p.get()); 
