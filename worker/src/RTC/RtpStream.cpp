@@ -392,10 +392,11 @@ namespace RTC
 	{
 		if (produceContexts.count(ssrc) == 0)
 		{
-			MS_ASSERT(!onlyExisting, "context not exists");
+			// MS_ASSERT(!onlyExisting, "context not exists");
 
-			produceContexts[ssrc].ssrc     = params.ssrc;
-			produceContexts[ssrc].sequence = random32(125) % 8096;
+			produceContexts[ssrc].ssrc        = params.ssrc;
+			produceContexts[ssrc].sequence    = random32(125) % 8096;
+			produceContexts[ssrc].rtxsequence = random32(125) % 8096;
 		}
 		return produceContexts[ssrc];
 	}

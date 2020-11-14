@@ -688,8 +688,8 @@ namespace RTC
         if (packet->GetSsrc() == rtpStream->GetRtxSsrc())
         {
             // rtx packet
-            MS_WARN_TAG(dead, "RTX stream %s ssrc %" PRIu32 " unpack packet timestamp %" PRIu32 " type %" PRIu32 " seq %" PRIu16, 
-                                rtpStream->GetCname().c_str(), rtpStream->GetSsrc(),
+            MS_WARN_TAG(dead, "RTX ssrc %" PRIu32 " rtx %" PRIu32 " unpack packet timestamp %" PRIu32 " type %" PRIu32 " seq %" PRIu16, 
+                                rtpStream->GetSsrc(), rtpStream->GetRtxSsrc(),
                                 packet->GetTimestamp(), packet->GetPayloadType(), packet->GetSequenceNumber());
 
             return ReceiveRtpPacketInternal(packet);
@@ -701,8 +701,8 @@ namespace RTC
         
         // MS_WARN_TAG(rtp, "received MEDIA packet stream name %s", rtpStream->GetCname().c_str());
 
-        MS_WARN_TAG(dead, "1 stream %s ssrc %" PRIu32 " unpack packet timestamp %" PRIu32 " type %" PRIu32 " seq %" PRIu16, 
-                            rtpStream->GetCname().c_str(), rtpStream->GetSsrc(),
+        MS_WARN_TAG(dead, "ORIG ssrc %" PRIu32 " rtx %" PRIu32 " unpack packet timestamp %" PRIu32 " type %" PRIu32 " seq %" PRIu16, 
+                            rtpStream->GetSsrc(), rtpStream->GetRtxSsrc(),
                             packet->GetTimestamp(), packet->GetPayloadType(), packet->GetSequenceNumber());
 
         std::vector<std::pair<const uint8_t *, size_t> > nalptrs;
@@ -805,8 +805,8 @@ namespace RTC
 
                         c.produced[p->GetSequenceNumber()] = p;
 
-                        MS_WARN_TAG(dead, "2 stream %s ssrs %" PRIu32 " produced packet timestamp %" PRIu32 " type %" PRIu32 " seq %" PRIu16, 
-                                            rtpStream->GetCname().c_str(), rtpStream->GetSsrc(), 
+                        MS_WARN_TAG(dead, "PRUDUCED ssrs %" PRIu32 " produced packet timestamp %" PRIu32 " type %" PRIu32 " seq %" PRIu16, 
+                                            rtpStream->GetSsrc(), 
                                             p->GetTimestamp(), p->GetPayloadType(), p->GetSequenceNumber());
 
                         // // unpack and process packet
@@ -1760,7 +1760,9 @@ namespace RTC
 
             RTC::RtpPacketPtr p = c.produced[*it];
 
-            p->RtxEncode(rtpStream->GetRtxPayloadType(), rtpStream->GetRtxSsrc(), ++c.sequence);
+            MS_WARN_TAG(dead, "RTX encode packet seq %" PRIu16 " for %" PRIu16 " stream %" PRIu32 " for %" PRIu32, c.rtxsequence+1, *it, rtpStream->GetRtxSsrc(), rtpStream->GetSsrc());
+
+            p->RtxEncode(rtpStream->GetRtxPayloadType(), rtpStream->GetRtxSsrc(), ++c.rtxsequence);
 
             ReceiveRtpPacket(p.get());
         }

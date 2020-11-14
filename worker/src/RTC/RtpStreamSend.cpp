@@ -104,6 +104,8 @@ namespace RTC
 
 			this->nackPacketCount += item->CountRequestedPackets();
 
+	        MS_WARN_TAG(dead, "NACK seq %" PRIu16, item->GetPacketId());
+
 			FillRetransmissionContainer(item->GetPacketId(), item->GetLostPacketBitmask());
 
 			for (auto* storageItem : RetransmissionContainer)

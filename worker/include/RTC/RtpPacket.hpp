@@ -58,6 +58,7 @@ namespace RTC
 		size_t      size          { 0 };
 		uint32_t    lastTimestamp { 0 };
 		uint16_t    sequence      { 0 };
+		uint16_t    rtxsequence   { 0 };
 		uint32_t    ssrc          { 0 };
 
 		// TODO from codec
