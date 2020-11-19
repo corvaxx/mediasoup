@@ -137,7 +137,7 @@ namespace RTC
 		struct VideoOrientation videoOrientation;
 		struct TraceEventTypes traceEventTypes;
 
-		TranslateMode translateMode { decodeAndEncode };
+		TranslateMode translateMode { direct };
 
 		Timer m_timer;
 
