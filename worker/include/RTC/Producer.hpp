@@ -84,6 +84,13 @@ namespace RTC
 		virtual ReceiveRtpPacketResult ReceiveRtpPacket(RTC::RtpPacket* packet);
 		ReceiveRtpPacketResult ReceiveRtpPacketInternal(RTC::RtpPacket* packet);
 
+		//
+		void setMaster(Producer * master);
+
+		// 
+		void onClosedSlave(Producer * slave);
+
+		//
 		AVFramePtr getLastFrame() const;
 
 	protected:
@@ -134,7 +141,9 @@ namespace RTC
 
 		Timer m_timer;
 
-		std::vector<Producer *> m_slaves;
+		// TODO need remove when slave closed
+		Producer                * m_master { nullptr };
+		std::vector<Producer *>   m_slaves;
 	};
 } // namespace RTC
 

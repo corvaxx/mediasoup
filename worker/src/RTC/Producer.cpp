@@ -314,6 +314,13 @@ namespace RTC
     {
         MS_TRACE();
 
+        // notify master 
+        if (m_master)
+        {
+            m_master->onClosedSlave(this);
+            m_master == nullptr;
+        }
+
         // Delete all streams.
         for (auto& kv : this->mapSsrcRtpStream)
         {
@@ -1104,6 +1111,18 @@ namespace RTC
         this->listener->OnProducerRtpPacketReceived(this, packet);
 
         return result;
+    }
+
+    void Producer::setMaster(Producer * master)
+    {
+        MS_ASSERT(m_master == nullptr, "master already set");
+        MS_ASSERT(master == nullptr, "master must be not null");
+        m_master = master;
+    }
+
+    void Producer::onClosedSlave(Producer * slave)
+    {
+        // TODO remove from slaves
     }
 
     AVFramePtr Producer::getLastFrame() const
