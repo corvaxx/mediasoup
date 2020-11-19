@@ -84,6 +84,8 @@ namespace RTC
 		virtual ReceiveRtpPacketResult ReceiveRtpPacket(RTC::RtpPacket* packet);
 		ReceiveRtpPacketResult ReceiveRtpPacketInternal(RTC::RtpPacket* packet);
 
+		AVFramePtr getLastFrame() const;
+
 	protected:
 		RTC::RtpStreamRecv* GetRtpStream(RTC::RtpPacket* packet);
 
@@ -131,6 +133,8 @@ namespace RTC
 		TranslateMode translateMode { decodeAndEncode };
 
 		Timer m_timer;
+
+		std::vector<Producer *> m_slaves;
 	};
 } // namespace RTC
 
