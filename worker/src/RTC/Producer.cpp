@@ -721,7 +721,8 @@ namespace RTC
             std::vector<AVPacketPtr> packets;
             if (!RTC::Codecs::Tools::EncodePacket(ec, rtpStream->GetMimeType(), dc.frames, packets))
             {
-                MS_WARN_TAG(dead, "encode error");
+                // error or no frames
+                // MS_WARN_TAG(dead, "encode error");
             }
 
             for (AVPacketPtr & pkt : packets)
