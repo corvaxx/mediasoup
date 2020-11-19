@@ -206,7 +206,10 @@ namespace RTC
 
             encodingMapping.mappedSsrc = jsonMappedSsrcIt->get<uint32_t>();
 
-            m_timer.Start(40, 40);
+            if (translateMode != direct)
+            {
+                m_timer.Start(40, 40);
+            }
         }
 
         auto jsonPausedIt = data.find("paused");
@@ -620,14 +623,23 @@ namespace RTC
 
                 if (mode == "direct")
                 {
+                    m_timer.Stop();
                     translateMode = direct;
                 }
                 else if (mode == "unpackAndProduce")
                 {
+                    if (!m_timer.IsActive())
+                    {
+                        m_timer.Start(40, 40);
+                    }
                     translateMode = unpackAndProduce;
                 }
                 else if (mode == "decodeAndEncode")
                 {
+                    if (!m_timer.IsActive())
+                    {
+                        m_timer.Start(40, 40);
+                    }
                     translateMode = decodeAndEncode;
                 }
                 else
