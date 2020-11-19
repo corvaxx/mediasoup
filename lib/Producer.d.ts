@@ -231,6 +231,10 @@ export declare class Producer extends EnhancedEventEmitter {
      */
     setTranslateMode(translateMode: string): Promise<void>;
     /**
+     * Attach produser to producer as slave
+     */
+    attachSlave(slaveId: string): Promise<void>;
+    /**
      * Send RTP packet (just valid for Producers created on a DirectTransport).
      */
     send(rtpPacket: Buffer): void;
