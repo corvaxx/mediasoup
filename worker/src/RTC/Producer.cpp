@@ -822,11 +822,11 @@ namespace RTC
     {
         MS_TRACE();
 
-        if (random32(0) % 32 == 0)
-        {
-            MS_WARN_TAG(dead, "DROPPED");
-            return ReceiveRtpPacketResult::MEDIA;    
-        }
+        // if (random32(0) % 32 == 0)
+        // {
+        //     MS_WARN_TAG(dead, "DROPPED");
+        //     return ReceiveRtpPacketResult::MEDIA;    
+        // }
 
         if (translateMode == direct)
         {
