@@ -774,11 +774,11 @@ namespace RTC
                         //     fclose(f);      
                         // }
 
-                        if (random32(0) % 32 == 0)
-                        {
-                            MS_WARN_TAG(dead, "DROPPED");
-                            return ;    
-                        }
+                        // if (random32(0) % 32 == 0)
+                        // {
+                        //     MS_WARN_TAG(dead, "DROPPED");
+                        //     return ;    
+                        // }
 
                         // Process the packet.
                         ReceiveRtpPacketInternal(p.get()); 
