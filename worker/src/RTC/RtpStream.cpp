@@ -435,7 +435,8 @@ namespace RTC
 
 	RTC::EncodeContext  & RtpStream::GetEncodeContext(const uint32_t & ssrc)
 	{
-		if (encodeContexts.count(ssrc) == 0)
+		// TODO resource leaak when !isOpened
+		if (encodeContexts.count(ssrc) == 0 || !encodeContexts[ssrc].isOpened)
 		{
 			DecodeContext & dc = GetDecodeContext(ssrc, true);
 
@@ -452,8 +453,8 @@ namespace RTC
 			c.codecContext.reset(avcodec_alloc_context3(c.codec));
 			MS_ASSERT(c.codecContext, "alloc context failed");
 
-		    c.codecContext->width        = dc.frameWidth  == 0 ? 320 : dc.frameWidth;
-		    c.codecContext->height       = dc.frameHeight == 0 ? 180 : dc.frameHeight;
+		    c.codecContext->width        = (dc.frameWidth  == 0 ? 320 : dc.frameWidth);
+		    c.codecContext->height       = (dc.frameHeight == 0 ? 180 : dc.frameHeight);
 			c.codecContext->time_base    = (AVRational){1, 25};
 			c.codecContext->pix_fmt      = AV_PIX_FMT_YUV420P;
 

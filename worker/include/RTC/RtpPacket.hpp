@@ -8,6 +8,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <mutex>
 
 extern "C"
 {
@@ -77,12 +78,17 @@ namespace RTC
 
 	struct DecodeContext
 	{
-		AVCodec            * codec         { nullptr };
-        AVCodecContextPtr    codecContext;
-        bool                 isOpened      { false };
+		std::mutex              lock;
 
-        int                  frameWidth    { 0 };
-        int                  frameHeight   { 0 };
+		AVCodec               * codec         { nullptr };
+        AVCodecContextPtr       codecContext;
+        bool                    isOpened      { false };
+        bool                    gotFrame      { false };
+
+        int                     frameWidth    { 0 };
+        int                     frameHeight   { 0 };
+
+        std::vector<AVFramePtr> frames;
 	};
 
 	struct EncodeContext

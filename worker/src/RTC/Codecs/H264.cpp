@@ -748,6 +748,12 @@ else
                 }
             }
 
+            if (frames.size() > 0)
+            {
+                context.frames = frames;
+                context.gotFrame = true;
+            }
+
             return frames.size() > 0;
         }
 

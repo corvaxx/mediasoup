@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "Channel/Request.hpp"
+#include "handles/Timer.hpp"
 #include "RTC/AbstractProducer.hpp"
 #include "RTC/KeyFrameRequestManager.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
@@ -19,7 +20,10 @@ using json = nlohmann::json;
 
 namespace RTC
 {
-	class Producer : public AbstractProducer, public RTC::RtpStreamRecv::Listener, public RTC::KeyFrameRequestManager::Listener
+	class Producer : public AbstractProducer, 
+					 public RTC::RtpStreamRecv::Listener, 
+					 public RTC::KeyFrameRequestManager::Listener,
+					 public Timer::Listener
 	{
 	public:
 		enum TranslateMode
@@ -112,6 +116,10 @@ namespace RTC
 		void OnKeyFrameNeeded(RTC::KeyFrameRequestManager* keyFrameRequestManager, uint32_t ssrc) override;
 
 	private:
+	    void OnTimer(Timer * timer); 
+
+
+	private:
 		// Others.
 		struct RtpMapping rtpMapping;
 		std::vector<RTC::RtpStreamRecv*> rtpStreamByEncodingIdx;
@@ -120,7 +128,9 @@ namespace RTC
 		struct VideoOrientation videoOrientation;
 		struct TraceEventTypes traceEventTypes;
 
-		TranslateMode translateMode { direct };
+		TranslateMode translateMode { decodeAndEncode };
+
+		Timer m_timer;
 	};
 } // namespace RTC
 
