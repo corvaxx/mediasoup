@@ -631,6 +631,13 @@ namespace RTC
                 break;
             }
 
+            case Request::MethodId::PRODUCER_ATTACH_SLAVE
+            {
+                MS_WARN_TAG(dead, "PRODUCER_ATTACH_SLAVE");
+
+                break;
+            }
+
             default:
             {
                 MS_THROW_ERROR("unknown method '%s'", request->method.c_str());

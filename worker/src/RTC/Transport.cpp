@@ -1329,6 +1329,7 @@ namespace RTC
 			case Channel::Request::MethodId::PRODUCER_RESUME:
 			case Channel::Request::MethodId::PRODUCER_ENABLE_TRACE_EVENT:
 			case Channel::Request::MethodId::PRODUCER_SET_TRANSLATE_MODE:
+			case Channel::Request::MethodId::PRODUCER_ATTACH_SLAVE:
 			{
 				// This may throw.
 				RTC::AbstractProducer* producer = GetProducerFromInternal(request->internal);
