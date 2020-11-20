@@ -852,7 +852,7 @@ namespace RTC
         }
         else
         {
-            MS_ABORT("found stream does not match received packet");
+            // MS_ABORT("found stream does not match received packet");
         }
 
         return ReceiveRtpPacketResult::DISCARDED;
