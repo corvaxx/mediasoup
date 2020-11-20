@@ -796,66 +796,65 @@ namespace RTC
 		  seqNumbers[0],
 		  seqNumbers.size());
 
+		// TODO temporary for debug
 		// Notify the listener.
-		static_cast<RTC::RtpStreamRecv::Listener*>(this->listener)->OnRtpStreamResendPackets(this, seqNumbers);
+		// static_cast<RTC::RtpStreamRecv::Listener*>(this->listener)->OnRtpStreamResendPackets(this, seqNumbers);
 
-		// TODO check code below
+		RTC::RTCP::FeedbackRtpNackPacket packet(0, GetSsrc());
 
-		// RTC::RTCP::FeedbackRtpNackPacket packet(0, GetSsrc());
+		auto it        = seqNumbers.begin();
+		const auto end = seqNumbers.end();
+		size_t numPacketsRequested{ 0 };
 
-		// auto it        = seqNumbers.begin();
-		// const auto end = seqNumbers.end();
-		// size_t numPacketsRequested{ 0 };
+		while (it != end)
+		{
+	        MS_WARN_TAG(dead, "NACK REQ %" PRIu16, *it);
 
-		// while (it != end)
-		// {
-	 //        MS_WARN_TAG(dead, "NACK REQ %" PRIu16, *it);
+          //   RTC::ProduceContext & c = GetProduceContext(GetSsrc());
+          //   if (c.produced.count(*it))
+          //   {
+		        // MS_WARN_TAG(dead, "PACKET FOUND, SEND RTX");
+          //   }
 
-  //           RTC::ProduceContext & c = GetProduceContext(GetSsrc());
-  //           if (c.produced.count(*it))
-  //           {
-		//         MS_WARN_TAG(dead, "PACKET FOUND, SEND RTX");
-  //           }
+			uint16_t seq;
+			uint16_t bitmask{ 0 };
 
-		// 	uint16_t seq;
-		// 	uint16_t bitmask{ 0 };
+			seq = *it;
+			++it;
 
-		// 	seq = *it;
-		// 	++it;
+			while (it != end)
+			{
+				uint16_t shift = *it - seq - 1;
 
-		// 	while (it != end)
-		// 	{
-		// 		uint16_t shift = *it - seq - 1;
+				if (shift > 15)
+					break;
 
-		// 		if (shift > 15)
-		// 			break;
+				bitmask |= (1 << shift);
+				++it;
+			}
 
-		// 		bitmask |= (1 << shift);
-		// 		++it;
-		// 	}
+			auto* nackItem = new RTC::RTCP::FeedbackRtpNackItem(seq, bitmask);
 
-		// 	auto* nackItem = new RTC::RTCP::FeedbackRtpNackItem(seq, bitmask);
+			packet.AddItem(nackItem);
 
-		// 	packet.AddItem(nackItem);
+			numPacketsRequested += nackItem->CountRequestedPackets();
+		}
 
-		// 	numPacketsRequested += nackItem->CountRequestedPackets();
-		// }
+		// Ensure that the RTCP packet fits into the RTCP buffer.
+		if (packet.GetSize() > RTC::RTCP::BufferSize)
+		{
+			MS_WARN_TAG(rtx, "cannot send RTCP NACK packet, size too big (%zu bytes)", packet.GetSize());
 
-		// // Ensure that the RTCP packet fits into the RTCP buffer.
-		// if (packet.GetSize() > RTC::RTCP::BufferSize)
-		// {
-		// 	MS_WARN_TAG(rtx, "cannot send RTCP NACK packet, size too big (%zu bytes)", packet.GetSize());
+			return;
+		}
 
-		// 	return;
-		// }
+		this->nackCount++;
+		this->nackPacketCount += numPacketsRequested;
 
-		// this->nackCount++;
-		// this->nackPacketCount += numPacketsRequested;
+		packet.Serialize(RTC::RTCP::Buffer);
 
-		// packet.Serialize(RTC::RTCP::Buffer);
-
-		// // Notify the listener.
-		// static_cast<RTC::RtpStreamRecv::Listener*>(this->listener)->OnRtpStreamSendRtcpPacket(this, &packet);
+		// Notify the listener.
+		static_cast<RTC::RtpStreamRecv::Listener*>(this->listener)->OnRtpStreamSendRtcpPacket(this, &packet);
 	}
 
 	inline void RtpStreamRecv::OnNackGeneratorKeyFrameRequired()

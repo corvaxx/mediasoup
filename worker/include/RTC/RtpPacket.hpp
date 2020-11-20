@@ -74,6 +74,8 @@ namespace RTC
 		size_t      size          { 0 };
 		std::string fileName;
 		uint8_t     ptr[RTP_PAYLOAD_MAX_SIZE];
+
+		uint16_t    lastSeq       { 0 };
 	};
 
 	struct DecodeContext

@@ -82,7 +82,9 @@ namespace RTC
 
 		//
 		virtual ReceiveRtpPacketResult ReceiveRtpPacket(RTC::RtpPacket* packet);
-		ReceiveRtpPacketResult ReceiveRtpPacketInternal(RTC::RtpPacket* packet);
+		ReceiveRtpPacketResult ReceiveRtpMedia(RTC::RtpPacket* packet);
+		ReceiveRtpPacketResult ReceiveRtpRtx(RTC::RtpPacket* packet);
+		ReceiveRtpPacketResult DispatchRtpPacket(RTC::RtpPacket* packet);
 
 		//
 		void setMaster(Producer * master);

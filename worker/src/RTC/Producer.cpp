@@ -716,7 +716,7 @@ namespace RTC
 
             RTC::EncodeContext & ec = rtpStream->GetEncodeContext(rtpStream->GetSsrc());
 
-            MS_WARN_TAG(dead, "PRUDUCE encode %" PRIu64 " last frames", dc.frames.size());
+            // MS_WARN_TAG(dead, "PRUDUCE encode %" PRIu64 " last frames", dc.frames.size());
 
             std::vector<AVPacketPtr> packets;
             if (!RTC::Codecs::Tools::EncodePacket(ec, rtpStream->GetMimeType(), dc.frames, packets))
@@ -781,7 +781,7 @@ namespace RTC
                         // }
 
                         // Process the packet.
-                        ReceiveRtpPacketInternal(p.get()); 
+                        DispatchRtpPacket(p.get()); 
                     }
                 }
 
@@ -822,15 +822,10 @@ namespace RTC
     {
         MS_TRACE();
 
-        // if (random32(0) % 32 == 0)
-        // {
-        //     MS_WARN_TAG(dead, "DROPPED");
-        //     return ReceiveRtpPacketResult::MEDIA;    
-        // }
-
         if (translateMode == direct)
         {
-            return ReceiveRtpPacketInternal(packet);
+            // in direct mode - dispatcj packets without processingd j,otv dct ghj,ktvs
+            return DispatchRtpPacket(packet);
         }
 
         auto* rtpStream = GetRtpStream(packet);
@@ -841,25 +836,40 @@ namespace RTC
             return ReceiveRtpPacketResult::DISCARDED;
         }
 
-        if (packet->GetSsrc() != rtpStream->GetSsrc() && packet->GetSsrc() != rtpStream->GetRtxSsrc())
+        if (packet->GetSsrc() == rtpStream->GetRtxSsrc())
+        {
+            return ReceiveRtpRtx(packet);
+        }
+        else if (packet->GetSsrc() == rtpStream->GetSsrc())
+        {
+            // if (random32(0) % 32 == 0)
+            // {
+            //     MS_WARN_TAG(dead, "DROPPED %" PRIu16, packet->GetSequenceNumber());
+            //     return ReceiveRtpPacketResult::MEDIA;    
+            // }
+
+            return ReceiveRtpMedia(packet);
+        }
+        else
         {
             MS_ABORT("found stream does not match received packet");
         }
 
-        if (packet->GetSsrc() == rtpStream->GetRtxSsrc())
-        {
-            // rtx packet
-            MS_WARN_TAG(dead, "RTX ssrc %" PRIu32 " rtx %" PRIu32 " unpack packet timestamp %" PRIu32 " type %" PRIu32 " seq %" PRIu16, 
-                                rtpStream->GetSsrc(), rtpStream->GetRtxSsrc(),
-                                packet->GetTimestamp(), packet->GetPayloadType(), packet->GetSequenceNumber());
+        return ReceiveRtpPacketResult::DISCARDED;
+    }
 
-            return ReceiveRtpPacketInternal(packet);
-        }
-
-        // media packet
-
+    ReceiveRtpPacketResult Producer::ReceiveRtpMedia(RTC::RtpPacket* packet)
+    {
         ReceiveRtpPacketResult result = ReceiveRtpPacketResult::MEDIA;
         
+        auto* rtpStream = GetRtpStream(packet);
+        if (!rtpStream)
+        {
+            // MS_WARN_TAG(rtp, "no stream found for received packet [ssrc:%" PRIu32 "]", packet->GetSsrc());
+
+            return ReceiveRtpPacketResult::DISCARDED;
+        }
+
         // MS_WARN_TAG(rtp, "received MEDIA packet stream name %s", rtpStream->GetCname().c_str());
 
         MS_WARN_TAG(dead, "ORIG ssrc %" PRIu32 " rtx %" PRIu32 " unpack packet timestamp %" PRIu32 " type %" PRIu32 " seq %" PRIu16, 
@@ -872,24 +882,34 @@ namespace RTC
             // unpack and process packet
             RTC::UnpackContext & c = rtpStream->GetUnpackContext(rtpStream->GetSsrc());
 
-            if (RTC::Codecs::Tools::UnpackRtpPacket(c, packet, rtpStream->GetMimeType(), nalptrs))
+            if (!RTC::Codecs::Tools::UnpackRtpPacket(c, packet, rtpStream->GetMimeType(), nalptrs))
             {
-                // // static size_t summary = 0;
-                // static const uint8_t start_code[4] = { 0, 0, 0, 1 };
-
-                // // TODO debug code, write to file
-                // FILE * f = fopen(c.fileName.c_str(), "a+b");
-
-                // for (const std::pair<const uint8_t *, size_t> & nal : nalptrs)
-                // {
-                //     fwrite(start_code, 1, 4, f);    
-                //     fwrite(nal.first, 1, nal.second, f);    
-
-                //     // MS_WARN_TAG(dead, "write packet size %" PRIu64 " summary %" PRIu64, nal.second + 4, summary);
-                // }
-
-                // fclose(f);      
+                // unpack error
             }
+
+            // // static size_t summary = 0;
+            // static const uint8_t start_code[4] = { 0, 0, 0, 1 };
+
+            // // TODO debug code, write to file
+            // FILE * f = fopen(c.fileName.c_str(), "a+b");
+
+            // for (const std::pair<const uint8_t *, size_t> & nal : nalptrs)
+            // {
+            //     fwrite(start_code, 1, 4, f);    
+            //     fwrite(nal.first, 1, nal.second, f);    
+
+            //     // MS_WARN_TAG(dead, "write packet size %" PRIu64 " summary %" PRIu64, nal.second + 4, summary);
+            // }
+
+            // fclose(f);      
+
+            if (c.lastSeq != 0 && c.lastSeq + 1 != packet->GetSequenceNumber())
+            {
+                // TODO request packets
+                MS_WARN_TAG(dead, "missed %" PRIu16 " packets from %" PRIu16, packet->GetSequenceNumber() - c.lastSeq - 1, c.lastSeq);
+            }
+
+            c.lastSeq = packet->GetSequenceNumber();
         }
 
         // decode and encode packets
@@ -1021,7 +1041,26 @@ namespace RTC
         return result;
     }
 
-    ReceiveRtpPacketResult Producer::ReceiveRtpPacketInternal(RTC::RtpPacket* packet)
+    ReceiveRtpPacketResult Producer::ReceiveRtpRtx(RTC::RtpPacket* packet)
+    {
+        auto* rtpStream = GetRtpStream(packet);
+        if (!rtpStream)
+        {
+            // MS_WARN_TAG(rtp, "no stream found for received packet [ssrc:%" PRIu32 "]", packet->GetSsrc());
+
+            return ReceiveRtpPacketResult::DISCARDED;
+        }
+
+        // rtx packet
+        MS_WARN_TAG(dead, "RTX ssrc %" PRIu32 " rtx %" PRIu32 " unpack packet timestamp %" PRIu32 " type %" PRIu32 " seq %" PRIu16, 
+                            rtpStream->GetSsrc(), rtpStream->GetRtxSsrc(),
+                            packet->GetTimestamp(), packet->GetPayloadType(), packet->GetSequenceNumber());
+
+        // return ReceiveRtpPacketInternal(packet);
+        return ReceiveRtpPacketResult::RETRANSMISSION;
+    }
+
+    ReceiveRtpPacketResult Producer::DispatchRtpPacket(RTC::RtpPacket* packet)
     {
         MS_TRACE();
 
