@@ -208,7 +208,7 @@ namespace RTC
 
             if (translateMode != direct)
             {
-                m_timer.Start(40, 40);
+                m_timer.Start(m_timerDelay, m_timerDelay);
             }
         }
 
@@ -630,7 +630,7 @@ namespace RTC
                 {
                     if (!m_timer.IsActive())
                     {
-                        m_timer.Start(40, 40);
+                        m_timer.Start(m_timerDelay, m_timerDelay);
                     }
                     translateMode = unpackAndProduce;
                 }
@@ -638,7 +638,7 @@ namespace RTC
                 {
                     if (!m_timer.IsActive())
                     {
-                        m_timer.Start(40, 40);
+                        m_timer.Start(m_timerDelay, m_timerDelay);
                     }
                     translateMode = decodeAndEncode;
                 }

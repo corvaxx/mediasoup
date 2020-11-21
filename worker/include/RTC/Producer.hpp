@@ -141,6 +141,9 @@ namespace RTC
 
 		TranslateMode translateMode { direct };
 
+		// 40 - 25 fps
+		// 67 - 15 fps
+		const uint32_t m_timerDelay { 67 };
 		Timer m_timer;
 
 		// TODO need remove when slave closed
