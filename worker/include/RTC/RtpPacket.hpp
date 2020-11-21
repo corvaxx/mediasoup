@@ -95,7 +95,7 @@ namespace RTC
 
         std::vector<AVFramePtr> frames;
 
-        int updateDefaultFrame(const uint32_t width = 1280, const uint32_t height = 720);
+        int updateDefaultFrame(const uint32_t width = 640, const uint32_t height = 480);
 	};
 
 	struct EncodeContext
