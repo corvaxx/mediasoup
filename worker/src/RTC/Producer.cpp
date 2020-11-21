@@ -706,7 +706,7 @@ namespace RTC
             // TODO join slave frames with primary
 
             RTC::DecodeContext & dc = rtpStream->GetDecodeContext(rtpStream->GetSsrc());
-            if (!dc.isOpened || !dc.gotFrame)
+            if (!dc.isOpened || dc.frames.size() == 0)
             {
                 MS_WARN_TAG(dead, "context not opened or no frames");
                 continue;

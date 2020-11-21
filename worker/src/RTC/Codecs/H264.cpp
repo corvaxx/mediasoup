@@ -739,8 +739,11 @@ else
                 }
                 if (gotFrame)
                 {
-                    context.frameWidth  = frame->width;   
-                    context.frameHeight = frame->height;
+                    if (context.frameWidth != frame->width || context.frameHeight != frame->height)
+                    {
+                        context.frameWidth  = frame->width;   
+                        context.frameHeight = frame->height;
+                    }
 
                     // MS_WARN_TAG(dead, "DecodePacket FRAME %dx%d %d", frame->width, frame->height, frame->key_frame);
                     
@@ -750,8 +753,7 @@ else
 
             if (frames.size() > 0)
             {
-                context.frames = frames;
-                context.gotFrame = true;
+                // context.frames = frames;
             }
 
             return frames.size() > 0;
@@ -769,6 +771,7 @@ else
                 {
                     // MS_WARN_TAG(dead, "frame %dx%d linesize %d-%d-%d", frame->width, frame->height, frame->linesize[0], frame->linesize[1], frame->linesize[2]);
                     
+                    // make grayscale
                     memset(frame->data[1], 0x80, frame->linesize[1] * frame->height / 2);
                     memset(frame->data[2], 0x80, frame->linesize[2] * frame->height / 2);
                     

@@ -418,7 +418,60 @@ namespace RTC
 			c.codecContext.reset(avcodec_alloc_context3(c.codec));
 			MS_ASSERT(c.codecContext, "alloc context failed");
 
-            int result = avcodec_open2(c.codecContext.get(), c.codec, nullptr);
+			c.defaultFrame.reset(av_frame_alloc());
+			c.defaultFrame->format = AV_PIX_FMT_YUV420P;
+			c.defaultFrame->width  = 320; // c->width;
+			c.defaultFrame->height = 240; // c->height;
+
+			int result = av_frame_get_buffer(c.defaultFrame.get(), 0);
+			if (result < 0)
+			{
+				c.defaultFrame.reset();
+			}
+			else
+			{
+				result = av_frame_make_writable(c.defaultFrame.get());
+				if (result < 0)
+				{
+					c.defaultFrame.reset();
+				}
+				else
+				{
+					// int i = 0; // random32(0) % 32;
+
+			        // prepare a dummy image
+			        // Y
+			        for (int y = 0; y < c.defaultFrame->height; ++y) 
+			        {
+			            for (int x = 0; x < c.defaultFrame->width; ++x) 
+			            {
+			                c.defaultFrame->data[0][y * c.defaultFrame->linesize[0] + x] = 149; // x + y + i * 3;
+			            }
+			        }
+			        // Cb and Cr
+			        for (int y = 0; y < c.defaultFrame->height/2; ++y) 
+			        {
+			            for (int x = 0; x < c.defaultFrame->width/2; ++x) 
+			            {
+			                c.defaultFrame->data[1][y * c.defaultFrame->linesize[1] + x] = 128 + 84; // 128 + y + i * 2;
+			                c.defaultFrame->data[2][y * c.defaultFrame->linesize[2] + x] = 128 + 106; // 64 + x + i * 5;
+			            }
+			        }
+				}
+			}
+
+			if (!c.defaultFrame)
+			{
+            	char errstr[80];
+                MS_WARN_TAG(dead, "default frame not allocated %x %s", result, av_make_error_string(errstr, 80, result));
+			}
+			else
+			{
+				MS_WARN_TAG(dead, "default frame %" PRIu32 "x%" PRIu32, c.defaultFrame->width, c.defaultFrame->height);
+				c.frames.emplace_back(c.defaultFrame);
+			}
+
+            result = avcodec_open2(c.codecContext.get(), c.codec, nullptr);
             if (result < 0)
             {
             	char errstr[80];

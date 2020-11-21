@@ -82,13 +82,14 @@ namespace RTC
 	{
 		std::mutex              lock;
 
-		AVCodec               * codec         { nullptr };
+		AVCodec               * codec          { nullptr };
         AVCodecContextPtr       codecContext;
-        bool                    isOpened      { false };
-        bool                    gotFrame      { false };
+        bool                    isOpened       { false };
 
-        int                     frameWidth    { 0 };
-        int                     frameHeight   { 0 };
+        int                     frameWidth     { 0 };
+        int                     frameHeight    { 0 };
+
+        AVFramePtr              defaultFrame;
 
         std::vector<AVFramePtr> frames;
 	};
