@@ -944,7 +944,7 @@ namespace RTC
 
                 //     // encode
 
-                if (c.updateDefaultFrame(320, 180) == 0)
+                if (c.updateDefaultFrame(640, 480) == 0)
                 {
                     c.frames.clear();
                     c.frames.emplace_back(c.defaultFrame);
