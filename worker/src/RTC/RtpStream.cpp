@@ -418,7 +418,7 @@ namespace RTC
 			c.codecContext.reset(avcodec_alloc_context3(c.codec));
 			MS_ASSERT(c.codecContext, "alloc context failed");
 
-			int result = c.updateDefaultFrame(640, 480);
+			int result = c.updateDefaultFrame();
 
 			if (!c.defaultFrame)
 			{
