@@ -968,8 +968,8 @@ namespace RTC
     {
 		defaultFrame.reset(av_frame_alloc());
 		defaultFrame->format = AV_PIX_FMT_YUV420P;
-		defaultFrame->width  = 320; // c->width;
-		defaultFrame->height = 180; // c->height;
+		defaultFrame->width  = width; // c->width;
+		defaultFrame->height = height; // c->height;
 
 		int result = av_frame_get_buffer(defaultFrame.get(), 0);
 		if (result < 0)
