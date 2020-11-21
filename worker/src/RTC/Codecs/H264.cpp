@@ -739,7 +739,7 @@ else
                 }
                 if (gotFrame)
                 {
-                    if (context.frameWidth != frame->width || context.frameHeight != frame->height)
+                    // if (context.frameWidth != frame->width || context.frameHeight != frame->height)
                     {
                         context.frameWidth  = frame->width;   
                         context.frameHeight = frame->height;
