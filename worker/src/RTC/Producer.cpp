@@ -944,11 +944,11 @@ namespace RTC
 
                 //     // encode
 
-                //     if (RTC::Codecs::Tools::EncodePacket(ec, rtpStream->GetMimeType(), frames, packets))
-                //     {
-                //         // MS_WARN_TAG(dead, "encoded %" PRIu64 " packets", frames.size());
-                //     }
-                // }
+                if (c.updateDefaultFrame(320, 180) == 0)
+                {
+                    c.frames.clear();
+                    c.frames.emplace_back(c.defaultFrame);
+                }
             }
 
             // nalptrs.clear();
