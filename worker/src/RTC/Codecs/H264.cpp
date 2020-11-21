@@ -751,11 +751,6 @@ else
                 }
             }
 
-            if (frames.size() > 0)
-            {
-                context.frames = frames;
-            }
-
             return frames.size() > 0;
         }
 
