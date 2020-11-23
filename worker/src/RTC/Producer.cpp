@@ -937,7 +937,16 @@ namespace RTC
                 v[3] = 1;
                 memcpy(&v[4], nal.first, nal.second);
 
-                if (RTC::Codecs::Tools::DecodePacket(c, rtpStream->GetMimeType(), &v[0], nal.second + 4, c.frames))
+                if (!RTC::Codecs::Tools::DecodePacket(c, rtpStream->GetMimeType(), &v[0], nal.second + 4, c.frames))
+                {
+                    // no frames
+                    if (c.frameWidth == 0 && c.frameHeight == 0)
+                    {
+                        MS_WARN_TAG(dead, "NO KEYFRAME");
+                        // TODO request keyframe ?
+                    }
+                }
+                else
                 {
                     // MS_WARN_TAG(dead, "decoded %" PRIu64 " frames", frames.size());
                 }
