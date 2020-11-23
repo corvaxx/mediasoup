@@ -965,12 +965,16 @@ namespace RTC
 
 	void RtpPacket::SetBuffer(uint8_t * buf)
 	{
+		MS_TRACE();
+
 		MS_ASSERT(buffer == nullptr, "beffer already set");
 		buffer = buf;
 	}
 
     int DecodeContext::updateDefaultFrame(const uint32_t width, const uint32_t height)
     {
+    	MS_TRACE();
+
 		defaultFrame.reset(av_frame_alloc());
 		defaultFrame->format = AV_PIX_FMT_YUV420P;
 		defaultFrame->width  = width; // c->width;

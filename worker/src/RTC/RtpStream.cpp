@@ -453,6 +453,8 @@ namespace RTC
 			DecodeContext & dc = GetDecodeContext(ssrc, true);
 			// MS_ASSERT(dc.frameWidth != 0 && dc.frameHeight != 0, "incorrect frame size");
 
+			MS_WARN_TAG(dead, "init context ssrc %" PRIu16 " %" PRIu32 "x%" PRIu32, ssrc, dc.frameWidth == 0 ? 320 : dc.frameWidth, dc.frameHeight == 0 ? 180 : dc.frameHeight);
+
 			EncodeContext & c = encodeContexts[ssrc];
 			c.initContext(dc.frameWidth == 0 ? 320 : dc.frameWidth, dc.frameHeight == 0 ? 180 : dc.frameHeight);
 		}

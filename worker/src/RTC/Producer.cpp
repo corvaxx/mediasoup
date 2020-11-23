@@ -716,6 +716,12 @@ namespace RTC
 
             RTC::EncodeContext & ec = rtpStream->GetEncodeContext(rtpStream->GetSsrc());
 
+            if (dc.frameWidth != ec.frameWidth || dc.frameHeight != ec.frameHeight)
+            {
+                MS_WARN_TAG(dead, "init context ssrc %" PRIu16 " %" PRIu32 "x%" PRIu32, rtpStream->GetSsrc(), dc.frameWidth == 0 ? 320 : dc.frameWidth, dc.frameHeight == 0 ? 180 : dc.frameHeight);
+                ec.initContext(dc.frameWidth == 0 ? 320 : dc.frameWidth, dc.frameHeight == 0 ? 180 : dc.frameHeight);
+            }
+
             // MS_WARN_TAG(dead, "PRUDUCE encode %" PRIu64 " last frames", dc.frames.size());
 
             std::vector<AVPacketPtr> packets;
