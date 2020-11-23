@@ -1351,11 +1351,6 @@ namespace RTC
     {
         MS_TRACE();
 
-        if (encodingIdx > 0)
-        {
-            return nullptr;
-        }
-
         uint32_t ssrc = packet->GetSsrc();
 
         MS_ASSERT(
