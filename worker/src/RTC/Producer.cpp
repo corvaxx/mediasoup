@@ -321,7 +321,7 @@ namespace RTC
         if (m_master)
         {
             m_master->onClosedSlave(this);
-            m_master == nullptr;
+            m_master = nullptr;
         }
 
         // Delete all streams.
