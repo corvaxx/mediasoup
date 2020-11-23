@@ -115,6 +115,8 @@ namespace RTC
         AVCodec               * jpegCodec     { nullptr };
         AVCodecContextPtr       jpegContext;
 
+        int64_t                 totalPts      { 0 };
+        
         int initContext(const uint32_t width = 320, const uint32_t height = 180);
 	};
 

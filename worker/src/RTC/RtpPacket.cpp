@@ -1029,6 +1029,8 @@ namespace RTC
     	frameWidth  = width;
     	frameHeight = height;
 
+    	totalPts    = 0;
+
 		// TODO codec id must be variable ( from stream ?)
 		codec        = avcodec_find_encoder(AV_CODEC_ID_H264);
 		MS_ASSERT(codec, "no codec");

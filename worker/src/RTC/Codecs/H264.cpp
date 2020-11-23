@@ -798,6 +798,13 @@ else
                             break;
                         }
 
+                        const int64_t duration = (static_cast<double>(context.codecContext->time_base.num) / context.codecContext->time_base.den) * 1000;
+                        context.totalPts += duration;
+
+                        MS_WARN_TAG(dead, "PTS %" PRIu32, context.totalPts);
+
+                        pkt->pts = pkt->dts = context.totalPts;
+
                         // MS_WARN_TAG(dead, "EncodePacket GOT PACKET");
                         packets.emplace_back(pkt);
                     }
