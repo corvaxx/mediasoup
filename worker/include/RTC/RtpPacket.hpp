@@ -83,32 +83,34 @@ namespace RTC
 
 	struct DecodeContext
 	{
-		std::mutex              lock;
-
-		AVCodec               * codec          { nullptr };
-        AVCodecContextPtr       codecContext;
         bool                    isOpened       { false };
 
         int                     frameWidth     { 0 };
         int                     frameHeight    { 0 };
 
+		std::mutex              lock;
+
+		AVCodec               * codec          { nullptr };
+        AVCodecContextPtr       codecContext;
+
         // default frame
-        int                     i              { 0 };
-        AVFramePtr              defaultFrame;
+        // int                     i              { 0 };
+        // AVFramePtr              defaultFrame;
 
         std::vector<AVFramePtr> frames;
 
-        int updateDefaultFrame(const uint32_t width = 320, const uint32_t height = 180);
+        // int updateDefaultFrame(const uint32_t width = 320, const uint32_t height = 180);
 	};
 
 	struct EncodeContext
 	{
+        bool                    isOpened       { false };
+
         int                     frameWidth     { 0 };
         int                     frameHeight    { 0 };
 
 		AVCodec               * codec         { nullptr };
         AVCodecContextPtr       codecContext;
-        bool                    isOpened      { false };
 
         AVCodec               * jpegCodec     { nullptr };
         AVCodecContextPtr       jpegContext;
