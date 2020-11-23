@@ -720,6 +720,11 @@ namespace RTC
             std::lock_guard<std::mutex> lock(dc.lock);
 
             RTC::EncodeContext & ec = rtpStream->GetEncodeContext(rtpStream->GetSsrc());
+            if (!ec.isOpened)
+            {
+                MS_WARN_TAG(dead, "encode context not ready %" PRIu32, rtpStream->GetSsrc());
+                continue;
+            }
 
             if (dc.frameWidth != ec.frameWidth || dc.frameHeight != ec.frameHeight)
             {
