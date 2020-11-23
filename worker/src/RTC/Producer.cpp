@@ -708,7 +708,12 @@ namespace RTC
             RTC::DecodeContext & dc = rtpStream->GetDecodeContext(rtpStream->GetSsrc());
             if (!dc.isOpened || dc.frames.size() == 0)
             {
-                MS_WARN_TAG(dead, "context not opened or no frames");
+                MS_WARN_TAG(dead, "context not opened or no frames %" PRIu32, rtpStream->GetSsrc());
+                continue;
+            }
+            if (dc.frameWidth == 0 || dc.frameHeight == 0)
+            {
+                MS_WARN_TAG(dead, "zero frame sizes, no keyframe received %" PRIu32, rtpStream->GetSsrc());
                 continue;
             }
 
@@ -718,7 +723,7 @@ namespace RTC
 
             if (dc.frameWidth != ec.frameWidth || dc.frameHeight != ec.frameHeight)
             {
-                MS_WARN_TAG(dead, "init context ssrc %" PRIu16 " %" PRIu32 "x%" PRIu32, rtpStream->GetSsrc(), dc.frameWidth == 0 ? 320 : dc.frameWidth, dc.frameHeight == 0 ? 180 : dc.frameHeight);
+                MS_WARN_TAG(dead, "init (reinit) context ssrc %" PRIu16 " %" PRIu32 "x%" PRIu32, rtpStream->GetSsrc(), dc.frameWidth == 0 ? 320 : dc.frameWidth, dc.frameHeight == 0 ? 180 : dc.frameHeight);
                 ec.initContext(dc.frameWidth == 0 ? 320 : dc.frameWidth, dc.frameHeight == 0 ? 180 : dc.frameHeight);
             }
 
@@ -728,7 +733,8 @@ namespace RTC
             if (!RTC::Codecs::Tools::EncodePacket(ec, rtpStream->GetMimeType(), dc.frames, packets))
             {
                 // error or no frames
-                // MS_WARN_TAG(dead, "encode error");
+                MS_WARN_TAG(dead, "encode error or no frames %" PRIu32, rtpStream->GetSsrc());
+                continue;
             }
 
             for (AVPacketPtr & pkt : packets)
@@ -968,11 +974,11 @@ namespace RTC
 
                     //     // encode
 
-                    if (c.updateDefaultFrame(c.frameWidth, c.frameHeight) == 0)
-                    {
-                        c.frames.clear();
-                        c.frames.emplace_back(c.defaultFrame);
-                    }
+                    // if (c.updateDefaultFrame(c.frameWidth, c.frameHeight) == 0)
+                    // {
+                    //     c.frames.clear();
+                    //     c.frames.emplace_back(c.defaultFrame);
+                    // }
                 }
             }
 
