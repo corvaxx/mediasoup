@@ -886,6 +886,15 @@ namespace RTC
             if (!RTC::Codecs::Tools::UnpackRtpPacket(c, packet, rtpStream->GetMimeType(), nalptrs))
             {
                 // unpack error
+                if (c.flags & RTP_PAYLOAD_FLAG_PACKET_LOST)
+                {
+                    // force request keyframe ?
+                    if (this->keyFrameRequestManager)
+                    {
+                        this->keyFrameRequestManager->ForceKeyFrameNeeded(packet->GetSsrc());
+                    }
+                    return result;
+                }
             }
 
             // // static size_t summary = 0;
