@@ -872,7 +872,7 @@ namespace RTC
 
         // MS_WARN_TAG(rtp, "received MEDIA packet stream name %s", rtpStream->GetCname().c_str());
 
-        MS_WARN_TAG(dead, "ORIG ssrc %" PRIu32 " rtx %" PRIu32 " unpack packet size %" PRIu32" timestamp %" PRIu32 " type %" PRIu32 " seq %" PRIu16, 
+        MS_WARN_TAG(dead, "ORIG ssrc %" PRIu32 " rtx %" PRIu32 " unpack packet size %" PRIu64 " timestamp %" PRIu32 " type %" PRIu32 " seq %" PRIu16, 
                             rtpStream->GetSsrc(), rtpStream->GetRtxSsrc(),
                             packet->GetSize(), packet->GetTimestamp(), 
                             packet->GetPayloadType(), packet->GetSequenceNumber());
