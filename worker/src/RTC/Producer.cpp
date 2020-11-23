@@ -752,7 +752,6 @@ namespace RTC
                 // produce
                 RTC::ProduceContext & c = rtpStream->GetProduceContext(rtpStream->GetSsrc());
                 c.payloadType = rtpStream->GetPayloadType();
-                // c.sequence    = packet->GetSequenceNumber();
 
                 std::vector<RTC::RtpPacketPtr> produced;
                 if (RTC::Codecs::Tools::ProduceRtpPacket(c, pkt->data, pkt->size, DepLibUV::GetTimeMs(), rtpStream->GetMimeType(), produced))
@@ -799,7 +798,7 @@ namespace RTC
                         // if (random32(0) % 32 == 0)
                         // {
                         //     MS_WARN_TAG(dead, "DROPPED");
-                        //     return ;    
+                        //     continue;
                         // }
 
                         // Process the packet.
@@ -846,7 +845,7 @@ namespace RTC
 
         if (translateMode == direct)
         {
-            // in direct mode - dispatcj packets without processingd j,otv dct ghj,ktvs
+            // in direct mode - dispatch packets without processing
             return DispatchRtpPacket(packet);
         }
 
