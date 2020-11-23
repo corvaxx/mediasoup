@@ -1941,11 +1941,12 @@ namespace RTC
 
             RTC::RtpPacketPtr p = c.produced[*it];
 
-            MS_WARN_TAG(dead, "RTX encode packet seq %" PRIu16 " for %" PRIu16 " stream %" PRIu32 " for %" PRIu32, c.rtxsequence+1, *it, rtpStream->GetRtxSsrc(), rtpStream->GetSsrc());
+            MS_WARN_TAG(dead, "RTX RESEND packet seq %" PRIu16 " for %" PRIu16 " stream %" PRIu32 " for %" PRIu32, c.rtxsequence+1, *it, rtpStream->GetRtxSsrc(), rtpStream->GetSsrc());
 
             p->RtxEncode(rtpStream->GetRtxPayloadType(), rtpStream->GetRtxSsrc(), ++c.rtxsequence);
 
-            ReceiveRtpPacket(p.get());
+            // ReceiveRtpPacket(p.get());
+            DispatchRtpPacket(p.get());
         }
     }
 
