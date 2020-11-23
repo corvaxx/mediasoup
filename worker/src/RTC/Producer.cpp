@@ -760,8 +760,8 @@ namespace RTC
 
                         c.produced[p->GetSequenceNumber()] = p;
 
-                        MS_WARN_TAG(dead, "PRUDUCED ssrs %" PRIu32 " produced packet timestamp %" PRIu32 " type %" PRIu32 " seq %" PRIu16, 
-                                            rtpStream->GetSsrc(), 
+                        MS_WARN_TAG(dead, "PRUDUCED ssrs %" PRIu32 " produced packet size %" PRIu64 " timestamp %" PRIu32 " type %" PRIu32 " seq %" PRIu16, 
+                                            rtpStream->GetSsrc(), p->GetSize(),
                                             p->GetTimestamp(), p->GetPayloadType(), p->GetSequenceNumber());
 
                         // // unpack and process packet
