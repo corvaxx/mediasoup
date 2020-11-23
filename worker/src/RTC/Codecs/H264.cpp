@@ -700,8 +700,6 @@ else
         {
             MS_TRACE();
 
-            frames.clear();
-            
             // 4 byte header
             uint8_t type = data[4] & 0x1f;
             // MS_WARN_TAG(dead, "DECODE type %d", type);

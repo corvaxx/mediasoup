@@ -959,7 +959,8 @@ namespace RTC
                 v[3] = 1;
                 memcpy(&v[4], nal.first, nal.second);
 
-                if (!RTC::Codecs::Tools::DecodePacket(c, rtpStream->GetMimeType(), &v[0], nal.second + 4, c.frames))
+                std::vector<AVFramePtr> frames;
+                if (!RTC::Codecs::Tools::DecodePacket(c, rtpStream->GetMimeType(), &v[0], nal.second + 4, frames))
                 {
                     // no frames
                     if (c.frameWidth == 0 && c.frameHeight == 0)
@@ -971,6 +972,7 @@ namespace RTC
                 else
                 {
                     // MS_WARN_TAG(dead, "decoded %" PRIu64 " frames", frames.size());
+                    c.frames = frames;
 
                     // if (frames.size() > 0)
                     // {                
