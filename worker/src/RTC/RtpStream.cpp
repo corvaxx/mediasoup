@@ -11,7 +11,6 @@ extern "C"
 {
 	#include <libavcodec/avcodec.h>
 	#include <libavformat/avformat.h>
-	#include <libavutil/opt.h>
 }
 
 namespace RTC
@@ -452,91 +451,10 @@ namespace RTC
 		if (encodeContexts.count(ssrc) == 0 || !encodeContexts[ssrc].isOpened)
 		{
 			DecodeContext & dc = GetDecodeContext(ssrc, true);
-
-			MS_ASSERT(dc.frameWidth != 0 && dc.frameHeight != 0, "incorrect frame size");
+			// MS_ASSERT(dc.frameWidth != 0 && dc.frameHeight != 0, "incorrect frame size");
 
 			EncodeContext & c = encodeContexts[ssrc];
-
-			// TODO codec id must be variable ( from stream ?)
-			c.codec        = avcodec_find_encoder(AV_CODEC_ID_H264);
-			MS_ASSERT(c.codec, "no codec");
-
-			MS_WARN_TAG(dead, "found codec %s %s", c.codec->name, c.codec->long_name);
-
-			c.codecContext.reset(avcodec_alloc_context3(c.codec));
-			MS_ASSERT(c.codecContext, "alloc context failed");
-
-		    c.codecContext->width        = (dc.frameWidth  == 0 ? 320 : dc.frameWidth);
-		    c.codecContext->height       = (dc.frameHeight == 0 ? 180 : dc.frameHeight);
-			c.codecContext->time_base    = (AVRational){1, 25};
-			c.codecContext->pix_fmt      = AV_PIX_FMT_YUV420P;
-
-            MS_WARN_TAG(dead, "codec params %dx%d timebase %d-%d", 
-            			c.codecContext->width, c.codecContext->height,
-            			c.codecContext->time_base.num, c.codecContext->time_base.den);
-
-			// MS_ASSERT(av_opt_set(c.codecContext->priv_data, "preset", "ultrafast", AV_OPT_SEARCH_CHILDREN) == 0, "preset");
-			// av_opt_set(c.codecContext->priv_data, "preset", "medium", 0);
-			// av_opt_set(c.codecContext->priv_data, "tune",   "zerolatency", 0);
-			// c.codecContext->level = ;
-
-			// c.codecContext->coder_type = 1;
-			// c.codecContext->me_subpel_quality = 7;
-			// c.codecContext->me_range = 16;
-			// c.codecContext->keyint_min = 25; 
-			// c.codecContext->i_quant_factor = 0.71;
-			// c.codecContext->b_frame_strategy = 1;
-			// c.codecContext->qcompress    = .6;
-			c.codecContext->max_b_frames      = 0;
-			c.codecContext->refs              = 3;
-			c.codecContext->gop_size          = 25;
-			c.codecContext->thread_count      = 1;
-			c.codecContext->delay             = 0;
-			c.codecContext->me_subpel_quality = 4; 
-
-			// sliced-threads:
-			// quantizer=15:no-mbtree:sync-lookahead=0:rc-lookahead=0
-			// bad option 'speed-preset': '2'
-			// bad option 'dct8x8': 'true'
-			// bad value for 'pass': 'qual'
-			// bad option 'quantizer': '15' 
-			// bad option 'key-int-max': '60'
-			MS_ASSERT(av_opt_set(c.codecContext->priv_data, "x264opts", "sliced-threads:no-mbtree:sync-lookahead=0:rc-lookahead=0", 0) == 0, "x264opts");
-
-			// MS_ASSERT(av_opt_set(c.codecContext.get(), "rc-lookahead",   "0", AV_OPT_SEARCH_CHILDREN) == 0, "rc-lookahead");
-			// MS_ASSERT(av_opt_set(c.codecContext.get(), "b-frames",        "0", AV_OPT_SEARCH_CHILDREN) == 0, "bframes");
-			// MS_ASSERT(av_opt_set(c.codecContext.get(), "sync-lookahead", "0", AV_OPT_SEARCH_CHILDREN) == 0, "sync-lookahead");
-
-            int result = avcodec_open2(c.codecContext.get(), c.codec, nullptr);
-            if (result < 0)
-            {
-            	char errstr[80];
-                MS_WARN_TAG(dead, "codec not opened %x %s", result, av_make_error_string(errstr, 80, result));
-            }
-            else
-            {
-                MS_WARN_TAG(dead, "codec OK");
-                c.isOpened = true;
-            }
-
-            c.jpegCodec = avcodec_find_encoder(AV_CODEC_ID_MJPEG);
-            c.jpegContext.reset(avcodec_alloc_context3(c.jpegCodec));
-
-		    c.jpegContext->width        = dc.frameWidth  == 0 ? 320 : dc.frameWidth;
-		    c.jpegContext->height       = dc.frameHeight == 0 ? 180 : dc.frameHeight;
-		    c.jpegContext->time_base    = (AVRational){1, 25}; 
-            c.jpegContext->pix_fmt = AV_PIX_FMT_YUVJ420P;
-
-			result = avcodec_open2(c.jpegContext.get(), c.jpegCodec, NULL);
-            if (result < 0)
-            {
-            	char errstr[80];
-                MS_WARN_TAG(dead, "jpeg codec not opened %x %s", result, av_make_error_string(errstr, 80, result));
-            }
-            else
-            {
-                MS_WARN_TAG(dead, "jpeg codec OK");
-            }
+			c.initContext(dc.frameWidth == 0 ? 320 : dc.frameWidth, dc.frameHeight == 0 ? 180 : dc.frameHeight);
 		}
 		return encodeContexts[ssrc];
 	}

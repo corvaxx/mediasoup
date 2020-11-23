@@ -7,6 +7,11 @@
 #include <iterator> // std::ostream_iterator
 #include <sstream>  // std::ostringstream
 
+extern "C"
+{
+	#include <libavutil/opt.h>
+}
+
 namespace RTC
 {
 	/* Class methods. */
@@ -1011,5 +1016,90 @@ namespace RTC
 		return 0;
     }
 
+    int EncodeContext::initContext(const uint32_t width, const uint32_t height)
+    {
+		// TODO codec id must be variable ( from stream ?)
+		codec        = avcodec_find_encoder(AV_CODEC_ID_H264);
+		MS_ASSERT(codec, "no codec");
+
+		MS_WARN_TAG(dead, "found codec %s %s", codec->name, codec->long_name);
+
+		codecContext.reset(avcodec_alloc_context3(codec));
+		MS_ASSERT(codecContext, "alloc context failed");
+
+	    codecContext->width        = width;
+	    codecContext->height       = height;
+		codecContext->time_base    = (AVRational){1, 25};
+		codecContext->pix_fmt      = AV_PIX_FMT_YUV420P;
+
+        MS_WARN_TAG(dead, "codec params %dx%d timebase %d-%d", 
+        			codecContext->width, codecContext->height,
+        			codecContext->time_base.num, codecContext->time_base.den);
+
+		// MS_ASSERT(av_opt_set(c.codecContext->priv_data, "preset", "ultrafast", AV_OPT_SEARCH_CHILDREN) == 0, "preset");
+		// av_opt_set(c.codecContext->priv_data, "preset", "medium", 0);
+		// av_opt_set(c.codecContext->priv_data, "tune",   "zerolatency", 0);
+		// c.codecContext->level = ;
+
+		// c.codecContext->coder_type = 1;
+		// c.codecContext->me_subpel_quality = 7;
+		// c.codecContext->me_range = 16;
+		// c.codecContext->keyint_min = 25; 
+		// c.codecContext->i_quant_factor = 0.71;
+		// c.codecContext->b_frame_strategy = 1;
+		// c.codecContext->qcompress    = .6;
+		codecContext->max_b_frames      = 0;
+		codecContext->refs              = 3;
+		codecContext->gop_size          = 25;
+		codecContext->thread_count      = 1;
+		codecContext->delay             = 0;
+		codecContext->me_subpel_quality = 4; 
+
+		// sliced-threads:
+		// quantizer=15:no-mbtree:sync-lookahead=0:rc-lookahead=0
+		// bad option 'speed-preset': '2'
+		// bad option 'dct8x8': 'true'
+		// bad value for 'pass': 'qual'
+		// bad option 'quantizer': '15' 
+		// bad option 'key-int-max': '60'
+		MS_ASSERT(av_opt_set(codecContext->priv_data, "x264opts", "sliced-threads:no-mbtree:sync-lookahead=0:rc-lookahead=0", 0) == 0, "x264opts");
+
+		// MS_ASSERT(av_opt_set(c.codecContext.get(), "rc-lookahead",   "0", AV_OPT_SEARCH_CHILDREN) == 0, "rc-lookahead");
+		// MS_ASSERT(av_opt_set(c.codecContext.get(), "b-frames",        "0", AV_OPT_SEARCH_CHILDREN) == 0, "bframes");
+		// MS_ASSERT(av_opt_set(c.codecContext.get(), "sync-lookahead", "0", AV_OPT_SEARCH_CHILDREN) == 0, "sync-lookahead");
+
+        int result = avcodec_open2(codecContext.get(), codec, nullptr);
+        if (result < 0)
+        {
+        	char errstr[80];
+            MS_WARN_TAG(dead, "codec not opened %x %s", result, av_make_error_string(errstr, 80, result));
+        }
+        else
+        {
+            MS_WARN_TAG(dead, "codec OK");
+            isOpened = true;
+        }
+
+        jpegCodec = avcodec_find_encoder(AV_CODEC_ID_MJPEG);
+        jpegContext.reset(avcodec_alloc_context3(jpegCodec));
+
+	    jpegContext->width        = width;
+	    jpegContext->height       = height;
+	    jpegContext->time_base    = (AVRational){1, 25}; 
+        jpegContext->pix_fmt = AV_PIX_FMT_YUVJ420P;
+
+		result = avcodec_open2(jpegContext.get(), jpegCodec, NULL);
+        if (result < 0)
+        {
+        	char errstr[80];
+            MS_WARN_TAG(dead, "jpeg codec not opened %x %s", result, av_make_error_string(errstr, 80, result));
+        }
+        else
+        {
+            MS_WARN_TAG(dead, "jpeg codec OK");
+        }
+
+	    return result;
+    }
 
 } // namespace RTC
