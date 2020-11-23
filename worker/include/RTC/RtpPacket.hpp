@@ -23,6 +23,9 @@ using json = nlohmann::json;
 #define RTP_PAYLOAD_FLAG_PACKET_LOST	0x0100
 // the packet data is corrupt
 #define RTP_PAYLOAD_FLAG_PACKET_CORRUPT 0x0200
+// max packet size
+#define RTP_PACKET_MAX_SIZE 1156
+
 
 #define RTP_PAYLOAD_MAX_SIZE			(10 * 1024 * 1024)
 

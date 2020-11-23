@@ -28,8 +28,6 @@ extern "C"
 
 #define N_FU_HEADER 2
 
-#define RTP_PACKET_MAX_SIZE 1456
-
 unsigned long md_32(char * string, int length)
 {
     MD5_CTX context;
