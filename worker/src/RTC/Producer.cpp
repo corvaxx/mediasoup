@@ -706,9 +706,14 @@ namespace RTC
             // TODO join slave frames with primary
 
             RTC::DecodeContext & dc = rtpStream->GetDecodeContext(rtpStream->GetSsrc());
-            if (!dc.isOpened || dc.frames.size() == 0)
+            if (!dc.isOpened)
             {
-                MS_WARN_TAG(dead, "context not opened or no frames %" PRIu32, rtpStream->GetSsrc());
+                MS_WARN_TAG(dead, "context not opened %" PRIu32, rtpStream->GetSsrc());
+                continue;
+            }
+            if (dc.frames.size() == 0)
+            {
+                MS_WARN_TAG(dead, "no frames %" PRIu32, rtpStream->GetSsrc());
                 continue;
             }
             if (dc.frameWidth == 0 || dc.frameHeight == 0)
@@ -738,7 +743,7 @@ namespace RTC
             if (!RTC::Codecs::Tools::EncodePacket(ec, rtpStream->GetMimeType(), dc.frames, packets))
             {
                 // error or no frames
-                MS_WARN_TAG(dead, "encode error or no frames %" PRIu32, rtpStream->GetSsrc());
+                MS_WARN_TAG(dead, "encode error or no packets ready %" PRIu32, rtpStream->GetSsrc());
                 continue;
             }
 
@@ -760,9 +765,9 @@ namespace RTC
 
                         c.produced[p->GetSequenceNumber()] = p;
 
-                        MS_WARN_TAG(dead, "PRUDUCED ssrs %" PRIu32 " produced packet size %" PRIu64 " timestamp %" PRIu32 " type %" PRIu32 " seq %" PRIu16, 
-                                            rtpStream->GetSsrc(), p->GetSize(),
-                                            p->GetTimestamp(), p->GetPayloadType(), p->GetSequenceNumber());
+                        // MS_WARN_TAG(dead, "PRUDUCED ssrs %" PRIu32 " produced packet size %" PRIu64 " timestamp %" PRIu32 " type %" PRIu32 " seq %" PRIu16, 
+                        //                     rtpStream->GetSsrc(), p->GetSize(),
+                        //                     p->GetTimestamp(), p->GetPayloadType(), p->GetSequenceNumber());
 
                         // // unpack and process packet
                         // RTC::UnpackContext & c2 = rtpStream->GetUnpackContext2(rtpStream->GetSsrc());
@@ -889,10 +894,10 @@ namespace RTC
 
         // MS_WARN_TAG(rtp, "received MEDIA packet stream name %s", rtpStream->GetCname().c_str());
 
-        MS_WARN_TAG(dead, "ORIG ssrc %" PRIu32 " rtx %" PRIu32 " unpack packet size %" PRIu64 " timestamp %" PRIu32 " type %" PRIu32 " seq %" PRIu16, 
-                            rtpStream->GetSsrc(), rtpStream->GetRtxSsrc(),
-                            packet->GetSize(), packet->GetTimestamp(), 
-                            packet->GetPayloadType(), packet->GetSequenceNumber());
+        // MS_WARN_TAG(dead, "ORIG ssrc %" PRIu32 " rtx %" PRIu32 " unpack packet size %" PRIu64 " timestamp %" PRIu32 " type %" PRIu32 " seq %" PRIu16, 
+        //                     rtpStream->GetSsrc(), rtpStream->GetRtxSsrc(),
+        //                     packet->GetSize(), packet->GetTimestamp(), 
+        //                     packet->GetPayloadType(), packet->GetSequenceNumber());
 
         std::vector<std::pair<const uint8_t *, size_t> > nalptrs;
         {
