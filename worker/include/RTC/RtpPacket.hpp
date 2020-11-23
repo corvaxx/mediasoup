@@ -103,12 +103,15 @@ namespace RTC
 
 	struct EncodeContext
 	{
-		AVCodec            * codec         { nullptr };
-        AVCodecContextPtr    codecContext;
-        bool                 isOpened      { false };
+        int                     frameWidth     { 0 };
+        int                     frameHeight    { 0 };
 
-        AVCodec            * jpegCodec     { nullptr };
-        AVCodecContextPtr    jpegContext;
+		AVCodec               * codec         { nullptr };
+        AVCodecContextPtr       codecContext;
+        bool                    isOpened      { false };
+
+        AVCodec               * jpegCodec     { nullptr };
+        AVCodecContextPtr       jpegContext;
 
         int initContext(const uint32_t width = 320, const uint32_t height = 180);
 	};

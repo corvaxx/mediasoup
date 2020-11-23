@@ -1018,6 +1018,11 @@ namespace RTC
 
     int EncodeContext::initContext(const uint32_t width, const uint32_t height)
     {
+    	MS_TRACE();
+
+    	frameWidth  = width;
+    	frameHeight = height;
+
 		// TODO codec id must be variable ( from stream ?)
 		codec        = avcodec_find_encoder(AV_CODEC_ID_H264);
 		MS_ASSERT(codec, "no codec");
