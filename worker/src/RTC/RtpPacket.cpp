@@ -971,54 +971,54 @@ namespace RTC
 		buffer = buf;
 	}
 
-    int DecodeContext::updateDefaultFrame(const uint32_t width, const uint32_t height)
-    {
-    	MS_TRACE();
+  //   int DecodeContext::updateDefaultFrame(const uint32_t width, const uint32_t height)
+  //   {
+  //   	MS_TRACE();
 
-		defaultFrame.reset(av_frame_alloc());
-		defaultFrame->format = AV_PIX_FMT_YUV420P;
-		defaultFrame->width  = width; // c->width;
-		defaultFrame->height = height; // c->height;
+		// defaultFrame.reset(av_frame_alloc());
+		// defaultFrame->format = AV_PIX_FMT_YUV420P;
+		// defaultFrame->width  = width; // c->width;
+		// defaultFrame->height = height; // c->height;
 
-		int result = av_frame_get_buffer(defaultFrame.get(), 0);
-		if (result < 0)
-		{
-			defaultFrame.reset();
-			return result;
-		}
+		// int result = av_frame_get_buffer(defaultFrame.get(), 0);
+		// if (result < 0)
+		// {
+		// 	defaultFrame.reset();
+		// 	return result;
+		// }
 
-		result = av_frame_make_writable(defaultFrame.get());
-		if (result < 0)
-		{
-			defaultFrame.reset();
-			return result;
-		}
+		// result = av_frame_make_writable(defaultFrame.get());
+		// if (result < 0)
+		// {
+		// 	defaultFrame.reset();
+		// 	return result;
+		// }
 
-		// int i = 0; // random32(0) % 32;
+		// // int i = 0; // random32(0) % 32;
 
-		i = (++i) % 256;
+		// i = (++i) % 256;
 
-        // prepare a dummy image
-        // Y
-        for (uint32_t y = 0; y < height; ++y) 
-        {
-            for (uint32_t x = 0; x < width; ++x) 
-            {
-                defaultFrame->data[0][y * defaultFrame->linesize[0] + x] = x + y + i * 3; // 149;
-            }
-        }
-        // Cb and Cr
-        for (uint32_t y = 0; y < height/2; ++y) 
-        {
-            for (uint32_t x = 0; x < width/2; ++x) 
-            {
-                defaultFrame->data[1][y * defaultFrame->linesize[1] + x] = 128 + y + i * 2; // 128 + 84;
-                defaultFrame->data[2][y * defaultFrame->linesize[2] + x] = 64 + x + i * 5; // 128 + 106;
-            }
-        }
+  //       // prepare a dummy image
+  //       // Y
+  //       for (uint32_t y = 0; y < height; ++y) 
+  //       {
+  //           for (uint32_t x = 0; x < width; ++x) 
+  //           {
+  //               defaultFrame->data[0][y * defaultFrame->linesize[0] + x] = x + y + i * 3; // 149;
+  //           }
+  //       }
+  //       // Cb and Cr
+  //       for (uint32_t y = 0; y < height/2; ++y) 
+  //       {
+  //           for (uint32_t x = 0; x < width/2; ++x) 
+  //           {
+  //               defaultFrame->data[1][y * defaultFrame->linesize[1] + x] = 128 + y + i * 2; // 128 + 84;
+  //               defaultFrame->data[2][y * defaultFrame->linesize[2] + x] = 64 + x + i * 5; // 128 + 106;
+  //           }
+  //       }
 
-		return 0;
-    }
+		// return 0;
+  //   }
 
     int EncodeContext::initContext(const uint32_t width, const uint32_t height)
     {
