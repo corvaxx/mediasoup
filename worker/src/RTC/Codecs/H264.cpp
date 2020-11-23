@@ -700,6 +700,8 @@ else
         {
             MS_TRACE();
 
+            frames.clear();
+            
             // 4 byte header
             uint8_t type = data[4] & 0x1f;
             // MS_WARN_TAG(dead, "DECODE type %d", type);
@@ -792,7 +794,8 @@ else
                                 char errstr[80];
                                 MS_WARN_TAG(dead, "avcodec_receive_packet failed %x %s", result, av_make_error_string(errstr, 80, result));
                             }
-                            return false;
+                            // return false;
+                            break;
                         }
 
                         // MS_WARN_TAG(dead, "EncodePacket GOT PACKET");
