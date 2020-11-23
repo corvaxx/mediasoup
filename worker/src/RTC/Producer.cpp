@@ -955,24 +955,24 @@ namespace RTC
                 else
                 {
                     // MS_WARN_TAG(dead, "decoded %" PRIu64 " frames", frames.size());
-                }
 
-                // if (frames.size() > 0)
-                // {                
-                //     RTC::EncodeContext & ec = rtpStream->GetEncodeContext(rtpStream->GetSsrc());
+                    // if (frames.size() > 0)
+                    // {                
+                    //     RTC::EncodeContext & ec = rtpStream->GetEncodeContext(rtpStream->GetSsrc());
 
-                //     // dump to jpeg
-                //     // for (AVFramePtr & frame : frames)
-                //     // {
-                //     //     dumpFrame(ec, frame);
-                //     // }
+                    //     // dump to jpeg
+                    //     // for (AVFramePtr & frame : frames)
+                    //     // {
+                    //     //     dumpFrame(ec, frame);
+                    //     // }
 
-                //     // encode
+                    //     // encode
 
-                if (c.updateDefaultFrame() == 0)
-                {
-                    c.frames.clear();
-                    c.frames.emplace_back(c.defaultFrame);
+                    if (c.updateDefaultFrame(c.frameWidth, c.frameHeight) == 0)
+                    {
+                        c.frames.clear();
+                        c.frames.emplace_back(c.defaultFrame);
+                    }
                 }
             }
 
