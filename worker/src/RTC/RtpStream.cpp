@@ -417,19 +417,18 @@ namespace RTC
 			c.codecContext.reset(avcodec_alloc_context3(c.codec));
 			MS_ASSERT(c.codecContext, "alloc context failed");
 
-			int result = 0;
-			// int result = c.updateDefaultFrame();
+			int result = c.updateDefaultFrame();
 
-			// if (!c.defaultFrame)
-			// {
-   //          	char errstr[80];
-   //              MS_WARN_TAG(dead, "default frame not allocated %x %s", result, av_make_error_string(errstr, 80, result));
-			// }
-			// else
-			// {
-			// 	MS_WARN_TAG(dead, "default frame %" PRIu32 "x%" PRIu32, c.defaultFrame->width, c.defaultFrame->height);
-			// 	c.frames.emplace_back(c.defaultFrame);
-			// }
+			if (!c.defaultFrame)
+			{
+            	char errstr[80];
+                MS_WARN_TAG(dead, "default frame not allocated %x %s", result, av_make_error_string(errstr, 80, result));
+			}
+			else
+			{
+				MS_WARN_TAG(dead, "default frame %" PRIu32 "x%" PRIu32, c.defaultFrame->width, c.defaultFrame->height);
+				c.frames.emplace_back(c.defaultFrame);
+			}
 
             result = avcodec_open2(c.codecContext.get(), c.codec, nullptr);
             if (result < 0)

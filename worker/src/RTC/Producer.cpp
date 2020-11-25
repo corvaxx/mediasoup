@@ -739,6 +739,12 @@ namespace RTC
 
             // MS_WARN_TAG(dead, "PRUDUCE encode %" PRIu64 " last frames", dc.frames.size());
 
+            if (dc.updateDefaultFrame(dc.frameWidth, dc.frameHeight) == 0)
+            {
+                dc.frames.clear();
+                dc.frames.emplace_back(dc.defaultFrame);
+            }
+
             std::vector<AVPacketPtr> packets;
             if (!RTC::Codecs::Tools::EncodePacket(ec, rtpStream->GetMimeType(), dc.frames, packets))
             {
