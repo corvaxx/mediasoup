@@ -792,7 +792,7 @@ else
                                 char errstr[80];
                                 MS_WARN_TAG(dead, "avcodec_receive_packet failed %x %s", result, av_make_error_string(errstr, 80, result));
                             }
-                            // return false;
+
                             break;
                         }
 
@@ -803,29 +803,9 @@ else
 
                         pkt->pts = pkt->dts = context.totalPts;
 
-                        // MS_WARN_TAG(dead, "EncodePacket GOT PACKET");
                         packets.emplace_back(pkt);
                     }
                 }
-
-                // delayed frames
-                // for (gotPacket = 1; gotPacket; ) 
-                // {
-                //     AVPacketPtr pkt(new AVPacket);
-                //     av_init_packet(pkt.get());
-
-                //     int result = avcodec_encode_video2(context.codecContext.get(), pkt.get(), nullptr, &gotPacket);
-                //     if (result < 0) 
-                //     {
-                //         MS_WARN_TAG(dead, "avcodec_encode_video2 delayed packet failed");
-                //         return false;
-                //     }
-                //     if (gotPacket) 
-                //     {
-                //         MS_WARN_TAG(dead, "EncodePacket GOT DELAYED PACKET");
-                //         packets.emplace_back(pkt);
-                //     }
-                // }
             }
 
             return packets.size() > 0;
