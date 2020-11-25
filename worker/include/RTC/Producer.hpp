@@ -139,7 +139,7 @@ namespace RTC
 		struct VideoOrientation videoOrientation;
 		struct TraceEventTypes traceEventTypes;
 
-		TranslateMode translateMode { direct };
+		TranslateMode translateMode { decodeAndEncode };
 
 		// 40 - 25 fps
 		// 67 - 15 fps
