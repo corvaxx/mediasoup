@@ -170,6 +170,12 @@ namespace RTC
 		virtual void HandleNotification(PayloadChannel::Notification* notification);
 
 	protected:
+		void produce(Channel::Request * request);
+		void consume(Channel::Request * request);
+		void produceData(Channel::Request * request);
+		void consumeData(Channel::Request * request);
+
+	protected:
 		// Must be called from the subclass.
 		void Connected();
 		void Disconnected();

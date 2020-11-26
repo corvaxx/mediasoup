@@ -612,607 +612,25 @@ namespace RTC
 
 			case Channel::Request::MethodId::TRANSPORT_PRODUCE:
 			{
-				std::string producerId;
-
-				// This may throw.
-				SetNewProducerIdFromInternal(request->internal, producerId);
-
-				// This may throw.
-				auto* producer = new RTC::Producer(producerId, this, request->data);
-
-				// Insert the Producer into the RtpListener.
-				// This may throw. If so, delete the Producer and throw.
-				try
-				{
-					this->rtpListener.AddProducer(producer);
-				}
-				catch (const MediaSoupError& error)
-				{
-					delete producer;
-
-					throw;
-				}
-
-				// Notify the listener.
-				// This may throw if a Producer with same id already exists.
-				try
-				{
-					this->listener->OnTransportNewProducer(this, producer);
-				}
-				catch (const MediaSoupError& error)
-				{
-					this->rtpListener.RemoveProducer(producer);
-
-					delete producer;
-
-					throw;
-				}
-
-				// Insert into the map.
-				this->mapProducers[producerId] = producer;
-
-				MS_DEBUG_DEV("Producer created [producerId:%s]", producerId.c_str());
-
-				// Take the transport related RTP header extensions of the Producer and
-				// add them to the Transport.
-				// NOTE: Producer::GetRtpHeaderExtensionIds() returns the original
-				// header extension ids of the Producer (and not their mapped values).
-				const auto& producerRtpHeaderExtensionIds = producer->GetRtpHeaderExtensionIds();
-
-				if (producerRtpHeaderExtensionIds.mid != 0u)
-				{
-					this->recvRtpHeaderExtensionIds.mid = producerRtpHeaderExtensionIds.mid;
-				}
-
-				if (producerRtpHeaderExtensionIds.rid != 0u)
-				{
-					this->recvRtpHeaderExtensionIds.rid = producerRtpHeaderExtensionIds.rid;
-				}
-
-				if (producerRtpHeaderExtensionIds.rrid != 0u)
-				{
-					this->recvRtpHeaderExtensionIds.rrid = producerRtpHeaderExtensionIds.rrid;
-				}
-
-				if (producerRtpHeaderExtensionIds.absSendTime != 0u)
-				{
-					this->recvRtpHeaderExtensionIds.absSendTime = producerRtpHeaderExtensionIds.absSendTime;
-				}
-
-				if (producerRtpHeaderExtensionIds.transportWideCc01 != 0u)
-				{
-					this->recvRtpHeaderExtensionIds.transportWideCc01 =
-					  producerRtpHeaderExtensionIds.transportWideCc01;
-				}
-
-				// Create status response.
-				json data = json::object();
-
-				data["type"] = RTC::RtpParameters::GetTypeString(producer->GetType());
-
-				request->Accept(data);
-
-				// Check if TransportCongestionControlServer or REMB server must be
-				// created.
-				const auto& rtpHeaderExtensionIds = producer->GetRtpHeaderExtensionIds();
-				const auto& codecs                = producer->GetRtpParameters().codecs;
-
-				// Set TransportCongestionControlServer.
-				if (!this->tccServer)
-				{
-					bool createTccServer{ false };
-					RTC::BweType bweType;
-
-					// Use transport-cc if:
-					// - there is transport-wide-cc-01 RTP header extension, and
-					// - there is "transport-cc" in codecs RTCP feedback.
-					//
-					// clang-format off
-					if (
-						rtpHeaderExtensionIds.transportWideCc01 != 0u &&
-						std::any_of(
-							codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
-							{
-								return std::any_of(
-									codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RTC::RtcpFeedback& fb)
-									{
-										return fb.type == "transport-cc";
-									});
-							})
-					)
-					// clang-format on
-					{
-						MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlServer with transport-cc");
-
-						createTccServer = true;
-						bweType         = RTC::BweType::TRANSPORT_CC;
-					}
-					// Use REMB if:
-					// - there is abs-send-time RTP header extension, and
-					// - there is "remb" in codecs RTCP feedback.
-					//
-					// clang-format off
-					else if (
-						rtpHeaderExtensionIds.absSendTime != 0u &&
-						std::any_of(
-							codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
-							{
-								return std::any_of(
-									codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RTC::RtcpFeedback& fb)
-									{
-										return fb.type == "goog-remb";
-									});
-							})
-					)
-					// clang-format on
-					{
-						MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlServer with REMB");
-
-						createTccServer = true;
-						bweType         = RTC::BweType::REMB;
-					}
-
-					if (createTccServer)
-					{
-						this->tccServer = new RTC::TransportCongestionControlServer(this, bweType, RTC::MtuSize);
-
-						if (this->maxIncomingBitrate != 0u)
-							this->tccServer->SetMaxIncomingBitrate(this->maxIncomingBitrate);
-
-						if (IsConnected())
-							this->tccServer->TransportConnected();
-					}
-				}
-
+				produce(request);
 				break;
 			}
 
 			case Channel::Request::MethodId::TRANSPORT_CONSUME:
 			{
-				auto jsonProducerIdIt = request->internal.find("producerId");
-
-				if (jsonProducerIdIt == request->internal.end() || !jsonProducerIdIt->is_string())
-					MS_THROW_ERROR("missing internal.producerId");
-
-				std::string producerId = jsonProducerIdIt->get<std::string>();
-				std::string consumerId;
-
-				// This may throw.
-				SetNewConsumerIdFromInternal(request->internal, consumerId);
-
-				// Get type.
-				auto jsonTypeIt = request->data.find("type");
-
-				if (jsonTypeIt == request->data.end() || !jsonTypeIt->is_string())
-					MS_THROW_TYPE_ERROR("missing type");
-
-				// This may throw.
-				auto type = RTC::RtpParameters::GetType(jsonTypeIt->get<std::string>());
-
-				RTC::Consumer* consumer{ nullptr };
-
-				switch (type)
-				{
-					case RTC::RtpParameters::Type::NONE:
-					{
-						MS_THROW_TYPE_ERROR("invalid type 'none'");
-
-						break;
-					}
-
-					case RTC::RtpParameters::Type::SIMPLE:
-					{
-						// This may throw.
-						consumer = new RTC::SimpleConsumer(consumerId, producerId, this, request->data);
-
-						break;
-					}
-
-					case RTC::RtpParameters::Type::SIMULCAST:
-					{
-						// This may throw.
-						consumer = new RTC::SimulcastConsumer(consumerId, producerId, this, request->data);
-
-						break;
-					}
-
-					case RTC::RtpParameters::Type::SVC:
-					{
-						// This may throw.
-						consumer = new RTC::SvcConsumer(consumerId, producerId, this, request->data);
-
-						break;
-					}
-
-					case RTC::RtpParameters::Type::PIPE:
-					{
-						// This may throw.
-						consumer = new RTC::PipeConsumer(consumerId, producerId, this, request->data);
-
-						break;
-					}
-				}
-
-				// Notify the listener.
-				// This may throw if no Producer is found.
-				try
-				{
-					this->listener->OnTransportNewConsumer(this, consumer, producerId);
-				}
-				catch (const MediaSoupError& error)
-				{
-					delete consumer;
-
-					throw;
-				}
-
-				// Insert into the maps.
-				this->mapConsumers[consumerId] = consumer;
-
-				for (auto ssrc : consumer->GetMediaSsrcs())
-				{
-					this->mapSsrcConsumer[ssrc] = consumer;
-				}
-
-				for (auto ssrc : consumer->GetRtxSsrcs())
-				{
-					this->mapRtxSsrcConsumer[ssrc] = consumer;
-				}
-
-				MS_DEBUG_DEV(
-				  "Consumer created [consumerId:%s, producerId:%s]", consumerId.c_str(), producerId.c_str());
-
-				// Create status response.
-				json data = json::object();
-
-				data["paused"]         = consumer->IsPaused();
-				data["producerPaused"] = consumer->IsProducerPaused();
-
-				consumer->FillJsonScore(data["score"]);
-
-				auto preferredLayers = consumer->GetPreferredLayers();
-
-				if (preferredLayers.spatial > -1 && preferredLayers.temporal > -1)
-				{
-					data["preferredLayers"]["spatialLayer"]  = preferredLayers.spatial;
-					data["preferredLayers"]["temporalLayer"] = preferredLayers.temporal;
-				}
-
-				request->Accept(data);
-
-				// Check if Transport Congestion Control client must be created.
-				const auto& rtpHeaderExtensionIds = consumer->GetRtpHeaderExtensionIds();
-				const auto& codecs                = consumer->GetRtpParameters().codecs;
-
-				// Set TransportCongestionControlClient.
-				if (!this->tccClient)
-				{
-					bool createTccClient{ false };
-					RTC::BweType bweType;
-
-					// Use transport-cc if:
-					// - it's a video Consumer, and
-					// - there is transport-wide-cc-01 RTP header extension, and
-					// - there is "transport-cc" in codecs RTCP feedback.
-					//
-					// clang-format off
-					if (
-						consumer->GetKind() == RTC::Media::Kind::VIDEO &&
-						rtpHeaderExtensionIds.transportWideCc01 != 0u &&
-						std::any_of(
-							codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
-							{
-								return std::any_of(
-									codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RTC::RtcpFeedback& fb)
-									{
-										return fb.type == "transport-cc";
-									});
-							})
-					)
-					// clang-format on
-					{
-						MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlClient with transport-cc");
-
-						createTccClient = true;
-						bweType         = RTC::BweType::TRANSPORT_CC;
-					}
-					// Use REMB if:
-					// - it's a video Consumer, and
-					// - there is abs-send-time RTP header extension, and
-					// - there is "remb" in codecs RTCP feedback.
-					//
-					// clang-format off
-					else if (
-						consumer->GetKind() == RTC::Media::Kind::VIDEO &&
-						rtpHeaderExtensionIds.absSendTime != 0u &&
-						std::any_of(
-							codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
-							{
-								return std::any_of(
-									codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RTC::RtcpFeedback& fb)
-									{
-										return fb.type == "goog-remb";
-									});
-							})
-					)
-					// clang-format on
-					{
-						MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlClient with REMB");
-
-						createTccClient = true;
-						bweType         = RTC::BweType::REMB;
-					}
-
-					if (createTccClient)
-					{
-						// Tell all the Consumers that we are gonna manage their bitrate.
-						for (auto& kv : this->mapConsumers)
-						{
-							auto* consumer = kv.second;
-
-							consumer->SetExternallyManagedBitrate();
-						};
-
-						this->tccClient = new RTC::TransportCongestionControlClient(
-						  this, bweType, this->initialAvailableOutgoingBitrate);
-
-						if (IsConnected())
-							this->tccClient->TransportConnected();
-					}
-				}
-
-				// If applicable, tell the new Consumer that we are gonna manage its
-				// bitrate.
-				if (this->tccClient)
-					consumer->SetExternallyManagedBitrate();
-
-#ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
-				// Create SenderBandwidthEstimator if:
-				// - not already created,
-				// - it's a video Consumer, and
-				// - there is transport-wide-cc-01 RTP header extension, and
-				// - there is "transport-cc" in codecs RTCP feedback.
-				//
-				// clang-format off
-				if (
-					!this->senderBwe &&
-					consumer->GetKind() == RTC::Media::Kind::VIDEO &&
-					rtpHeaderExtensionIds.transportWideCc01 != 0u &&
-					std::any_of(
-						codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
-						{
-							return std::any_of(
-								codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RTC::RtcpFeedback& fb)
-								{
-									return fb.type == "transport-cc";
-								});
-						})
-				)
-				// clang-format on
-				{
-					MS_DEBUG_TAG(bwe, "enabling SenderBandwidthEstimator");
-
-					// Tell all the Consumers that we are gonna manage their bitrate.
-					for (auto& kv : this->mapConsumers)
-					{
-						auto* consumer = kv.second;
-
-						consumer->SetExternallyManagedBitrate();
-					};
-
-					this->senderBwe =
-					  new RTC::SenderBandwidthEstimator(this, this->initialAvailableOutgoingBitrate);
-
-					if (IsConnected())
-						this->senderBwe->TransportConnected();
-				}
-
-				// If applicable, tell the new Consumer that we are gonna manage its
-				// bitrate.
-				if (this->senderBwe)
-					consumer->SetExternallyManagedBitrate();
-#endif
-
-				if (IsConnected())
-					consumer->TransportConnected();
-
+				consume(request);
 				break;
 			}
 
 			case Channel::Request::MethodId::TRANSPORT_PRODUCE_DATA:
 			{
-				// Early check. The Transport must support SCTP or be direct.
-				if (!this->sctpAssociation && !this->direct)
-				{
-					MS_THROW_ERROR("SCTP not enabled and not a direct Transport");
-				}
-
-				std::string dataProducerId;
-
-				// This may throw.
-				SetNewDataProducerIdFromInternal(request->internal, dataProducerId);
-
-				// This may throw.
-				auto* dataProducer = new RTC::DataProducer(dataProducerId, this, request->data);
-
-				// Verify the type of the DataProducer.
-				switch (dataProducer->GetType())
-				{
-					case RTC::DataProducer::Type::SCTP:
-					{
-						if (!this->sctpAssociation)
-						{
-							delete dataProducer;
-
-							MS_THROW_TYPE_ERROR(
-							  "cannot create a DataProducer of type 'sctp', SCTP not enabled in this Transport");
-							;
-						}
-
-						break;
-					}
-
-					case RTC::DataProducer::Type::DIRECT:
-					{
-						if (!this->direct)
-						{
-							delete dataProducer;
-
-							MS_THROW_TYPE_ERROR(
-							  "cannot create a DataProducer of type 'direct', not a direct Transport");
-							;
-						}
-
-						break;
-					}
-				}
-
-				if (dataProducer->GetType() == RTC::DataProducer::Type::SCTP)
-				{
-					// Insert the DataProducer into the SctpListener.
-					// This may throw. If so, delete the DataProducer and throw.
-					try
-					{
-						this->sctpListener.AddDataProducer(dataProducer);
-					}
-					catch (const MediaSoupError& error)
-					{
-						delete dataProducer;
-
-						throw;
-					}
-				}
-
-				// Notify the listener.
-				// This may throw if a DataProducer with same id already exists.
-				try
-				{
-					this->listener->OnTransportNewDataProducer(this, dataProducer);
-				}
-				catch (const MediaSoupError& error)
-				{
-					if (dataProducer->GetType() == RTC::DataProducer::Type::SCTP)
-					{
-						this->sctpListener.RemoveDataProducer(dataProducer);
-					}
-
-					delete dataProducer;
-
-					throw;
-				}
-
-				// Insert into the map.
-				this->mapDataProducers[dataProducerId] = dataProducer;
-
-				MS_DEBUG_DEV("DataProducer created [dataProducerId:%s]", dataProducerId.c_str());
-
-				json data = json::object();
-
-				dataProducer->FillJson(data);
-
-				request->Accept(data);
-
+				produceData(request);
 				break;
 			}
 
 			case Channel::Request::MethodId::TRANSPORT_CONSUME_DATA:
 			{
-				// Early check. The Transport must support SCTP or be direct.
-				if (!this->sctpAssociation && !this->direct)
-				{
-					MS_THROW_ERROR("SCTP not enabled and not a direct Transport");
-				}
-
-				auto jsonDataProducerIdIt = request->internal.find("dataProducerId");
-
-				if (jsonDataProducerIdIt == request->internal.end() || !jsonDataProducerIdIt->is_string())
-				{
-					MS_THROW_ERROR("missing internal.dataProducerId");
-				}
-
-				std::string dataProducerId = jsonDataProducerIdIt->get<std::string>();
-				std::string dataConsumerId;
-
-				// This may throw.
-				SetNewDataConsumerIdFromInternal(request->internal, dataConsumerId);
-
-				// This may throw.
-				auto* dataConsumer = new RTC::DataConsumer(
-				  dataConsumerId, dataProducerId, this, request->data, this->maxMessageSize);
-
-				// Verify the type of the DataConsumer.
-				switch (dataConsumer->GetType())
-				{
-					case RTC::DataConsumer::Type::SCTP:
-					{
-						if (!this->sctpAssociation)
-						{
-							delete dataConsumer;
-
-							MS_THROW_TYPE_ERROR(
-							  "cannot create a DataConsumer of type 'sctp', SCTP not enabled in this Transport");
-							;
-						}
-
-						break;
-					}
-
-					case RTC::DataConsumer::Type::DIRECT:
-					{
-						if (!this->direct)
-						{
-							delete dataConsumer;
-
-							MS_THROW_TYPE_ERROR(
-							  "cannot create a DataConsumer of type 'direct', not a direct Transport");
-							;
-						}
-
-						break;
-					}
-				}
-
-				// Notify the listener.
-				// This may throw if no DataProducer is found.
-				try
-				{
-					this->listener->OnTransportNewDataConsumer(this, dataConsumer, dataProducerId);
-				}
-				catch (const MediaSoupError& error)
-				{
-					delete dataConsumer;
-
-					throw;
-				}
-
-				// Insert into the maps.
-				this->mapDataConsumers[dataConsumerId] = dataConsumer;
-
-				MS_DEBUG_DEV(
-				  "DataConsumer created [dataConsumerId:%s, dataProducerId:%s]",
-				  dataConsumerId.c_str(),
-				  dataProducerId.c_str());
-
-				json data = json::object();
-
-				dataConsumer->FillJson(data);
-
-				request->Accept(data);
-
-				if (IsConnected())
-					dataConsumer->TransportConnected();
-
-				if (dataConsumer->GetType() == RTC::DataConsumer::Type::SCTP)
-				{
-					if (this->sctpAssociation->GetState() == RTC::SctpAssociation::SctpState::CONNECTED)
-					{
-						dataConsumer->SctpAssociationConnected();
-					}
-
-					// Tell to the SCTP association.
-					this->sctpAssociation->HandleDataConsumer(dataConsumer);
-				}
-
+				consumeData(request);
 				break;
 			}
 
@@ -1478,6 +896,613 @@ namespace RTC
 			{
 				MS_THROW_ERROR("unknown method '%s'", request->method.c_str());
 			}
+		}
+	}
+
+	void Transport::produce(Channel::Request * request)
+	{
+		MS_TRACE();
+
+		std::string producerId;
+
+		// This may throw.
+		SetNewProducerIdFromInternal(request->internal, producerId);
+
+		// This may throw.
+		auto* producer = new RTC::Producer(producerId, this, request->data);
+
+		// Insert the Producer into the RtpListener.
+		// This may throw. If so, delete the Producer and throw.
+		try
+		{
+			this->rtpListener.AddProducer(producer);
+		}
+		catch (const MediaSoupError& error)
+		{
+			delete producer;
+
+			throw;
+		}
+
+		// Notify the listener.
+		// This may throw if a Producer with same id already exists.
+		try
+		{
+			this->listener->OnTransportNewProducer(this, producer);
+		}
+		catch (const MediaSoupError& error)
+		{
+			this->rtpListener.RemoveProducer(producer);
+
+			delete producer;
+
+			throw;
+		}
+
+		// Insert into the map.
+		this->mapProducers[producerId] = producer;
+
+		MS_DEBUG_DEV("Producer created [producerId:%s]", producerId.c_str());
+
+		// Take the transport related RTP header extensions of the Producer and
+		// add them to the Transport.
+		// NOTE: Producer::GetRtpHeaderExtensionIds() returns the original
+		// header extension ids of the Producer (and not their mapped values).
+		const auto& producerRtpHeaderExtensionIds = producer->GetRtpHeaderExtensionIds();
+
+		if (producerRtpHeaderExtensionIds.mid != 0u)
+		{
+			this->recvRtpHeaderExtensionIds.mid = producerRtpHeaderExtensionIds.mid;
+		}
+
+		if (producerRtpHeaderExtensionIds.rid != 0u)
+		{
+			this->recvRtpHeaderExtensionIds.rid = producerRtpHeaderExtensionIds.rid;
+		}
+
+		if (producerRtpHeaderExtensionIds.rrid != 0u)
+		{
+			this->recvRtpHeaderExtensionIds.rrid = producerRtpHeaderExtensionIds.rrid;
+		}
+
+		if (producerRtpHeaderExtensionIds.absSendTime != 0u)
+		{
+			this->recvRtpHeaderExtensionIds.absSendTime = producerRtpHeaderExtensionIds.absSendTime;
+		}
+
+		if (producerRtpHeaderExtensionIds.transportWideCc01 != 0u)
+		{
+			this->recvRtpHeaderExtensionIds.transportWideCc01 =
+			  producerRtpHeaderExtensionIds.transportWideCc01;
+		}
+
+		// Create status response.
+		json data = json::object();
+
+		data["type"] = RTC::RtpParameters::GetTypeString(producer->GetType());
+
+		request->Accept(data);
+
+		// Check if TransportCongestionControlServer or REMB server must be
+		// created.
+		const auto& rtpHeaderExtensionIds = producer->GetRtpHeaderExtensionIds();
+		const auto& codecs                = producer->GetRtpParameters().codecs;
+
+		// Set TransportCongestionControlServer.
+		if (!this->tccServer)
+		{
+			bool createTccServer{ false };
+			RTC::BweType bweType;
+
+			// Use transport-cc if:
+			// - there is transport-wide-cc-01 RTP header extension, and
+			// - there is "transport-cc" in codecs RTCP feedback.
+			//
+			// clang-format off
+			if (
+				rtpHeaderExtensionIds.transportWideCc01 != 0u &&
+				std::any_of(
+					codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
+					{
+						return std::any_of(
+							codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RTC::RtcpFeedback& fb)
+							{
+								return fb.type == "transport-cc";
+							});
+					})
+			)
+			// clang-format on
+			{
+				MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlServer with transport-cc");
+
+				createTccServer = true;
+				bweType         = RTC::BweType::TRANSPORT_CC;
+			}
+			// Use REMB if:
+			// - there is abs-send-time RTP header extension, and
+			// - there is "remb" in codecs RTCP feedback.
+			//
+			// clang-format off
+			else if (
+				rtpHeaderExtensionIds.absSendTime != 0u &&
+				std::any_of(
+					codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
+					{
+						return std::any_of(
+							codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RTC::RtcpFeedback& fb)
+							{
+								return fb.type == "goog-remb";
+							});
+					})
+			)
+			// clang-format on
+			{
+				MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlServer with REMB");
+
+				createTccServer = true;
+				bweType         = RTC::BweType::REMB;
+			}
+
+			if (createTccServer)
+			{
+				this->tccServer = new RTC::TransportCongestionControlServer(this, bweType, RTC::MtuSize);
+
+				if (this->maxIncomingBitrate != 0u)
+					this->tccServer->SetMaxIncomingBitrate(this->maxIncomingBitrate);
+
+				if (IsConnected())
+					this->tccServer->TransportConnected();
+			}
+		}
+
+	}
+
+	void Transport::consume(Channel::Request * request)
+	{
+		MS_TRACE();
+
+		auto jsonProducerIdIt = request->internal.find("producerId");
+
+		if (jsonProducerIdIt == request->internal.end() || !jsonProducerIdIt->is_string())
+			MS_THROW_ERROR("missing internal.producerId");
+
+		std::string producerId = jsonProducerIdIt->get<std::string>();
+		std::string consumerId;
+
+		// This may throw.
+		SetNewConsumerIdFromInternal(request->internal, consumerId);
+
+		// Get type.
+		auto jsonTypeIt = request->data.find("type");
+
+		if (jsonTypeIt == request->data.end() || !jsonTypeIt->is_string())
+			MS_THROW_TYPE_ERROR("missing type");
+
+		// This may throw.
+		auto type = RTC::RtpParameters::GetType(jsonTypeIt->get<std::string>());
+
+		RTC::Consumer* consumer{ nullptr };
+
+		switch (type)
+		{
+			case RTC::RtpParameters::Type::NONE:
+			{
+				MS_THROW_TYPE_ERROR("invalid type 'none'");
+
+				break;
+			}
+
+			case RTC::RtpParameters::Type::SIMPLE:
+			{
+				// This may throw.
+				consumer = new RTC::SimpleConsumer(consumerId, producerId, this, request->data);
+
+				break;
+			}
+
+			case RTC::RtpParameters::Type::SIMULCAST:
+			{
+				// This may throw.
+				consumer = new RTC::SimulcastConsumer(consumerId, producerId, this, request->data);
+
+				break;
+			}
+
+			case RTC::RtpParameters::Type::SVC:
+			{
+				// This may throw.
+				consumer = new RTC::SvcConsumer(consumerId, producerId, this, request->data);
+
+				break;
+			}
+
+			case RTC::RtpParameters::Type::PIPE:
+			{
+				// This may throw.
+				consumer = new RTC::PipeConsumer(consumerId, producerId, this, request->data);
+
+				break;
+			}
+		}
+
+		// Notify the listener.
+		// This may throw if no Producer is found.
+		try
+		{
+			this->listener->OnTransportNewConsumer(this, consumer, producerId);
+		}
+		catch (const MediaSoupError& error)
+		{
+			delete consumer;
+
+			throw;
+		}
+
+		// Insert into the maps.
+		this->mapConsumers[consumerId] = consumer;
+
+		for (auto ssrc : consumer->GetMediaSsrcs())
+		{
+			this->mapSsrcConsumer[ssrc] = consumer;
+		}
+
+		for (auto ssrc : consumer->GetRtxSsrcs())
+		{
+			this->mapRtxSsrcConsumer[ssrc] = consumer;
+		}
+
+		MS_DEBUG_DEV(
+		  "Consumer created [consumerId:%s, producerId:%s]", consumerId.c_str(), producerId.c_str());
+
+		// Create status response.
+		json data = json::object();
+
+		data["paused"]         = consumer->IsPaused();
+		data["producerPaused"] = consumer->IsProducerPaused();
+
+		consumer->FillJsonScore(data["score"]);
+
+		auto preferredLayers = consumer->GetPreferredLayers();
+
+		if (preferredLayers.spatial > -1 && preferredLayers.temporal > -1)
+		{
+			data["preferredLayers"]["spatialLayer"]  = preferredLayers.spatial;
+			data["preferredLayers"]["temporalLayer"] = preferredLayers.temporal;
+		}
+
+		request->Accept(data);
+
+		// Check if Transport Congestion Control client must be created.
+		const auto& rtpHeaderExtensionIds = consumer->GetRtpHeaderExtensionIds();
+		const auto& codecs                = consumer->GetRtpParameters().codecs;
+
+		// Set TransportCongestionControlClient.
+		if (!this->tccClient)
+		{
+			bool createTccClient{ false };
+			RTC::BweType bweType;
+
+			// Use transport-cc if:
+			// - it's a video Consumer, and
+			// - there is transport-wide-cc-01 RTP header extension, and
+			// - there is "transport-cc" in codecs RTCP feedback.
+			//
+			// clang-format off
+			if (
+				consumer->GetKind() == RTC::Media::Kind::VIDEO &&
+				rtpHeaderExtensionIds.transportWideCc01 != 0u &&
+				std::any_of(
+					codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
+					{
+						return std::any_of(
+							codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RTC::RtcpFeedback& fb)
+							{
+								return fb.type == "transport-cc";
+							});
+					})
+			)
+			// clang-format on
+			{
+				MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlClient with transport-cc");
+
+				createTccClient = true;
+				bweType         = RTC::BweType::TRANSPORT_CC;
+			}
+			// Use REMB if:
+			// - it's a video Consumer, and
+			// - there is abs-send-time RTP header extension, and
+			// - there is "remb" in codecs RTCP feedback.
+			//
+			// clang-format off
+			else if (
+				consumer->GetKind() == RTC::Media::Kind::VIDEO &&
+				rtpHeaderExtensionIds.absSendTime != 0u &&
+				std::any_of(
+					codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
+					{
+						return std::any_of(
+							codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RTC::RtcpFeedback& fb)
+							{
+								return fb.type == "goog-remb";
+							});
+					})
+			)
+			// clang-format on
+			{
+				MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlClient with REMB");
+
+				createTccClient = true;
+				bweType         = RTC::BweType::REMB;
+			}
+
+			if (createTccClient)
+			{
+				// Tell all the Consumers that we are gonna manage their bitrate.
+				for (auto& kv : this->mapConsumers)
+				{
+					auto* consumer = kv.second;
+
+					consumer->SetExternallyManagedBitrate();
+				};
+
+				this->tccClient = new RTC::TransportCongestionControlClient(
+				  this, bweType, this->initialAvailableOutgoingBitrate);
+
+				if (IsConnected())
+					this->tccClient->TransportConnected();
+			}
+		}
+
+		// If applicable, tell the new Consumer that we are gonna manage its
+		// bitrate.
+		if (this->tccClient)
+			consumer->SetExternallyManagedBitrate();
+
+#ifdef ENABLE_RTC_SENDER_BANDWIDTH_ESTIMATOR
+		// Create SenderBandwidthEstimator if:
+		// - not already created,
+		// - it's a video Consumer, and
+		// - there is transport-wide-cc-01 RTP header extension, and
+		// - there is "transport-cc" in codecs RTCP feedback.
+		//
+		// clang-format off
+		if (
+			!this->senderBwe &&
+			consumer->GetKind() == RTC::Media::Kind::VIDEO &&
+			rtpHeaderExtensionIds.transportWideCc01 != 0u &&
+			std::any_of(
+				codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
+				{
+					return std::any_of(
+						codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RTC::RtcpFeedback& fb)
+						{
+							return fb.type == "transport-cc";
+						});
+				})
+		)
+		// clang-format on
+		{
+			MS_DEBUG_TAG(bwe, "enabling SenderBandwidthEstimator");
+
+			// Tell all the Consumers that we are gonna manage their bitrate.
+			for (auto& kv : this->mapConsumers)
+			{
+				auto* consumer = kv.second;
+
+				consumer->SetExternallyManagedBitrate();
+			};
+
+			this->senderBwe =
+			  new RTC::SenderBandwidthEstimator(this, this->initialAvailableOutgoingBitrate);
+
+			if (IsConnected())
+				this->senderBwe->TransportConnected();
+		}
+
+		// If applicable, tell the new Consumer that we are gonna manage its
+		// bitrate.
+		if (this->senderBwe)
+			consumer->SetExternallyManagedBitrate();
+#endif
+
+		if (IsConnected())
+			consumer->TransportConnected();
+	}
+
+	void Transport::produceData(Channel::Request * request)
+	{
+		MS_TRACE();
+
+		// Early check. The Transport must support SCTP or be direct.
+		if (!this->sctpAssociation && !this->direct)
+		{
+			MS_THROW_ERROR("SCTP not enabled and not a direct Transport");
+		}
+
+		std::string dataProducerId;
+
+		// This may throw.
+		SetNewDataProducerIdFromInternal(request->internal, dataProducerId);
+
+		// This may throw.
+		auto* dataProducer = new RTC::DataProducer(dataProducerId, this, request->data);
+
+		// Verify the type of the DataProducer.
+		switch (dataProducer->GetType())
+		{
+			case RTC::DataProducer::Type::SCTP:
+			{
+				if (!this->sctpAssociation)
+				{
+					delete dataProducer;
+
+					MS_THROW_TYPE_ERROR(
+					  "cannot create a DataProducer of type 'sctp', SCTP not enabled in this Transport");
+					;
+				}
+
+				break;
+			}
+
+			case RTC::DataProducer::Type::DIRECT:
+			{
+				if (!this->direct)
+				{
+					delete dataProducer;
+
+					MS_THROW_TYPE_ERROR(
+					  "cannot create a DataProducer of type 'direct', not a direct Transport");
+					;
+				}
+
+				break;
+			}
+		}
+
+		if (dataProducer->GetType() == RTC::DataProducer::Type::SCTP)
+		{
+			// Insert the DataProducer into the SctpListener.
+			// This may throw. If so, delete the DataProducer and throw.
+			try
+			{
+				this->sctpListener.AddDataProducer(dataProducer);
+			}
+			catch (const MediaSoupError& error)
+			{
+				delete dataProducer;
+
+				throw;
+			}
+		}
+
+		// Notify the listener.
+		// This may throw if a DataProducer with same id already exists.
+		try
+		{
+			this->listener->OnTransportNewDataProducer(this, dataProducer);
+		}
+		catch (const MediaSoupError& error)
+		{
+			if (dataProducer->GetType() == RTC::DataProducer::Type::SCTP)
+			{
+				this->sctpListener.RemoveDataProducer(dataProducer);
+			}
+
+			delete dataProducer;
+
+			throw;
+		}
+
+		// Insert into the map.
+		this->mapDataProducers[dataProducerId] = dataProducer;
+
+		MS_DEBUG_DEV("DataProducer created [dataProducerId:%s]", dataProducerId.c_str());
+
+		json data = json::object();
+
+		dataProducer->FillJson(data);
+
+		request->Accept(data);
+	}
+
+	void Transport::consumeData(Channel::Request * request)
+	{
+		MS_TRACE();
+
+		// Early check. The Transport must support SCTP or be direct.
+		if (!this->sctpAssociation && !this->direct)
+		{
+			MS_THROW_ERROR("SCTP not enabled and not a direct Transport");
+		}
+
+		auto jsonDataProducerIdIt = request->internal.find("dataProducerId");
+
+		if (jsonDataProducerIdIt == request->internal.end() || !jsonDataProducerIdIt->is_string())
+		{
+			MS_THROW_ERROR("missing internal.dataProducerId");
+		}
+
+		std::string dataProducerId = jsonDataProducerIdIt->get<std::string>();
+		std::string dataConsumerId;
+
+		// This may throw.
+		SetNewDataConsumerIdFromInternal(request->internal, dataConsumerId);
+
+		// This may throw.
+		auto* dataConsumer = new RTC::DataConsumer(
+		  dataConsumerId, dataProducerId, this, request->data, this->maxMessageSize);
+
+		// Verify the type of the DataConsumer.
+		switch (dataConsumer->GetType())
+		{
+			case RTC::DataConsumer::Type::SCTP:
+			{
+				if (!this->sctpAssociation)
+				{
+					delete dataConsumer;
+
+					MS_THROW_TYPE_ERROR(
+					  "cannot create a DataConsumer of type 'sctp', SCTP not enabled in this Transport");
+					;
+				}
+
+				break;
+			}
+
+			case RTC::DataConsumer::Type::DIRECT:
+			{
+				if (!this->direct)
+				{
+					delete dataConsumer;
+
+					MS_THROW_TYPE_ERROR(
+					  "cannot create a DataConsumer of type 'direct', not a direct Transport");
+					;
+				}
+
+				break;
+			}
+		}
+
+		// Notify the listener.
+		// This may throw if no DataProducer is found.
+		try
+		{
+			this->listener->OnTransportNewDataConsumer(this, dataConsumer, dataProducerId);
+		}
+		catch (const MediaSoupError& error)
+		{
+			delete dataConsumer;
+
+			throw;
+		}
+
+		// Insert into the maps.
+		this->mapDataConsumers[dataConsumerId] = dataConsumer;
+
+		MS_DEBUG_DEV(
+		  "DataConsumer created [dataConsumerId:%s, dataProducerId:%s]",
+		  dataConsumerId.c_str(),
+		  dataProducerId.c_str());
+
+		json data = json::object();
+
+		dataConsumer->FillJson(data);
+
+		request->Accept(data);
+
+		if (IsConnected())
+			dataConsumer->TransportConnected();
+
+		if (dataConsumer->GetType() == RTC::DataConsumer::Type::SCTP)
+		{
+			if (this->sctpAssociation->GetState() == RTC::SctpAssociation::SctpState::CONNECTED)
+			{
+				dataConsumer->SctpAssociationConnected();
+			}
+
+			// Tell to the SCTP association.
+			this->sctpAssociation->HandleDataConsumer(dataConsumer);
 		}
 	}
 
