@@ -626,14 +626,6 @@ namespace RTC
                     m_timer.Stop();
                     translateMode = direct;
                 }
-                else if (mode == "unpackAndProduce")
-                {
-                    if (!m_timer.IsActive())
-                    {
-                        m_timer.Start(m_timerDelay, m_timerDelay);
-                    }
-                    translateMode = unpackAndProduce;
-                }
                 else if (mode == "decodeAndEncode")
                 {
                     if (!m_timer.IsActive())
@@ -951,7 +943,7 @@ namespace RTC
 
         // decode and encode packets
         std::vector<AVPacketPtr> packets;
-        if (nalptrs.size() > 0 && translateMode == decodeAndEncode)
+        if (nalptrs.size() > 0)
         {
             RTC::DecodeContext & c = rtpStream->GetDecodeContext(rtpStream->GetSsrc());
 
