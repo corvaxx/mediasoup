@@ -775,31 +775,31 @@ namespace RTC
                         //                     p->GetTimestamp(), p->GetPayloadType(), p->GetSequenceNumber());
 
                         // unpack and process packet
-                        RTC::UnpackContext & c2 = rtpStream->GetUnpackContext2(rtpStream->GetSsrc());
+                        // RTC::UnpackContext & c2 = rtpStream->GetUnpackContext2(rtpStream->GetSsrc());
 
-                        std::vector<std::pair<const uint8_t *, size_t> > nalptrs2;
-                        if (!RTC::Codecs::Tools::UnpackRtpPacket(c2, p.get(), rtpStream->GetMimeType(), nalptrs2))
-                        {
-                            MS_WARN_TAG(dead, "unpack failed");
-                        }
-                        else
-                        {
-                            static size_t summary = 0;
-                            static const uint8_t start_code[4] = { 0, 0, 0, 1 };
+                        // std::vector<std::pair<const uint8_t *, size_t> > nalptrs2;
+                        // if (!RTC::Codecs::Tools::UnpackRtpPacket(c2, p.get(), rtpStream->GetMimeType(), nalptrs2))
+                        // {
+                        //     MS_WARN_TAG(dead, "unpack failed");
+                        // }
+                        // else
+                        // {
+                        //     static size_t summary = 0;
+                        //     static const uint8_t start_code[4] = { 0, 0, 0, 1 };
 
-                            // TODO debug code, write to file
-                            FILE * f = fopen(c2.fileName.c_str(), "a+b");
+                        //     // TODO debug code, write to file
+                        //     FILE * f = fopen(c2.fileName.c_str(), "a+b");
 
-                            for (const std::pair<const uint8_t *, size_t> & nal : nalptrs2)
-                            {
-                                fwrite(start_code, 1, 4, f);    
-                                fwrite(nal.first, 1, nal.second, f);    
+                        //     for (const std::pair<const uint8_t *, size_t> & nal : nalptrs2)
+                        //     {
+                        //         fwrite(start_code, 1, 4, f);    
+                        //         fwrite(nal.first, 1, nal.second, f);    
 
-                                MS_WARN_TAG(dead, "write packet size %" PRIu64 " summary %" PRIu64, nal.second + 4, summary += (nal.second + 4));
-                            }
+                        //         MS_WARN_TAG(dead, "write packet size %" PRIu64 " summary %" PRIu64, nal.second + 4, summary += (nal.second + 4));
+                        //     }
 
-                            fclose(f);      
-                        }
+                        //     fclose(f);      
+                        // }
 
                         // if (random32(0) % 32 == 0)
                         // {
