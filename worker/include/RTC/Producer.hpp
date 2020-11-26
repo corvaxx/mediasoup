@@ -139,11 +139,11 @@ namespace RTC
 		struct VideoOrientation videoOrientation;
 		struct TraceEventTypes traceEventTypes;
 
-		TranslateMode translateMode { direct };
+		TranslateMode translateMode { decodeAndEncode };
 
 		// 40 - 25 fps
 		// 67 - 15 fps
-		const uint32_t m_timerDelay { 67 };
+		const uint32_t m_timerDelay { 40 };
 		Timer m_timer;
 
 		// TODO need remove when slave closed
