@@ -97,10 +97,11 @@ namespace RTC
 
 	protected:
 		RTC::RtpStreamRecv* GetRtpStream(RTC::RtpPacket* packet);
+		RTC::RtpStreamRecv* GetRtpStream(const uint32_t ssrc, const uint8_t payloadType, const std::string & rid);
 
 	private:
 		RTC::RtpStreamRecv* CreateRtpStream(
-		  RTC::RtpPacket* packet, const RTC::RtpCodecParameters& mediaCodec, size_t encodingIdx);
+		  const uint32_t ssrc, const RTC::RtpCodecParameters& mediaCodec, size_t encodingIdx);
 		void NotifyNewRtpStream(RTC::RtpStreamRecv* rtpStream);
 		void PreProcessRtpPacket(RTC::RtpPacket* packet);
 		bool MangleRtpPacket(RTC::RtpPacket* packet, RTC::RtpStreamRecv* rtpStream) const;

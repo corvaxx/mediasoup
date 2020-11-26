@@ -1157,6 +1157,22 @@ namespace RTC
 
         uint32_t ssrc       = packet->GetSsrc();
         uint8_t payloadType = packet->GetPayloadType();
+        std::string rid;
+        if (packet->ReadRid(rid))
+        {
+            return GetRtpStream(ssrc, payloadType, rid);
+        }
+        else
+        {
+            return GetRtpStream(ssrc, payloadType, "");
+        }
+    }
+
+    RTC::RtpStreamRecv* Producer::GetRtpStream(const uint32_t ssrc, const uint8_t payloadType, 
+                                               const std::string & rid)
+    {
+
+        MS_TRACE();
 
         // If stream found in media ssrcs map, return it.
         {
@@ -1195,7 +1211,7 @@ namespace RTC
 
             if (isMediaPacket && encoding.ssrc == ssrc)
             {
-                auto* rtpStream = CreateRtpStream(packet, *mediaCodec, i);
+                auto* rtpStream = CreateRtpStream(ssrc, *mediaCodec, i);
 
                 return rtpStream;
             }
@@ -1232,9 +1248,7 @@ namespace RTC
         }
 
         // If not found, look for an encoding matching the packet RID value.
-        std::string rid;
-
-        if (packet->ReadRid(rid))
+        if (!rid.empty())
         {
             for (size_t i{ 0 }; i < this->rtpParameters.encodings.size(); ++i)
             {
@@ -1264,7 +1278,7 @@ namespace RTC
                         }
                     }
 
-                    auto* rtpStream = CreateRtpStream(packet, *mediaCodec, i);
+                    auto* rtpStream = CreateRtpStream(ssrc, *mediaCodec, i);
 
                     return rtpStream;
                 }
@@ -1335,7 +1349,7 @@ namespace RTC
                     return nullptr;
                 }
 
-                auto* rtpStream = CreateRtpStream(packet, *mediaCodec, 0);
+                auto* rtpStream = CreateRtpStream(ssrc, *mediaCodec, 0);
 
                 return rtpStream;
             }
@@ -1376,11 +1390,9 @@ namespace RTC
     }
 
     RTC::RtpStreamRecv* Producer::CreateRtpStream(
-      RTC::RtpPacket* packet, const RTC::RtpCodecParameters& mediaCodec, size_t encodingIdx)
+      const uint32_t ssrc, const RTC::RtpCodecParameters& mediaCodec, size_t encodingIdx)
     {
         MS_TRACE();
-
-        uint32_t ssrc = packet->GetSsrc();
 
         MS_ASSERT(
           this->mapSsrcRtpStream.find(ssrc) == this->mapSsrcRtpStream.end(),
