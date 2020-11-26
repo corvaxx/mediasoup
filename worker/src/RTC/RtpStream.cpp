@@ -408,6 +408,8 @@ namespace RTC
 
 			DecodeContext & c = decodeContexts[ssrc];
 
+	        std::lock_guard<std::mutex> lock(c.lock);
+
 			// TODO codec id must be variable ( from stream ?)
 			c.codec        = avcodec_find_decoder(AV_CODEC_ID_H264);
 			MS_ASSERT(c.codec, "no codec");

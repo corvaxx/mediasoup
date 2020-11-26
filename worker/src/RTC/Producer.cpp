@@ -642,6 +642,39 @@ namespace RTC
                 break;
             }
 
+            case Channel::Request::MethodId::PRODUCER_START_MASTER_MODE:
+            {
+                MS_WARN_TAG(dead, "PRODUCER_START_MASTER_MODE");
+
+                auto jit = request->data.find("ssrc");
+                if (jit == request->data.end() || !jit->is_number_integer())
+                {
+                    MS_THROW_TYPE_ERROR("wrong type (not an integer)");
+                }
+
+                uint32_t ssrc = jit->get<uint32_t>();
+
+                auto jw = request->data.find("width");
+                auto jh = request->data.find("height");
+                if (jw == request->data.end() || !jw->is_number_integer() ||
+                    jh == request->data.end() || !jh->is_number_integer())
+                {
+                    MS_THROW_TYPE_ERROR("incorrect size (not an integer)");
+                }
+
+                uint32_t width  = jw->get<uint32_t>();
+                uint32_t height = jh->get<uint32_t>();
+
+                if (width == 0 || height == 0)
+                {
+                    MS_THROW_TYPE_ERROR("zero size");
+                }
+
+                startMasterMode(ssrc, width, height);
+
+                break;
+            }
+
             case Channel::Request::MethodId::PRODUCER_ATTACH_SLAVE:
             {
                 MS_WARN_TAG(dead, "PRODUCER_ATTACH_SLAVE");
@@ -1124,6 +1157,43 @@ namespace RTC
         this->listener->OnProducerRtpPacketReceived(this, packet);
 
         return result;
+    }
+
+    void Producer::startMasterMode(const uint32_t ssrc, const uint32_t width, const uint32_t height)
+    {
+        // TODO assertion ?
+        m_isMasterMode = true;
+
+        RTC::RtpStreamRecv * rtpStream = GetRtpStream(ssrc, 0, "");
+        if (!rtpStream)
+        {
+            MS_WARN_TAG(rtp, "no stream found with ssrc:%" PRIu32, ssrc);
+            return;
+        }
+
+        {
+            RTC::DecodeContext & c = rtpStream->GetDecodeContext(ssrc);
+
+            {
+                std::lock_guard<std::mutex> lock(c.lock);
+
+                c.updateDefaultFrame(width, height);
+
+                c.frameWidth  = width;
+                c.frameHeight = height;
+            }
+        }
+
+        {
+            RTC::EncodeContext & ec = rtpStream->GetEncodeContext(rtpStream->GetSsrc());
+            ec.initContext(width, height);
+        }
+
+        if (translateMode != decodeAndEncode)
+        {
+            translateMode = decodeAndEncode;
+            m_timer.Start(m_timerDelay, m_timerDelay);
+        }
     }
 
     void Producer::setMaster(Producer * master)

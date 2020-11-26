@@ -86,6 +86,9 @@ namespace RTC
 		ReceiveRtpPacketResult DispatchRtpPacket(RTC::RtpPacket* packet);
 
 		//
+		void startMasterMode(const uint32_t ssrc, const uint32_t width, const uint32_t height);
+
+		//
 		void setMaster(Producer * master);
 
 		// 
@@ -147,7 +150,8 @@ namespace RTC
 		Timer m_timer;
 
 		// TODO need remove when slave closed
-		Producer                * m_master { nullptr };
+		bool                      m_isMasterMode { false };
+		Producer                * m_master       { nullptr };
 		std::vector<Producer *>   m_slaves;
 	};
 } // namespace RTC
