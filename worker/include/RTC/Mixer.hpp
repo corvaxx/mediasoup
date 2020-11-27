@@ -4,6 +4,8 @@
 #ifndef MS_RTC_MIXER_HPP
 #define MS_RTC_MIXER_HPP
 
+#include "Channel/Request.hpp"
+
 #include <json.hpp>
 #include <string>
 
@@ -28,6 +30,8 @@ public:
     Mixer();
     virtual ~Mixer();
 
+public:
+        virtual void HandleRequest(Channel::Request * request);
 };
 
 } // namespace RTC

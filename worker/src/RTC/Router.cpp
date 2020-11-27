@@ -409,6 +409,14 @@ namespace RTC
 				break;
 			}
 
+			case Channel::Request::MethodId::MIXER_PRODUCE:
+			{
+				// mixer requests, must be delivered to mixer
+				// RTC::Mixer * mixer = GetMixerFromInternal(request->internal);
+				// mixer->HandleRequest(request);
+				break;
+			}
+
 			// Any other request must be delivered to the corresponding Transport.
 			default:
 			{
