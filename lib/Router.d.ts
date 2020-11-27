@@ -13,6 +13,7 @@ import { DataConsumer } from './DataConsumer';
 import { AudioLevelObserver, AudioLevelObserverOptions } from './AudioLevelObserver';
 import { RtpCapabilities, RtpCodecCapability } from './RtpParameters';
 import { NumSctpStreams } from './SctpParameters';
+import { Mixer } from './Mixer';
 export declare type RouterOptions = {
     /**
      * Router media codecs.
@@ -171,6 +172,10 @@ export declare class Router extends EnhancedEventEmitter {
      * Create an AudioLevelObserver.
      */
     createAudioLevelObserver({ maxEntries, threshold, interval, appData }?: AudioLevelObserverOptions): Promise<AudioLevelObserver>;
+    /**
+     * Create an Mixer.
+     */
+    createMixer(): Promise<Mixer>;
     /**
      * Check whether the given RTP capabilities can consume the given Producer.
      */

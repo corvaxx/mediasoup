@@ -19,6 +19,7 @@ import { RtpObserver } from './RtpObserver';
 import { AudioLevelObserver, AudioLevelObserverOptions } from './AudioLevelObserver';
 import { RtpCapabilities, RtpCodecCapability } from './RtpParameters';
 import { NumSctpStreams } from './SctpParameters';
+import { Mixer } from './Mixer';
 
 export type RouterOptions =
 {
@@ -943,6 +944,23 @@ export class Router extends EnhancedEventEmitter
 		this._observer.safeEmit('newrtpobserver', audioLevelObserver);
 
 		return audioLevelObserver;
+	}
+
+	/**
+	 * Create an Mixer.
+	 */
+	async createMixer(
+	): Promise<Mixer>
+	{
+		logger.debug('createMixer()');
+
+		const reqData = { };
+
+		await this._channel.request('router.createMixer', reqData);
+
+		const mixer = new Mixer();
+
+		return mixer;
 	}
 
 	/**
