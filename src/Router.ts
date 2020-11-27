@@ -958,7 +958,10 @@ export class Router extends EnhancedEventEmitter
 
 		await this._channel.request('router.createMixer', reqData);
 
-		const mixer = new Mixer();
+		const mixer = new Mixer({
+			channel         : this._channel,
+			payloadChannel  : this._payloadChannel,
+		});
 
 		return mixer;
 	}
