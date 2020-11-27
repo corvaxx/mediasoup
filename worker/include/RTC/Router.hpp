@@ -9,6 +9,7 @@
 #include "RTC/DataConsumer.hpp"
 #include "RTC/DataProducer.hpp"
 #include "RTC/AbstractProducer.hpp"
+#include "RTC/Mixer.hpp"
 #include "RTC/RtpObserver.hpp"
 #include "RTC/RtpPacket.hpp"
 #include "RTC/RtpStream.hpp"
@@ -40,6 +41,8 @@ namespace RTC
 		void SetNewRtpObserverIdFromInternal(json& internal, std::string& rtpObserverId) const;
 		RTC::RtpObserver* GetRtpObserverFromInternal(json& internal) const;
 		RTC::AbstractProducer* GetProducerFromInternal(json& internal) const;
+
+		void createMixer(json & internal);
 
 		/* Pure virtual methods inherited from RTC::Transport::Listener. */
 	public:

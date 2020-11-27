@@ -297,6 +297,14 @@ namespace RTC
 				break;
 			}
 
+			case Channel::Request::MethodId::ROUTER_CREATE_MIXER:
+			{
+				createMixer(request->data);
+
+				request->Accept();
+				break;
+			}
+
 			case Channel::Request::MethodId::TRANSPORT_CLOSE:
 			{
 				// This may throw.
@@ -519,6 +527,11 @@ namespace RTC
 		RTC::AbstractProducer* producer = it->second;
 
 		return producer;
+	}
+
+	void Router::createMixer(json & /*data*/)
+	{
+		MS_TRACE();
 	}
 
 	inline void Router::OnTransportNewProducer(RTC::Transport* /*transport*/, RTC::AbstractProducer* producer)
