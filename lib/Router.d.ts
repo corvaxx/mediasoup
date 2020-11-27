@@ -175,7 +175,7 @@ export declare class Router extends EnhancedEventEmitter {
     /**
      * Create an Mixer.
      */
-    createMixer(): Promise<Mixer>;
+    createMixer(appData?: {}): Promise<Mixer>;
     /**
      * Check whether the given RTP capabilities can consume the given Producer.
      */

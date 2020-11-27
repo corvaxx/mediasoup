@@ -950,17 +950,24 @@ export class Router extends EnhancedEventEmitter
 	 * Create an Mixer.
 	 */
 	async createMixer(
+			appData = {}
 	): Promise<Mixer>
 	{
 		logger.debug('createMixer()');
 
+		if (appData && typeof appData !== 'object')
+			throw new TypeError('if given, appData must be an object');
+
+		const internal = { ...this._internal, mixerId: uuidv4() };
 		const reqData = { };
 
-		await this._channel.request('router.createMixer', reqData);
+		await this._channel.request('router.createMixer', internal, reqData);
 
 		const mixer = new Mixer({
+			internal,
 			channel         : this._channel,
 			payloadChannel  : this._payloadChannel,
+			appData
 		});
 
 		return mixer;

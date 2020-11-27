@@ -10,24 +10,38 @@ const logger = new Logger('Mixer');
 
 export class Mixer extends EnhancedEventEmitter
 {
+    // Internal data.
+    protected readonly _internal:
+    {
+        routerId: string;
+        mixerId: string;
+    };
+
     // Channel instance.
     protected readonly _channel: Channel;
 
     // PayloadChannel instance.
     protected readonly _payloadChannel: PayloadChannel;
 
-    constructor({ channel, payloadChannel } : 
+    // Custom app data.
+    private readonly _appData?: any;
+
+    constructor({ internal, channel, payloadChannel, appData } : 
     { 
-        channel : Channel; 
+        internal       : any;
+        channel        : Channel; 
         payloadChannel : PayloadChannel;
+        appData        : any;
     })
     {
         super();
 
         logger.debug('constructor()');
 
+        this._internal       = internal;
         this._channel        = channel;
         this._payloadChannel = payloadChannel;
+        this._appData        = appData;
     }
 
     async produce(kind:MediaKind):Promise<Producer>
