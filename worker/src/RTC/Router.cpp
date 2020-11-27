@@ -410,6 +410,7 @@ namespace RTC
 			}
 
 			case Channel::Request::MethodId::MIXER_PRODUCE:
+			case Channel::Request::MethodId::MIXER_CLOSE:
 			{
 				// mixer requests, must be delivered to mixer
 				RTC::Mixer * mixer = GetMixerFromInternal(request->internal);

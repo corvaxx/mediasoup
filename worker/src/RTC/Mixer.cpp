@@ -42,6 +42,12 @@ void Mixer::HandleRequest(Channel::Request * request)
             break;
         }
 
+        case Channel::Request::MethodId::MIXER_CLOSE:
+        {
+            request->Accept();
+            break;
+        }
+
         default:
         {
             MS_THROW_ERROR("unknown method '%s'", request->method.c_str());

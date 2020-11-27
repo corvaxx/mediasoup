@@ -37,6 +37,7 @@ namespace Channel
 		{ "transport.consumeData",                       Request::MethodId::TRANSPORT_CONSUME_DATA                           },
 		{ "transport.enableTraceEvent",                  Request::MethodId::TRANSPORT_ENABLE_TRACE_EVENT                     },
 		{ "mixer.produce",                               Request::MethodId::MIXER_PRODUCE                                    },
+		{ "mixer.close",                                 Request::MethodId::MIXER_CLOSE                                      },
 		{ "producer.close",                              Request::MethodId::PRODUCER_CLOSE                                   },
 		{ "producer.dump",                               Request::MethodId::PRODUCER_DUMP                                    },
 		{ "producer.getStats",                           Request::MethodId::PRODUCER_GET_STATS                               },
