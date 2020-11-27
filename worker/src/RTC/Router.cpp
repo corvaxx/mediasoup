@@ -396,8 +396,8 @@ namespace RTC
 			case Channel::Request::MethodId::RTP_OBSERVER_REMOVE_PRODUCER:
 			{
 				// This may throw.
-				RTC::RtpObserver* rtpObserver = GetRtpObserverFromInternal(request->internal);
-				RTC::AbstractProducer* producer       = GetProducerFromInternal(request->internal);
+				RTC::RtpObserver* rtpObserver   = GetRtpObserverFromInternal(request->internal);
+				RTC::AbstractProducer* producer = GetProducerFromInternal(request->internal);
 
 				rtpObserver->RemoveProducer(producer);
 
@@ -412,8 +412,8 @@ namespace RTC
 			case Channel::Request::MethodId::MIXER_PRODUCE:
 			{
 				// mixer requests, must be delivered to mixer
-				// RTC::Mixer * mixer = GetMixerFromInternal(request->internal);
-				// mixer->HandleRequest(request);
+				RTC::Mixer * mixer = GetMixerFromInternal(request->internal);
+				mixer->HandleRequest(request);
 				break;
 			}
 
@@ -535,6 +535,26 @@ namespace RTC
 		RTC::AbstractProducer* producer = it->second;
 
 		return producer;
+	}
+
+	RTC::Mixer * Router::GetMixerFromInternal(json & internal) const
+	{
+		MS_TRACE();
+
+		auto jsonMixerIdIt = internal.find("mixerId");
+
+		if (jsonMixerIdIt == internal.end() || !jsonMixerIdIt->is_string())
+			MS_THROW_ERROR("missing internal.mixerId");
+
+		auto it = this->mapMixers.find(jsonMixerIdIt->get<std::string>());
+
+		if (it == this->mapMixers.end())
+		{
+			MS_THROW_ERROR("Mixer not found");
+		}
+
+		RTC::Mixer * mixer = it->second;
+		return mixer;
 	}
 
 	void Router::createMixer(json & /*data*/)

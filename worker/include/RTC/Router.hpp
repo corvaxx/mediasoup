@@ -37,12 +37,14 @@ namespace RTC
 
 	private:
 		void SetNewTransportIdFromInternal(json& internal, std::string& transportId) const;
-		RTC::Transport* GetTransportFromInternal(json& internal) const;
 		void SetNewRtpObserverIdFromInternal(json& internal, std::string& rtpObserverId) const;
-		RTC::RtpObserver* GetRtpObserverFromInternal(json& internal) const;
-		RTC::AbstractProducer* GetProducerFromInternal(json& internal) const;
 
-		void createMixer(json & internal);
+		RTC::Transport        * GetTransportFromInternal(json& internal) const;
+		RTC::RtpObserver      * GetRtpObserverFromInternal(json& internal) const;
+		RTC::AbstractProducer * GetProducerFromInternal(json& internal) const;
+		RTC::Mixer            * GetMixerFromInternal(json & internal) const;
+
+		void createMixer(json & data);
 
 		/* Pure virtual methods inherited from RTC::Transport::Listener. */
 	public:
@@ -106,6 +108,7 @@ namespace RTC
 		std::unordered_map<RTC::DataProducer*, std::unordered_set<RTC::DataConsumer*>> mapDataProducerDataConsumers;
 		std::unordered_map<RTC::DataConsumer*, RTC::DataProducer*> mapDataConsumerDataProducer;
 		std::unordered_map<std::string, RTC::DataProducer*> mapDataProducers;
+		std::unordered_map<std::string, RTC::Mixer*> mapMixers;
 	};
 } // namespace RTC
 
