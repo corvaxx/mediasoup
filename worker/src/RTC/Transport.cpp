@@ -2469,14 +2469,12 @@ namespace RTC
 	inline void Transport::OnProducerPaused(RTC::AbstractProducer* producer)
 	{
 		MS_TRACE();
-
 		this->listener->OnTransportProducerPaused(this, producer);
 	}
 
 	inline void Transport::OnProducerResumed(RTC::AbstractProducer* producer)
 	{
 		MS_TRACE();
-
 		this->listener->OnTransportProducerResumed(this, producer);
 	}
 
@@ -2484,7 +2482,6 @@ namespace RTC
 	  RTC::AbstractProducer* producer, RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
 	{
 		MS_TRACE();
-
 		this->listener->OnTransportProducerNewRtpStream(this, producer, rtpStream, mappedSsrc);
 	}
 
@@ -2492,7 +2489,6 @@ namespace RTC
 	  RTC::AbstractProducer* producer, RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore)
 	{
 		MS_TRACE();
-
 		this->listener->OnTransportProducerRtpStreamScore(this, producer, rtpStream, score, previousScore);
 	}
 
@@ -2500,21 +2496,18 @@ namespace RTC
 	  RTC::AbstractProducer* producer, RTC::RtpStream* rtpStream, bool first)
 	{
 		MS_TRACE();
-
 		this->listener->OnTransportProducerRtcpSenderReport(this, producer, rtpStream, first);
 	}
 
 	inline void Transport::OnProducerRtpPacketReceived(RTC::AbstractProducer* producer, RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
-
 		this->listener->OnTransportProducerRtpPacketReceived(this, producer, packet);
 	}
 
 	inline void Transport::OnProducerSendRtcpPacket(RTC::AbstractProducer* /*producer*/, RTC::RTCP::Packet* packet)
 	{
 		MS_TRACE();
-
 		SendRtcpPacket(packet);
 	}
 
@@ -2522,7 +2515,6 @@ namespace RTC
 	  RTC::AbstractProducer* producer, uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost)
 	{
 		MS_TRACE();
-
 		this->listener->OnTransportNeedWorstRemoteFractionLost(
 		  this, producer, mappedSsrc, worstRemoteFractionLost);
 	}

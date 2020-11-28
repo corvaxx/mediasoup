@@ -31,6 +31,9 @@ enum class ReceiveRtpPacketResult
     RETRANSMISSION
 };
 
+class AbstractProducer;
+typedef std::shared_ptr<AbstractProducer> AbstractProducerPtr;
+
 //******************************************************************************
 //******************************************************************************
 class AbstractProducer

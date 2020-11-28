@@ -32,11 +32,18 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		// Close all Mixers
+		for (auto& kv : this->mapMixers)
+		{
+			auto * mixer = kv.second;
+			delete mixer;
+		}
+		this->mapMixers.clear();
+
 		// Close all Transports.
 		for (auto& kv : this->mapTransports)
 		{
 			auto* transport = kv.second;
-
 			delete transport;
 		}
 		this->mapTransports.clear();
@@ -45,7 +52,6 @@ namespace RTC
 		for (auto& kv : this->mapRtpObservers)
 		{
 			auto* rtpObserver = kv.second;
-
 			delete rtpObserver;
 		}
 		this->mapRtpObservers.clear();
@@ -67,25 +73,30 @@ namespace RTC
 		// Add id.
 		jsonObject["id"] = this->id;
 
+		// Add mixerIds.
+		jsonObject["mixerIds"] = json::array();
+		auto jsonMixerIdsIt    = jsonObject.find("mixerIds");
+		for (const auto & kv : this->mapMixers)
+		{
+			const auto & mixerId = kv.first;
+			jsonMixerIdsIt->emplace_back(mixerId);
+		}
+
 		// Add transportIds.
 		jsonObject["transportIds"] = json::array();
 		auto jsonTransportIdsIt    = jsonObject.find("transportIds");
-
-		for (const auto& kv : this->mapTransports)
+		for (const auto & kv : this->mapTransports)
 		{
-			const auto& transportId = kv.first;
-
+			const auto & transportId = kv.first;
 			jsonTransportIdsIt->emplace_back(transportId);
 		}
 
 		// Add rtpObserverIds.
 		jsonObject["rtpObserverIds"] = json::array();
 		auto jsonRtpObserverIdsIt    = jsonObject.find("rtpObserverIds");
-
-		for (const auto& kv : this->mapRtpObservers)
+		for (const auto & kv : this->mapRtpObservers)
 		{
-			const auto& rtpObserverId = kv.first;
-
+			const auto & rtpObserverId = kv.first;
 			jsonRtpObserverIdsIt->emplace_back(rtpObserverId);
 		}
 
@@ -299,9 +310,7 @@ namespace RTC
 
 			case Channel::Request::MethodId::ROUTER_CREATE_MIXER:
 			{
-				createMixer(request->data);
-
-				request->Accept();
+				createMixer(request);
 				break;
 			}
 
@@ -500,6 +509,25 @@ namespace RTC
 			MS_THROW_ERROR("an RtpObserver with same rtpObserverId already exists");
 	}
 
+	void Router::SetNewMixerIdFromInternal(json & internal, std::string & mixerId) const
+	{
+		MS_TRACE();
+
+		auto it = internal.find("mixerId");
+
+		if (it == internal.end() || !it->is_string())
+		{
+			MS_THROW_ERROR("missing internal.rtpObserverId");
+		}
+
+		mixerId.assign(it->get<std::string>());
+
+		if (this->mapMixers.find(id) != this->mapMixers.end())
+		{
+			MS_THROW_ERROR("an Mixer with same id already exists");
+		}
+	}
+
 	RTC::RtpObserver* Router::GetRtpObserverFromInternal(json& internal) const
 	{
 		MS_TRACE();
@@ -558,12 +586,25 @@ namespace RTC
 		return mixer;
 	}
 
-	void Router::createMixer(json & /*data*/)
+	void Router::createMixer(Channel::Request * request)
 	{
 		MS_TRACE();
+
+		// This may throw
+		std::string id;
+		SetNewMixerIdFromInternal(request->internal, id);
+
+		auto * mixer = new RTC::Mixer(id, this, request->data);
+
+		// Insert into the map.
+		mapMixers[id] = mixer;
+
+		MS_DEBUG_DEV("Mixer created [id:%s]", id.c_str());
+
+		request->Accept();
 	}
 
-	inline void Router::OnTransportNewProducer(RTC::Transport* /*transport*/, RTC::AbstractProducer* producer)
+    void Router::onNewProducer(RTC::AbstractProducer * producer)
 	{
 		MS_TRACE();
 
@@ -582,7 +623,19 @@ namespace RTC
 		this->mapProducerRtpObservers[producer];
 	}
 
-	inline void Router::OnTransportProducerClosed(RTC::Transport* /*transport*/, RTC::AbstractProducer* producer)
+	inline void Router::OnTransportNewProducer(RTC::Transport* /*transport*/, RTC::AbstractProducer* producer)
+	{
+		MS_TRACE();
+		onNewProducer(producer);
+	}
+
+    inline void Router::OnMixerNewProducer(RTC::Mixer * /*mixer*/, RTC::AbstractProducer * producer)
+    {
+		MS_TRACE();
+		onNewProducer(producer);
+    }
+
+	void Router::onProducerClosed(RTC::AbstractProducer* producer)
 	{
 		MS_TRACE();
 
@@ -627,7 +680,19 @@ namespace RTC
 		this->mapProducerRtpObservers.erase(mapProducerRtpObserversIt);
 	}
 
-	inline void Router::OnTransportProducerPaused(RTC::Transport* /*transport*/, RTC::AbstractProducer* producer)
+	inline void Router::OnTransportProducerClosed(RTC::Transport* /*transport*/, RTC::AbstractProducer* producer)
+	{
+		MS_TRACE();
+		onProducerClosed(producer);
+	}
+
+    inline void Router::OnMixerProducerClosed(RTC::Mixer* /*mixer*/, RTC::AbstractProducer* producer)
+    {
+		MS_TRACE();
+		onProducerClosed(producer);
+    }
+
+	void Router::onProducerPaused(RTC::AbstractProducer* producer)
 	{
 		MS_TRACE();
 
@@ -651,7 +716,19 @@ namespace RTC
 		}
 	}
 
-	inline void Router::OnTransportProducerResumed(RTC::Transport* /*transport*/, RTC::AbstractProducer* producer)
+	inline void Router::OnTransportProducerPaused(RTC::Transport * /*transport*/, RTC::AbstractProducer * producer)
+	{
+		MS_TRACE();
+		onProducerPaused(producer);
+	}
+
+    inline void Router::OnMixerProducerPaused(RTC::Mixer * /*mixer*/, RTC::AbstractProducer * producer)
+    {
+		MS_TRACE();
+		onProducerPaused(producer);
+    }
+
+	void Router::onProducerResumed(RTC::AbstractProducer * producer)
 	{
 		MS_TRACE();
 
@@ -675,8 +752,21 @@ namespace RTC
 		}
 	}
 
-	inline void Router::OnTransportProducerNewRtpStream(
-	  RTC::Transport* /*transport*/, RTC::AbstractProducer* producer, RTC::RtpStream* rtpStream, uint32_t mappedSsrc)
+	inline void Router::OnTransportProducerResumed(RTC::Transport * /*transport*/, RTC::AbstractProducer * producer)
+	{
+		MS_TRACE();
+		onProducerResumed(producer);
+	}
+
+    inline void Router::OnMixerProducerResumed(RTC::Mixer * /*mixer*/, RTC::AbstractProducer * producer)
+    {
+		MS_TRACE();
+		onProducerResumed(producer);
+    }
+
+	void Router::onProducerNewRtpStream(RTC::AbstractProducer * producer, 
+										RTC::RtpStream * rtpStream, 
+										uint32_t mappedSsrc)
 	{
 		MS_TRACE();
 
@@ -688,12 +778,28 @@ namespace RTC
 		}
 	}
 
-	inline void Router::OnTransportProducerRtpStreamScore(
-	  RTC::Transport* /*transport*/,
-	  RTC::AbstractProducer* producer,
-	  RTC::RtpStream* rtpStream,
-	  uint8_t score,
-	  uint8_t previousScore)
+	inline void Router::OnTransportProducerNewRtpStream(RTC::Transport * /*transport*/, 
+														RTC::AbstractProducer * producer, 
+														RTC::RtpStream * rtpStream, 
+														uint32_t mappedSsrc)
+	{
+		MS_TRACE();
+		onProducerNewRtpStream(producer, rtpStream, mappedSsrc);
+	}
+
+    inline void Router::OnMixerProducerNewRtpStream(RTC::Mixer* mixer,
+                                                     RTC::AbstractProducer* producer,
+                                                     RTC::RtpStream* rtpStream,
+                                                     uint32_t mappedSsrc)
+    {
+		MS_TRACE();
+		onProducerNewRtpStream(producer, rtpStream, mappedSsrc);
+    }
+
+	void Router::onProducerRtpStreamScore(RTC::AbstractProducer* producer,
+										  RTC::RtpStream* rtpStream,
+										  uint8_t score,
+										  uint8_t previousScore)
 	{
 		MS_TRACE();
 
@@ -705,8 +811,27 @@ namespace RTC
 		}
 	}
 
-	inline void Router::OnTransportProducerRtcpSenderReport(
-	  RTC::Transport* /*transport*/, RTC::AbstractProducer* producer, RTC::RtpStream* rtpStream, bool first)
+	inline void Router::OnTransportProducerRtpStreamScore(RTC::Transport* /*transport*/,
+														  RTC::AbstractProducer* producer,
+														  RTC::RtpStream* rtpStream,
+														  uint8_t score,
+														  uint8_t previousScore)
+	{
+		MS_TRACE();
+		onProducerRtpStreamScore(producer, rtpStream, score, previousScore);
+	}
+
+    inline void Router::OnMixerProducerRtpStreamScore(RTC::Mixer * /*mixer*/,
+                                                       RTC::AbstractProducer * producer,
+                                                       RTC::RtpStream * rtpStream,
+                                                       uint8_t score,
+                                                       uint8_t previousScore)
+    {
+		MS_TRACE();
+		onProducerRtpStreamScore(producer, rtpStream, score, previousScore);
+    }
+
+	void Router::onProducerRtcpSenderReport(RTC::AbstractProducer* producer, RTC::RtpStream* rtpStream, bool first)
 	{
 		MS_TRACE();
 
@@ -718,8 +843,26 @@ namespace RTC
 		}
 	}
 
-	inline void Router::OnTransportProducerRtpPacketReceived(
-	  RTC::Transport* /*transport*/, RTC::AbstractProducer* producer, RTC::RtpPacket* packet)
+	inline void Router::OnTransportProducerRtcpSenderReport(RTC::Transport * /*transport*/, 
+															RTC::AbstractProducer * producer, 
+															RTC::RtpStream * rtpStream, 
+															bool first)
+	{
+		MS_TRACE();
+		onProducerRtcpSenderReport(producer, rtpStream, first);
+	}
+
+    inline void Router::OnMixerProducerRtcpSenderReport(RTC::Mixer * /*mixer*/, 
+                                                         RTC::AbstractProducer * producer, 
+                                                         RTC::RtpStream * rtpStream, 
+                                                         bool first)
+    {
+		MS_TRACE();
+		onProducerRtcpSenderReport(producer, rtpStream, first);
+    }
+
+	void Router::onProducerRtpPacketReceived(RTC::AbstractProducer * producer, 
+												RTC::RtpPacket * packet)
 	{
 		MS_TRACE();
 
@@ -749,11 +892,25 @@ namespace RTC
 		}
 	}
 
-	inline void Router::OnTransportNeedWorstRemoteFractionLost(
-	  RTC::Transport* /*transport*/,
-	  RTC::AbstractProducer* producer,
-	  uint32_t mappedSsrc,
-	  uint8_t& worstRemoteFractionLost)
+	inline void Router::OnTransportProducerRtpPacketReceived(RTC::Transport * /*transport*/, 
+																RTC::AbstractProducer * producer, 
+																RTC::RtpPacket * packet)
+	{
+		MS_TRACE();
+		onProducerRtpPacketReceived(producer, packet);
+	}
+
+    inline void Router::OnMixerProducerRtpPacketReceived(RTC::Mixer * /*mixer*/, 
+                                                          RTC::AbstractProducer * producer, 
+                                                          RTC::RtpPacket * packet)
+    {
+		MS_TRACE();
+		onProducerRtpPacketReceived(producer, packet);
+    }
+
+	void Router::onNeedWorstRemoteFractionLost(RTC::AbstractProducer* producer,
+												uint32_t mappedSsrc,
+												uint8_t& worstRemoteFractionLost)
 	{
 		MS_TRACE();
 
@@ -764,6 +921,25 @@ namespace RTC
 			consumer->NeedWorstRemoteFractionLost(mappedSsrc, worstRemoteFractionLost);
 		}
 	}
+
+
+	inline void Router::OnTransportNeedWorstRemoteFractionLost(RTC::Transport* /*transport*/,	  
+																RTC::AbstractProducer* producer,
+																uint32_t mappedSsrc,
+																uint8_t& worstRemoteFractionLost)
+	{
+		MS_TRACE();
+		onNeedWorstRemoteFractionLost(producer, mappedSsrc, worstRemoteFractionLost);
+	}
+
+    inline void Router::OnMixerNeedWorstRemoteFractionLost(RTC::Mixer* mixer,
+                                                            RTC::AbstractProducer* producer,
+                                                            uint32_t mappedSsrc,
+                                                            uint8_t& worstRemoteFractionLost)
+    {
+		MS_TRACE();
+		onNeedWorstRemoteFractionLost(producer, mappedSsrc, worstRemoteFractionLost);
+    }
 
 	inline void Router::OnTransportNewConsumer(
 	  RTC::Transport* /*transport*/, RTC::Consumer* consumer, std::string& producerId)
