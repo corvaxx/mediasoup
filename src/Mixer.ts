@@ -69,7 +69,7 @@ export class Mixer extends EnhancedEventEmitter
     }
 
     /**
-     * Close the Transport.
+     * Close the Mixer.
      */
     close(): void
     {
