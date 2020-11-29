@@ -15,11 +15,15 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <memory>
 
 using json = nlohmann::json;
 
 namespace RTC
 {
+	class Producer;
+	typedef std::shared_ptr<Producer> ProducerPtr;
+
 	class Producer : public AbstractProducer, 
 					 public RTC::RtpStreamRecv::Listener, 
 					 public RTC::KeyFrameRequestManager::Listener,

@@ -244,7 +244,7 @@ void Mixer::produce(Channel::Request * request)
     std::string producerId;
     setNewProducerIdFromInternal(request->internal, producerId);
 
-    AbstractProducerPtr producer(new RTC::Producer(producerId, this, g_data/*request->data*/));
+    ProducerPtr producer(new RTC::Producer(producerId, this, g_data/*request->data*/));
 
     try
     {
