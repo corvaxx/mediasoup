@@ -44,16 +44,23 @@ public:
     public:
         virtual void OnProducerPaused(RTC::AbstractProducer * producer)  = 0;
         virtual void OnProducerResumed(RTC::AbstractProducer* producer) = 0;
-        virtual void OnProducerNewRtpStream(
-          RTC::AbstractProducer * producer, RTC::RtpStream* rtpStream, uint32_t mappedSsrc) = 0;
-        virtual void OnProducerRtpStreamScore(
-          RTC::AbstractProducer * producer, RTC::RtpStream* rtpStream, uint8_t score, uint8_t previousScore) = 0;
-        virtual void OnProducerRtcpSenderReport(
-          RTC::AbstractProducer * producer, RTC::RtpStream* rtpStream, bool first)                         = 0;
-        virtual void OnProducerRtpPacketReceived(RTC::AbstractProducer * producer, RTC::RtpPacket* packet) = 0;
-        virtual void OnProducerSendRtcpPacket(RTC::AbstractProducer * producer, RTC::RTCP::Packet* packet) = 0;
-        virtual void OnProducerNeedWorstRemoteFractionLost(
-          RTC::AbstractProducer * producer, uint32_t mappedSsrc, uint8_t& worstRemoteFractionLost) = 0;
+        virtual void OnProducerNewRtpStream(RTC::AbstractProducer * producer, 
+                                            RTC::RtpStream* rtpStream, 
+                                            uint32_t mappedSsrc) = 0;
+        virtual void OnProducerRtpStreamScore(RTC::AbstractProducer * producer, 
+                                                RTC::RtpStream* rtpStream, 
+                                                uint8_t score, 
+                                                uint8_t previousScore) = 0;
+        virtual void OnProducerRtcpSenderReport(RTC::AbstractProducer * producer, 
+                                                RTC::RtpStream* rtpStream, 
+                                                bool first) = 0;
+        virtual void OnProducerRtpPacketReceived(RTC::AbstractProducer * producer, 
+                                                RTC::RtpPacket* packet) = 0;
+        virtual void OnProducerSendRtcpPacket(RTC::AbstractProducer * producer, 
+                                                RTC::RTCP::Packet* packet) = 0;
+        virtual void OnProducerNeedWorstRemoteFractionLost(RTC::AbstractProducer * producer, 
+                                                            uint32_t mappedSsrc, 
+                                                            uint8_t& worstRemoteFractionLost) = 0;
     };
 
 public:
