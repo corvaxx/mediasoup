@@ -69,9 +69,15 @@ public:
 protected:
     // 
     void setNewProducerIdFromInternal(json & internal, std::string & producerId) const;
+    //
+    RTC::AbstractProducerPtr getProducerFromInternal(json & internal) const;
 
     // 
     void produce(Channel::Request * request);
+    // 
+    void close(Channel::Request * request);
+    // 
+    void add(Channel::Request * request);
 
 protected:
     // AbstractProducer::Listener

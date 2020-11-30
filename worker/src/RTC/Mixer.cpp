@@ -47,7 +47,13 @@ void Mixer::HandleRequest(Channel::Request * request)
 
         case Channel::Request::MethodId::MIXER_CLOSE:
         {
-            request->Accept();
+            close(request);
+            break;
+        }
+
+        case Channel::Request::MethodId::MIXER_ADD:
+        {
+            add(request);
             break;
         }
 
@@ -77,6 +83,26 @@ void Mixer::setNewProducerIdFromInternal(json & internal, std::string & producer
     {
         MS_THROW_ERROR("a Producer with same producerId already exists");
     }
+}
+
+//******************************************************************************
+//******************************************************************************
+RTC::AbstractProducerPtr Mixer::getProducerFromInternal(json & internal) const
+{
+    MS_TRACE();
+
+    auto jsonProducerIdIt = internal.find("mixerProducerId");
+
+    if (jsonProducerIdIt == internal.end() || !jsonProducerIdIt->is_string())
+        MS_THROW_ERROR("missing internal.mixerProducerId");
+
+    auto it = this->mapProducers.find(jsonProducerIdIt->get<std::string>());
+
+    if (it == this->mapProducers.end())
+        MS_THROW_ERROR("Producer not found");
+
+    RTC::AbstractProducerPtr producer = it->second;
+    return producer;
 }
 
 //******************************************************************************
@@ -229,6 +255,22 @@ void Mixer::produce(Channel::Request * request)
     //             this->tccServer->TransportConnected();
     //     }
     // }
+}
+
+//******************************************************************************
+//******************************************************************************
+void Mixer::close(Channel::Request * request)
+{
+    MS_TRACE();
+    request->Accept();
+}
+
+//******************************************************************************
+//******************************************************************************
+void Mixer::add(Channel::Request * request)
+{
+    MS_TRACE();
+    request->Accept();
 }
 
 //******************************************************************************
