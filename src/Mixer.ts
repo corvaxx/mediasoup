@@ -5,7 +5,9 @@ import { Logger } from './Logger';
 import { MediaKind } from './RtpParameters';
 import { PayloadChannel } from './PayloadChannel';
 import { Producer, ProducerOptions } from './Producer';
+import { RtpCapabilities } from './RtpParameters';
 import { v4 as uuidv4 } from 'uuid';
+import * as ortc from './ortc';
 
 
 const logger = new Logger('Mixer');
@@ -28,18 +30,145 @@ export class Mixer extends EnhancedEventEmitter
     // Custom app data.
     private readonly _appData?: any;
 
+    // Method to retrieve Router RTP capabilities.
+    protected readonly _getRouterRtpCapabilities: () => RtpCapabilities;
+
     // Close flag.
     protected _closed = false;
 
     // Producers map.
     protected readonly _producers: Map<string, Producer> = new Map();
 
-    constructor({ internal, channel, payloadChannel, appData } : 
+    // rtp parameters
+    protected readonly _rtpParameters = {
+           "codecs": [
+               {
+                   "clockRate": 90000,
+                   "mimeType": "video/H264",
+                   "parameters": {
+                       "level-asymmetry-allowed": 1,
+                       "packetization-mode": 1,
+                       "profile-level-id": "42e01f"
+                   },
+                   "payloadType": 125,
+                   "rtcpFeedback": [
+                       {
+                           "parameter": "",
+                           "type": "goog-remb"
+                       },
+                       {
+                           "parameter": "",
+                           "type": "transport-cc"
+                       },
+                       {
+                           "parameter": "fir",
+                           "type": "ccm"
+                       },
+                       {
+                           "parameter": "",
+                           "type": "nack"
+                       },
+                       {
+                           "parameter": "pli",
+                           "type": "nack"
+                       }
+                   ]
+               },
+               {
+                   "clockRate": 90000,
+                   "mimeType": "video/rtx",
+                   "parameters": {
+                       "apt": 125
+                   },
+                   "payloadType": 107,
+                   "rtcpFeedback": []
+               }
+           ],
+           "encodings": [
+               {
+                   "active": true,
+                   "dtx": false,
+                   "maxBitrate": 500000,
+                   "rid": "r0",
+                   "scalabilityMode": "S1T3",
+                   "scaleResolutionDownBy": 4
+               },
+               {
+                   "active": true,
+                   "dtx": false,
+                   "maxBitrate": 1000000,
+                   "rid": "r1",
+                   "scalabilityMode": "S1T3",
+                   "scaleResolutionDownBy": 2
+               },
+               {
+                   "active": true,
+                   "dtx": false,
+                   "maxBitrate": 5000000,
+                   "rid": "r2",
+                   "scalabilityMode": "S1T3",
+                   "scaleResolutionDownBy": 1
+               }
+           ],
+           "headerExtensions": [
+               {
+                   "encrypt": false,
+                   "id": 4,
+                   "parameters": {},
+                   "uri": "urn:ietf:params:rtp-hdrext:sdes:mid"
+               },
+               {
+                   "encrypt": false,
+                   "id": 5,
+                   "parameters": {},
+                   "uri": "urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id"
+               },
+               {
+                   "encrypt": false,
+                   "id": 6,
+                   "parameters": {},
+                   "uri": "urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id"
+               },
+               {
+                   "encrypt": false,
+                   "id": 2,
+                   "parameters": {},
+                   "uri": "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time"
+               },
+               {
+                   "encrypt": false,
+                   "id": 3,
+                   "parameters": {},
+                   "uri": "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01"
+               },
+               {
+                   "encrypt": false,
+                   "id": 13,
+                   "parameters": {},
+                   "uri": "urn:3gpp:video-orientation"
+               },
+               {
+                   "encrypt": false,
+                   "id": 14,
+                   "parameters": {},
+                   "uri": "urn:ietf:params:rtp-hdrext:toffset"
+               }
+           ],
+           "mid": "0",
+           "rtcp": {
+               "cname": "de1c8077",
+               "reducedSize": true
+           }
+       };
+
+    constructor({ internal, channel, payloadChannel, appData,
+                    getRouterRtpCapabilities } : 
     { 
-        internal       : any;
-        channel        : Channel; 
-        payloadChannel : PayloadChannel;
-        appData        : any;
+        internal        : any;
+        channel         : Channel; 
+        payloadChannel  : PayloadChannel;
+        appData         : any;
+        getRouterRtpCapabilities: () => RtpCapabilities;
     })
     {
         super();
@@ -50,6 +179,7 @@ export class Mixer extends EnhancedEventEmitter
         this._channel        = channel;
         this._payloadChannel = payloadChannel;
         this._appData        = appData;
+        this._getRouterRtpCapabilities = getRouterRtpCapabilities;
     }
 
     /**
@@ -117,13 +247,33 @@ export class Mixer extends EnhancedEventEmitter
         if (![ 'video' ].includes(kind))
             throw new TypeError(`invalid kind "${kind}"`);
 
+        var rtpParameters = this._rtpParameters;
+
+        // This may throw.
+        ortc.validateRtpParameters(rtpParameters);
+
+        const routerRtpCapabilities = this._getRouterRtpCapabilities();
+
+        // This may throw.
+        const rtpMapping = ortc.getProducerRtpParametersMapping(
+            rtpParameters, routerRtpCapabilities);
+
+        // This may throw.
+        const consumableRtpParameters = ortc.getConsumableRtpParameters(
+            kind, rtpParameters, routerRtpCapabilities, rtpMapping);
+
         const internal = { ...this._internal, producerId: uuidv4() };
-        const reqData  = { kind };
+        const reqData  = { kind, rtpParameters, rtpMapping };
 
         const status =
             await this._channel.request('mixer.produce', internal, reqData);
 
-        const data    = {};
+        const data    = {
+            kind,
+            rtpParameters,
+            type : status.type,
+            consumableRtpParameters
+        };
         const appData = {};
 
 

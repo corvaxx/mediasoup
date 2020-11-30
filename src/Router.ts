@@ -967,7 +967,8 @@ export class Router extends EnhancedEventEmitter
 			internal,
 			channel         : this._channel,
 			payloadChannel  : this._payloadChannel,
-			appData
+			appData,
+			getRouterRtpCapabilities : (): RtpCapabilities => this._data.rtpCapabilities
 		});
 
 		mixer.on('@newproducer', (producer: Producer) => this._producers.set(producer.id, producer));
