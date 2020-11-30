@@ -131,6 +131,9 @@ export class Router extends EnhancedEventEmitter
 	// Transports map.
 	private readonly _transports: Map<string, Transport> = new Map();
 
+	// Mixers map.
+	private readonly _mixers: Map<string, Mixer> = new Map();
+
 	// Producers map.
 	private readonly _producers: Map<string, Producer> = new Map();
 
@@ -256,6 +259,13 @@ export class Router extends EnhancedEventEmitter
 			transport.routerClosed();
 		}
 		this._transports.clear();
+
+		// Close Mixers.
+		for (const mixer of this._mixers.values())
+		{
+			// mixer.routerClosed();
+		}
+		this._mixers.clear();
 
 		// Clear the Producers map.
 		this._producers.clear();
@@ -971,7 +981,11 @@ export class Router extends EnhancedEventEmitter
 			getRouterRtpCapabilities : (): RtpCapabilities => this._data.rtpCapabilities
 		});
 
+		this._mixers.set(mixer.id, mixer);
+
+		mixer.on('@close', () => this._mixers.delete(mixer.id));
 		mixer.on('@newproducer', (producer: Producer) => this._producers.set(producer.id, producer));
+		mixer.on('@producerclose', (producer: Producer) => this._producers.delete(producer.id));
 
 		return mixer;
 	}

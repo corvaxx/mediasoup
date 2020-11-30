@@ -276,7 +276,6 @@ export class Mixer extends EnhancedEventEmitter
         };
         const appData = {};
 
-
         const producer = new Producer(
             {
                 internal,
@@ -291,6 +290,8 @@ export class Mixer extends EnhancedEventEmitter
 
         producer.on('@close', () =>
         {
+            this._producers.delete(producer.id);
+            this.emit('@producerclose', producer);
         });
 
         this.emit('@newproducer', producer);
