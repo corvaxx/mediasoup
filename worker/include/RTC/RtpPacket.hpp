@@ -93,13 +93,7 @@ namespace RTC
 		AVCodec               * codec          { nullptr };
         AVCodecContextPtr       codecContext;
 
-        // default frame
-        int                     i              { 0 };
-        AVFramePtr              defaultFrame;
-
         std::vector<AVFramePtr> frames;
-
-        int updateDefaultFrame(const uint32_t width = 320, const uint32_t height = 180);
 	};
 
 	struct EncodeContext
@@ -117,7 +111,12 @@ namespace RTC
 
         int64_t                 totalPts      { 0 };
         
-        int initContext(const uint32_t width = 320, const uint32_t height = 180);
+        // default frame
+        int                     i              { 0 };
+        AVFramePtr              defaultFrame;
+
+        int initContext(const uint32_t width, const uint32_t height);
+        int updateDefaultFrame(const uint32_t width, const uint32_t height);
 	};
 
 

@@ -971,7 +971,7 @@ namespace RTC
 		buffer = buf;
 	}
 
-    int DecodeContext::updateDefaultFrame(const uint32_t width, const uint32_t height)
+    int EncodeContext::updateDefaultFrame(const uint32_t width, const uint32_t height)
     {
     	MS_TRACE();
 
@@ -1111,6 +1111,17 @@ namespace RTC
         {
             MS_WARN_TAG(dead, "jpeg codec OK");
         }
+
+		result = updateDefaultFrame(width, height);
+		if (!defaultFrame)
+		{
+        	char errstr[80];
+            MS_WARN_TAG(dead, "default frame not allocated %x %s", result, av_make_error_string(errstr, 80, result));
+		}
+		else
+		{
+			MS_WARN_TAG(dead, "default frame %" PRIu32 "x%" PRIu32, defaultFrame->width, defaultFrame->height);
+		}
 
 	    return result;
     }

@@ -419,20 +419,7 @@ namespace RTC
 			c.codecContext.reset(avcodec_alloc_context3(c.codec));
 			MS_ASSERT(c.codecContext, "alloc context failed");
 
-			int result = c.updateDefaultFrame();
-
-			if (!c.defaultFrame)
-			{
-            	char errstr[80];
-                MS_WARN_TAG(dead, "default frame not allocated %x %s", result, av_make_error_string(errstr, 80, result));
-			}
-			else
-			{
-				MS_WARN_TAG(dead, "default frame %" PRIu32 "x%" PRIu32, c.defaultFrame->width, c.defaultFrame->height);
-				c.frames.emplace_back(c.defaultFrame);
-			}
-
-            result = avcodec_open2(c.codecContext.get(), c.codec, nullptr);
+            int result = avcodec_open2(c.codecContext.get(), c.codec, nullptr);
             if (result < 0)
             {
             	char errstr[80];
@@ -447,18 +434,13 @@ namespace RTC
 		return decodeContexts[ssrc];
 	}
 
-	RTC::EncodeContext  & RtpStream::GetEncodeContext(const uint32_t & ssrc)
+	RTC::EncodeContext  & RtpStream::GetEncodeContext(const uint32_t & ssrc, uint32_t width, uint32_t height)
 	{
 		// TODO resource leaak when !isOpened
 		if (encodeContexts.count(ssrc) == 0 || !encodeContexts[ssrc].isOpened)
 		{
-			DecodeContext & dc = GetDecodeContext(ssrc, true);
-			// MS_ASSERT(dc.frameWidth != 0 && dc.frameHeight != 0, "incorrect frame size");
-
-			MS_WARN_TAG(dead, "init context ssrc %" PRIu16 " %" PRIu32 "x%" PRIu32, ssrc, dc.frameWidth == 0 ? 320 : dc.frameWidth, dc.frameHeight == 0 ? 180 : dc.frameHeight);
-
-			EncodeContext & c = encodeContexts[ssrc];
-			c.initContext(dc.frameWidth == 0 ? 320 : dc.frameWidth, dc.frameHeight == 0 ? 180 : dc.frameHeight);
+			// need to call 
+			encodeContexts[ssrc].initContext(width, height);
 		}
 		return encodeContexts[ssrc];
 	}

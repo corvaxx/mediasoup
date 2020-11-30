@@ -722,24 +722,31 @@ namespace RTC
 
             // TODO join slave frames with primary
 
-            RTC::DecodeContext & dc = rtpStream->GetDecodeContext(rtpStream->GetSsrc());
-            if (!dc.isOpened)
-            {
-                MS_WARN_TAG(dead, "context not opened %" PRIu32, rtpStream->GetSsrc());
-                continue;
-            }
-            if (dc.frames.size() == 0)
-            {
-                MS_WARN_TAG(dead, "no frames %" PRIu32, rtpStream->GetSsrc());
-                continue;
-            }
-            if (dc.frameWidth == 0 || dc.frameHeight == 0)
-            {
-                MS_WARN_TAG(dead, "zero frame sizes, no keyframe received %" PRIu32, rtpStream->GetSsrc());
-                continue;
-            }
+            std::vector<AVFramePtr> frames;
 
-            std::lock_guard<std::mutex> lock(dc.lock);
+            do
+            {
+                RTC::DecodeContext & dc = rtpStream->GetDecodeContext(rtpStream->GetSsrc());
+                if (!dc.isOpened)
+                {
+                    // MS_WARN_TAG(dead, "context not opened %" PRIu32, rtpStream->GetSsrc());
+                    break;
+                }
+                if (dc.frames.size() == 0)
+                {
+                    // MS_WARN_TAG(dead, "no frames %" PRIu32, rtpStream->GetSsrc());
+                    break;
+                }
+                if (dc.frameWidth == 0 || dc.frameHeight == 0)
+                {
+                    // MS_WARN_TAG(dead, "zero frame sizes, no keyframe received %" PRIu32, rtpStream->GetSsrc());
+                    break;
+                }
+
+                std::lock_guard<std::mutex> lock(dc.lock);
+                frames = dc.frames;
+            }
+            while (false);
 
             RTC::EncodeContext & ec = rtpStream->GetEncodeContext(rtpStream->GetSsrc());
             if (!ec.isOpened)
@@ -748,22 +755,22 @@ namespace RTC
                 continue;
             }
 
-            if (dc.frameWidth != ec.frameWidth || dc.frameHeight != ec.frameHeight)
-            {
-                MS_WARN_TAG(dead, "init (reinit) context ssrc %" PRIu16 " %" PRIu32 "x%" PRIu32, rtpStream->GetSsrc(), dc.frameWidth == 0 ? 320 : dc.frameWidth, dc.frameHeight == 0 ? 180 : dc.frameHeight);
-                ec.initContext(dc.frameWidth == 0 ? 320 : dc.frameWidth, dc.frameHeight == 0 ? 180 : dc.frameHeight);
-            }
-
-            // MS_WARN_TAG(dead, "PRUDUCE encode %" PRIu64 " last frames", dc.frames.size());
-
-            // if (dc.updateDefaultFrame(dc.frameWidth, dc.frameHeight) == 0)
+            // if (dc.frameWidth != ec.frameWidth || dc.frameHeight != ec.frameHeight)
             // {
-            //     dc.frames.clear();
-            //     dc.frames.emplace_back(dc.defaultFrame);
+            //     MS_WARN_TAG(dead, "init (reinit) context ssrc %" PRIu16 " %" PRIu32 "x%" PRIu32, rtpStream->GetSsrc(), dc.frameWidth == 0 ? 320 : dc.frameWidth, dc.frameHeight == 0 ? 180 : dc.frameHeight);
+            //     ec.initContext(dc.frameWidth == 0 ? 320 : dc.frameWidth, dc.frameHeight == 0 ? 180 : dc.frameHeight);
             // }
 
+            if (frames.size() == 0)
+            {
+                if (ec.updateDefaultFrame(ec.frameWidth, ec.frameHeight) == 0)
+                {
+                    frames.emplace_back(ec.defaultFrame);
+                }
+            }
+
             std::vector<AVPacketPtr> packets;
-            if (!RTC::Codecs::Tools::EncodePacket(ec, rtpStream->GetMimeType(), dc.frames, packets))
+            if (!RTC::Codecs::Tools::EncodePacket(ec, rtpStream->GetMimeType(), frames, packets))
             {
                 // error or no frames
                 MS_WARN_TAG(dead, "encode error or no packets ready %" PRIu32, rtpStream->GetSsrc());
@@ -1186,23 +1193,8 @@ namespace RTC
                 return;
             }
 
-            {
-                RTC::DecodeContext & c = rtpStream->GetDecodeContext(rtpStream->GetSsrc());
-
-                {
-                    std::lock_guard<std::mutex> lock(c.lock);
-
-                    c.updateDefaultFrame(width, height);
-
-                    c.frameWidth  = width;
-                    c.frameHeight = height;
-                }
-            }
-
-            {
-                RTC::EncodeContext & ec = rtpStream->GetEncodeContext(rtpStream->GetSsrc());
-                ec.initContext(width, height);
-            }
+            // init context
+            RTC::EncodeContext & ec = rtpStream->GetEncodeContext(rtpStream->GetSsrc(), width, height);
         }
 
         if (translateMode != decodeAndEncode)

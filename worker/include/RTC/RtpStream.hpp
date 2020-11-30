@@ -156,7 +156,7 @@ namespace RTC
 		RTC::UnpackContext  & GetUnpackContext2(const uint32_t & ssrc);
 		RTC::ProduceContext & GetProduceContext(const uint32_t & ssrc, bool onlyExisting = false);
 		RTC::DecodeContext  & GetDecodeContext(const uint32_t & ssrc, bool onlyExisting = false);
-		RTC::EncodeContext  & GetEncodeContext(const uint32_t & ssrc);
+		RTC::EncodeContext  & GetEncodeContext(const uint32_t & ssrc, uint32_t width = 320, uint32_t height = 180);
 
 	protected:
 		bool UpdateSeq(RTC::RtpPacket* packet);
