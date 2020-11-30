@@ -82,5 +82,12 @@ export declare class Mixer extends EnhancedEventEmitter {
      */
     close(): void;
     produce(kind: MediaKind): Promise<Producer>;
+    add(producer: Producer, kind: MediaKind, options: {
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+        z: number;
+    }): Promise<void>;
 }
 //# sourceMappingURL=Mixer.d.ts.map

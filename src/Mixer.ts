@@ -244,6 +244,9 @@ export class Mixer extends EnhancedEventEmitter
     {
         logger.debug('produce()');
 
+        if (this._producers.size !== 0)
+            throw new TypeError('no more than one producer allowed');
+
         if (![ 'video' ].includes(kind))
             throw new TypeError(`invalid kind "${kind}"`);
 
@@ -297,5 +300,27 @@ export class Mixer extends EnhancedEventEmitter
         this.emit('@newproducer', producer);
 
         return producer;
+    }
+
+    async add(producer : Producer, kind : MediaKind, 
+                options: { x : number, y : number, width : number, height : number, z : number}) 
+        : Promise<void>
+    {
+        logger.debug('add()');
+
+        if (this._producers.size === 0)
+            throw new TypeError('no mixer producers');
+        if (this._producers.has(producer.id))
+            throw new TypeError(`a Producer with same id "${producer.id}" in mixer producers`);
+        if (![ 'video' ].includes(kind))
+            throw new TypeError(`invalid kind "${kind}"`);
+
+        var mixerProducer = this._producers.values().next().value;
+
+        const internal = { ...this._internal, mixerProducerId: mixerProducer.id, producerId: producer.id };
+        const reqData  = { kind };
+
+        const status =
+            await this._channel.request('mixer.add', internal, reqData);
     }
 }
