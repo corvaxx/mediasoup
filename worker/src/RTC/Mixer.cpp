@@ -289,7 +289,7 @@ void Mixer::OnProducerRtpPacketReceived(RTC::AbstractProducer * producer, RTC::R
 void Mixer::OnProducerSendRtcpPacket(RTC::AbstractProducer * /*producer*/, RTC::RTCP::Packet* packet)
 {
     MS_TRACE();
-    MS_ASSERT(false, "SendRtcpPacket implementation");
+    // MS_ASSERT(false, "SendRtcpPacket implementation");
     // SendRtcpPacket(packet);
 }
 
