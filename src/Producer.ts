@@ -465,11 +465,11 @@ export class Producer extends EnhancedEventEmitter
     /**
      * Start master mode
      */
-    async startMasterMode(ssrc: number, width: number, height: number) : Promise<void>
+    async startMasterMode(width: number, height: number) : Promise<void>
     {
         logger.debug('startMasterMode()');
 
-        const reqData = { ssrc: ssrc, width: width, height: height };
+        const reqData = { width: width, height: height };
 
         await this._channel.request(
         	'producer.startMasterMode', this._internal, reqData);

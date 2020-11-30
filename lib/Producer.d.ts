@@ -233,7 +233,7 @@ export declare class Producer extends EnhancedEventEmitter {
     /**
      * Start master mode
      */
-    startMasterMode(ssrc: number, width: number, height: number): Promise<void>;
+    startMasterMode(width: number, height: number): Promise<void>;
     /**
      * Attach produser to producer as slave
      */
