@@ -970,6 +970,8 @@ export class Router extends EnhancedEventEmitter
 			appData
 		});
 
+		mixer.on('@newproducer', (producer: Producer) => this._producers.set(producer.id, producer));
+
 		return mixer;
 	}
 
