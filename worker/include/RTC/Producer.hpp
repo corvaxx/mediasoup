@@ -90,7 +90,7 @@ namespace RTC
 		ReceiveRtpPacketResult DispatchRtpPacket(RTC::RtpPacket* packet);
 
 		//
-		void startMasterMode(const uint32_t ssrc, const uint32_t width, const uint32_t height);
+		void startMasterMode(const uint32_t width, const uint32_t height);
 
 		//
 		void setMaster(Producer * master);

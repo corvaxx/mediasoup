@@ -646,14 +646,6 @@ namespace RTC
             {
                 MS_WARN_TAG(dead, "PRODUCER_START_MASTER_MODE");
 
-                auto jit = request->data.find("ssrc");
-                if (jit == request->data.end() || !jit->is_number_integer())
-                {
-                    MS_THROW_TYPE_ERROR("wrong type (not an integer)");
-                }
-
-                uint32_t ssrc = jit->get<uint32_t>();
-
                 auto jw = request->data.find("width");
                 auto jh = request->data.find("height");
                 if (jw == request->data.end() || !jw->is_number_integer() ||
@@ -670,7 +662,7 @@ namespace RTC
                     MS_THROW_TYPE_ERROR("zero size");
                 }
 
-                startMasterMode(ssrc, width, height);
+                startMasterMode(width, height);
 
                 break;
             }
@@ -878,6 +870,11 @@ namespace RTC
         {
             // in direct mode - dispatch packets without processing
             return DispatchRtpPacket(packet);
+        }
+
+        if (m_isMasterMode)
+        {
+            return ReceiveRtpPacketResult::MEDIA;
         }
 
         auto* rtpStream = GetRtpStream(packet);
@@ -1159,34 +1156,53 @@ namespace RTC
         return result;
     }
 
-    void Producer::startMasterMode(const uint32_t ssrc, const uint32_t width, const uint32_t height)
+    void Producer::startMasterMode(const uint32_t width, const uint32_t height)
     {
-        // TODO assertion ?
-        m_isMasterMode = true;
-
-        RTC::RtpStreamRecv * rtpStream = GetRtpStream(ssrc, 0, "");
-        if (!rtpStream)
+        if (m_isMasterMode)
         {
-            MS_WARN_TAG(rtp, "no stream found with ssrc:%" PRIu32, ssrc);
+            MS_WARN_TAG(rtp, "already in master mode");
             return;
         }
 
+        if (mapSsrcRtpStream.size() == 0)
         {
-            RTC::DecodeContext & c = rtpStream->GetDecodeContext(ssrc);
-
+            // create streams
+            // First, look for an encoding with matching media or RTX ssrc value.
+            for (size_t i{ 0 }; i < this->rtpParameters.encodings.size(); ++i)
             {
-                std::lock_guard<std::mutex> lock(c.lock);
+                auto & encoding         = this->rtpParameters.encodings[i];
+                const auto * mediaCodec = this->rtpParameters.GetCodecForEncoding(encoding);
 
-                c.updateDefaultFrame(width, height);
-
-                c.frameWidth  = width;
-                c.frameHeight = height;
+                GetRtpStream(encoding.ssrc, mediaCodec->payloadType, encoding.rid);
             }
         }
 
+        for (auto & it : mapSsrcRtpStream)
         {
-            RTC::EncodeContext & ec = rtpStream->GetEncodeContext(rtpStream->GetSsrc());
-            ec.initContext(width, height);
+            RTC::RtpStreamRecv * rtpStream = it.second;
+            if (!rtpStream)
+            {
+                MS_WARN_TAG(rtp, "no stream found with ssrc:%" PRIu32, it.first);
+                return;
+            }
+
+            {
+                RTC::DecodeContext & c = rtpStream->GetDecodeContext(rtpStream->GetSsrc());
+
+                {
+                    std::lock_guard<std::mutex> lock(c.lock);
+
+                    c.updateDefaultFrame(width, height);
+
+                    c.frameWidth  = width;
+                    c.frameHeight = height;
+                }
+            }
+
+            {
+                RTC::EncodeContext & ec = rtpStream->GetEncodeContext(rtpStream->GetSsrc());
+                ec.initContext(width, height);
+            }
         }
 
         if (translateMode != decodeAndEncode)
@@ -1194,6 +1210,8 @@ namespace RTC
             translateMode = decodeAndEncode;
             m_timer.Start(m_timerDelay, m_timerDelay);
         }
+
+        m_isMasterMode = true;
     }
 
     void Producer::setMaster(Producer * master)
