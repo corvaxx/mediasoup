@@ -28,7 +28,7 @@ export declare class Mixer extends EnhancedEventEmitter {
      */
     get closed(): boolean;
     /**
-     * Close the Transport.
+     * Close the Mixer.
      */
     close(): void;
     produce(kind: MediaKind): Promise<Producer>;
