@@ -713,7 +713,7 @@ namespace RTC
 
             std::vector<AVFramePtr> frames;
 
-            while (m_isMasterMode)
+            while (!m_isMasterMode)
             {
                 RTC::DecodeContext & dc = rtpStream->GetDecodeContext(rtpStream->GetSsrc());
 
