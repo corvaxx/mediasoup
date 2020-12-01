@@ -10,6 +10,8 @@
 #include "MediaSoupErrors.hpp"
 #include "RTC/Producer.hpp"
 
+#include <iostream>
+
 //******************************************************************************
 //******************************************************************************
 namespace RTC
@@ -114,6 +116,8 @@ RTC::AbstractProducerPtr Mixer::getProducerFromInternal(json & internal) const
 void Mixer::produce(Channel::Request * request)
 {
     MS_TRACE();
+
+    std::cerr << request->data.dump(4) << std::endl;
 
     std::string producerId;
     setNewProducerIdFromInternal(request->internal, producerId);
