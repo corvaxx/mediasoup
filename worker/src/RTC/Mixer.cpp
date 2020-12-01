@@ -266,6 +266,10 @@ void Mixer::produce(Channel::Request * request)
 void Mixer::close(Channel::Request * request)
 {
     MS_TRACE();
+
+    AbstractProducerPtr mixerProducer = getProducerFromInternal(request->internal);
+    mixerProducer->stop();
+
     request->Accept();
 }
 

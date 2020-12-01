@@ -91,6 +91,7 @@ namespace RTC
 
 		//
 		void startMasterMode(const uint32_t width, const uint32_t height);
+	    void stop();
 
 		//
 		void setMaster(AbstractProducer * master);

@@ -133,6 +133,7 @@ public:
 
     //
     virtual void startMasterMode(const uint32_t width, const uint32_t height) = 0;
+    virtual void stop() = 0;
 
     //
     virtual void setMaster(AbstractProducer * master) = 0;

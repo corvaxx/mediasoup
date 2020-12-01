@@ -1249,6 +1249,11 @@ namespace RTC
         m_isMasterMode = true;
     }
 
+    void Producer::stop()
+    {
+        m_timer.Stop();
+    }
+
     void Producer::setMaster(AbstractProducer * master)
     {
         MS_ASSERT(m_master == nullptr, "master already set");
