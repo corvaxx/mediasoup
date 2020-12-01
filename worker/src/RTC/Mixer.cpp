@@ -275,15 +275,15 @@ void Mixer::add(Channel::Request * request)
 {
     MS_TRACE();
 
-    // AbstractProducerPtr mixerProducer = getProducerFromInternal(request->internal);
+    AbstractProducerPtr mixerProducer = getProducerFromInternal(request->internal);
 
-    // auto it = request->internal.find("producerId");
-    // if (it == request->internal.end() || !it->is_string())
-    // {
-    //     MS_THROW_ERROR("missing internal.producerId");
-    // }
+    auto it = request->internal.find("producerId");
+    if (it == request->internal.end() || !it->is_string())
+    {
+        MS_THROW_ERROR("missing internal.producerId");
+    }
 
-    // AbstractProducer * producer = listener->getProducerById(it->get<std::string>());
+    AbstractProducer * producer = listener->getProducerById(it->get<std::string>());
 
     // producer.setMaster(mixerProducer.get());
     // mixerProducer->addSlave(producer);

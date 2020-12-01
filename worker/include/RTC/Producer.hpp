@@ -93,14 +93,14 @@ namespace RTC
 		void startMasterMode(const uint32_t width, const uint32_t height);
 
 		//
-		void setMaster(Producer * master);
-		void addSlave(Producer * slave, 
+		void setMaster(AbstractProducer * master);
+		void addSlave(AbstractProducer * slave, 
 						const uint32_t x, const uint32_t y, 
 						const uint32_t width, const uint32_t height, 
 						const uint32_t z);
 
 		// 
-		void onClosedSlave(Producer * slave);
+		void onClosedSlave(AbstractProducer * slave);
 
 		//
 		AVFramePtr getLastFrame(const uint32_t width, const uint32_t height) const;
@@ -159,19 +159,19 @@ namespace RTC
 
 		// TODO need remove when slave closed
 		bool                      m_isMasterMode { false };
-		Producer                * m_master       { nullptr };
+		AbstractProducer        * m_master       { nullptr };
 
 		struct Slave
 		{
-			Producer * producer { nullptr };
-			uint32_t   x        { 0 };
-			uint32_t   y        { 0 };
-			uint32_t   width    { 0 };
-			uint32_t   height   { 0 };
-			uint32_t   z        { 0 };
+			AbstractProducer * producer { nullptr };
+			uint32_t           x        { 0 };
+			uint32_t           y        { 0 };
+			uint32_t           width    { 0 };
+			uint32_t           height   { 0 };
+			uint32_t           z        { 0 };
 
 			inline bool operator == (const Slave & other) const { return producer == other.producer; }
-			inline bool operator == (const Producer * ptr) const { return producer == ptr; }
+			inline bool operator == (const AbstractProducer * ptr) const { return producer == ptr; }
 		};
 		std::vector<Slave>        m_slaves;
 	};

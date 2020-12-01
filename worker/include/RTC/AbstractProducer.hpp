@@ -131,6 +131,22 @@ public:
     //
     virtual void RequestKeyFrame(uint32_t mappedSsrc);
 
+    //
+    virtual void startMasterMode(const uint32_t width, const uint32_t height) = 0;
+
+    //
+    virtual void setMaster(AbstractProducer * master) = 0;
+    virtual void addSlave(AbstractProducer * slave, 
+                            const uint32_t x, const uint32_t y, 
+                            const uint32_t width, const uint32_t height, 
+                            const uint32_t z) = 0;
+
+    // 
+    virtual void onClosedSlave(AbstractProducer * slave) = 0;
+
+    //
+    virtual AVFramePtr getLastFrame(const uint32_t width, const uint32_t height) const = 0;
+
 public:
     // Passed by argument.
     const std::string id;

@@ -1249,14 +1249,14 @@ namespace RTC
         m_isMasterMode = true;
     }
 
-    void Producer::setMaster(Producer * master)
+    void Producer::setMaster(AbstractProducer * master)
     {
         MS_ASSERT(m_master == nullptr, "master already set");
         MS_ASSERT(master == nullptr, "master must be not null");
         m_master = master;
     }
 
-    void Producer::addSlave(Producer * slave, 
+    void Producer::addSlave(AbstractProducer * slave, 
                             const uint32_t x, const uint32_t y, 
                             const uint32_t width, const uint32_t height, 
                             const uint32_t z)
@@ -1267,7 +1267,7 @@ namespace RTC
         m_slaves.emplace_back(s);
     }
 
-    void Producer::onClosedSlave(Producer * slave)
+    void Producer::onClosedSlave(AbstractProducer * slave)
     {
         // TODO remove from slaves
         m_slaves.erase(std::remove(m_slaves.begin(), m_slaves.end(), slave), m_slaves.end());
