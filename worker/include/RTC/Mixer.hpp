@@ -22,7 +22,7 @@ namespace RTC
 
 //******************************************************************************
 //******************************************************************************
-class Mixer : public AbstractProducer::Listener
+class Mixer : public RTC::AbstractProducer::Listener
 {
 public:
     class Listener
@@ -56,6 +56,7 @@ public:
                                                             RTC::AbstractProducer* producer,
                                                             uint32_t mappedSsrc,
                                                             uint8_t& worstRemoteFractionLost) = 0;
+        virtual AbstractProducer * getProducerById(const std::string & id) = 0;
 
     };
 

@@ -16,6 +16,7 @@
 #include <sstream>  // std::ostringstream
 #include <chrono>
 #include <iostream>
+#include <algorithm>
 
 uint32_t random32(int type);
 
@@ -1213,9 +1214,15 @@ namespace RTC
         m_master = master;
     }
 
+    void Producer::addSlave(Producer * slave)
+    {
+        m_slaves.emplace_back(slave);
+    }
+
     void Producer::onClosedSlave(Producer * slave)
     {
         // TODO remove from slaves
+        m_slaves.erase(std::remove(m_slaves.begin(), m_slaves.end(), slave), m_slaves.end());
     }
 
     AVFramePtr Producer::getLastFrame() const

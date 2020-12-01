@@ -126,23 +126,35 @@ namespace RTC
                                                 uint8_t & worstRemoteFractionLost) override;
 
 
-		void OnTransportNewConsumer(RTC::Transport* transport, RTC::Consumer* consumer, std::string& producerId) override;
-		void OnTransportConsumerClosed(RTC::Transport* transport, RTC::Consumer* consumer) override;
-		void OnTransportConsumerProducerClosed(RTC::Transport* transport, RTC::Consumer* consumer) override;
-		void OnTransportConsumerKeyFrameRequested(RTC::Transport* transport, RTC::Consumer* consumer, uint32_t mappedSsrc) override;
-		void OnTransportNewDataProducer(RTC::Transport* transport, RTC::DataProducer* dataProducer) override;
-		void OnTransportDataProducerClosed(RTC::Transport* transport, RTC::DataProducer* dataProducer) override;
-		void OnTransportDataProducerMessageReceived(
-		  RTC::Transport* transport,
-		  RTC::DataProducer* dataProducer,
-		  uint32_t ppid,
-		  const uint8_t* msg,
-		  size_t len) override;
-		void OnTransportNewDataConsumer(
-		  RTC::Transport* transport, RTC::DataConsumer* dataConsumer, std::string& dataProducerId) override;
-		void OnTransportDataConsumerClosed(RTC::Transport* transport, RTC::DataConsumer* dataConsumer) override;
-		void OnTransportDataConsumerDataProducerClosed(
-		  RTC::Transport* transport, RTC::DataConsumer* dataConsumer) override;
+		void OnTransportNewConsumer(RTC::Transport * transport, 
+										RTC::Consumer * consumer, 
+										std::string & producerId) override;
+		void OnTransportConsumerClosed(RTC::Transport * transport, 
+										RTC::Consumer * consumer) override;
+		void OnTransportConsumerProducerClosed(RTC::Transport * transport, 
+													RTC::Consumer * consumer) override;
+		void OnTransportConsumerKeyFrameRequested(RTC::Transport * transport, 
+													RTC::Consumer * consumer, 
+													uint32_t mappedSsrc) override;
+		void OnTransportNewDataProducer(RTC::Transport * transport, 
+											RTC::DataProducer * dataProducer) override;
+		void OnTransportDataProducerClosed(RTC::Transport * transport, 
+											RTC::DataProducer * dataProducer) override;
+		void OnTransportDataProducerMessageReceived(RTC::Transport * transport,
+													  RTC::DataProducer * dataProducer,
+													  uint32_t ppid,
+													  const uint8_t * msg,
+													  size_t len) override;
+		void OnTransportNewDataConsumer(RTC::Transport * transport, 
+										RTC::DataConsumer * dataConsumer, 
+										std::string & dataProducerId) override;
+		void OnTransportDataConsumerClosed(RTC::Transport * transport, 
+											RTC::DataConsumer * dataConsumer) override;
+		void OnTransportDataConsumerDataProducerClosed(RTC::Transport * transport, 
+														RTC::DataConsumer* dataConsumer) override;
+
+        AbstractProducer * getProducerById(const std::string & id) override;
+
 
 	public:
 		// Passed by argument.

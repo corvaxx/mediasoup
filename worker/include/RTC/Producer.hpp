@@ -94,6 +94,7 @@ namespace RTC
 
 		//
 		void setMaster(Producer * master);
+		void addSlave(Producer * slave);
 
 		// 
 		void onClosedSlave(Producer * slave);

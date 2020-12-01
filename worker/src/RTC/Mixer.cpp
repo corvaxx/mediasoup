@@ -94,12 +94,16 @@ RTC::AbstractProducerPtr Mixer::getProducerFromInternal(json & internal) const
     auto jsonProducerIdIt = internal.find("mixerProducerId");
 
     if (jsonProducerIdIt == internal.end() || !jsonProducerIdIt->is_string())
+    {
         MS_THROW_ERROR("missing internal.mixerProducerId");
+    }
 
     auto it = this->mapProducers.find(jsonProducerIdIt->get<std::string>());
 
     if (it == this->mapProducers.end())
+    {
         MS_THROW_ERROR("Producer not found");
+    }
 
     RTC::AbstractProducerPtr producer = it->second;
     return producer;
@@ -270,6 +274,20 @@ void Mixer::close(Channel::Request * request)
 void Mixer::add(Channel::Request * request)
 {
     MS_TRACE();
+
+    // AbstractProducerPtr mixerProducer = getProducerFromInternal(request->internal);
+
+    // auto it = request->internal.find("producerId");
+    // if (it == request->internal.end() || !it->is_string())
+    // {
+    //     MS_THROW_ERROR("missing internal.producerId");
+    // }
+
+    // AbstractProducer * producer = listener->getProducerById(it->get<std::string>());
+
+    // producer.setMaster(mixerProducer.get());
+    // mixerProducer->addSlave(producer);
+
     request->Accept();
 }
 

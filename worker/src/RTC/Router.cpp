@@ -1200,4 +1200,15 @@ namespace RTC
 		// Remove the DataConsumer from the map.
 		this->mapDataConsumerDataProducer.erase(mapDataConsumerDataProducerIt);
 	}
+
+    AbstractProducer * Router::getProducerById(const std::string & id)
+    {
+		if (this->mapProducers.find(id) != this->mapProducers.end())
+		{
+			MS_THROW_ERROR("Producer not found in mapProducers [producerId:%s]", id.c_str());
+		}
+
+		return mapProducers[id]; 
+    }
+
 } // namespace RTC
