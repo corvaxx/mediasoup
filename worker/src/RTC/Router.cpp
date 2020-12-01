@@ -1203,7 +1203,7 @@ namespace RTC
 
     AbstractProducer * Router::getProducerById(const std::string & id)
     {
-		if (this->mapProducers.find(id) != this->mapProducers.end())
+		if (this->mapProducers.find(id) == this->mapProducers.end())
 		{
 			MS_THROW_ERROR("Producer not found in mapProducers [producerId:%s]", id.c_str());
 		}
