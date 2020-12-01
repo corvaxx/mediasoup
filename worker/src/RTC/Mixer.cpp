@@ -39,8 +39,6 @@ void Mixer::HandleRequest(Channel::Request * request)
 {
     MS_TRACE();
 
-    std::cerr << "request->data " << request->data.dump(4) << std::endl;
-
     switch (request->methodId)
     {
         case Channel::Request::MethodId::MIXER_PRODUCE:
