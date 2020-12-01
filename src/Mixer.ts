@@ -322,7 +322,7 @@ export class Mixer extends EnhancedEventEmitter
         var mixerProducer = this._producers.values().next().value;
 
         const internal = { ...this._internal, mixerProducerId: mixerProducer.id, producerId: producer.id };
-        const reqData  = { kind };
+        const reqData  = { kind, options };
 
         const status =
             await this._channel.request('mixer.add', internal, reqData);
