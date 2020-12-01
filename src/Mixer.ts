@@ -216,7 +216,11 @@ export class Mixer extends EnhancedEventEmitter
         // this._channel.removeAllListeners(this._internal.transportId);
         // this._payloadChannel.removeAllListeners(this._internal.transportId);
 
-        this._channel.request('mixer.close', this._internal)
+        var mixerProducer = this._producers.values().next().value;
+
+        const internal = { ...this._internal, mixerProducerId: mixerProducer.id };
+
+        this._channel.request('mixer.close', internal)
             .catch(() => {});
 
         // Close every Producer.
