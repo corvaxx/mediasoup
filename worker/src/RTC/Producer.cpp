@@ -1257,7 +1257,7 @@ namespace RTC
     void Producer::setMaster(AbstractProducer * master)
     {
         MS_ASSERT(m_master == nullptr, "master already set");
-        MS_ASSERT(master == nullptr, "master must be not null");
+        MS_ASSERT(master != nullptr, "master must be not null");
         m_master = master;
     }
 
