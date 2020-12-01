@@ -94,13 +94,16 @@ namespace RTC
 
 		//
 		void setMaster(Producer * master);
-		void addSlave(Producer * slave);
+		void addSlave(Producer * slave, 
+						const uint32_t x, const uint32_t y, 
+						const uint32_t width, const uint32_t height, 
+						const uint32_t z);
 
 		// 
 		void onClosedSlave(Producer * slave);
 
 		//
-		AVFramePtr getLastFrame() const;
+		AVFramePtr getLastFrame(const uint32_t width, const uint32_t height) const;
 
 	protected:
 		RTC::RtpStreamRecv* GetRtpStream(RTC::RtpPacket* packet);
@@ -157,7 +160,20 @@ namespace RTC
 		// TODO need remove when slave closed
 		bool                      m_isMasterMode { false };
 		Producer                * m_master       { nullptr };
-		std::vector<Producer *>   m_slaves;
+
+		struct Slave
+		{
+			Producer * producer { nullptr };
+			uint32_t   x        { 0 };
+			uint32_t   y        { 0 };
+			uint32_t   width    { 0 };
+			uint32_t   height   { 0 };
+			uint32_t   z        { 0 };
+
+			inline bool operator == (const Slave & other) const { return producer == other.producer; }
+			inline bool operator == (const Producer * ptr) const { return producer == ptr; }
+		};
+		std::vector<Slave>        m_slaves;
 	};
 } // namespace RTC
 

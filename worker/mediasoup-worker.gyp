@@ -249,7 +249,7 @@
     ],
     'libraries': 
     [ 
-      '-lavdevice', '-lavformat', '-lavcodec', '-lavutil' 
+      '-lavdevice', '-lavformat', '-lavcodec', '-lavutil', '-lswscale'
     ],
     'conditions':
     [

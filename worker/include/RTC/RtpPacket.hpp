@@ -15,6 +15,7 @@ extern "C"
     #include <libavcodec/avcodec.h>
     #include <libavformat/avio.h>
     #include <libavformat/avformat.h>
+    #include <libswscale/swscale.h>
 }
 
 using json = nlohmann::json;
@@ -112,8 +113,10 @@ namespace RTC
         int64_t                 totalPts      { 0 };
         
         // default frame
-        int                     i              { 0 };
+        int                     i             { 0 };
         AVFramePtr              defaultFrame;
+
+        SwsContext            * swc           { nullptr };
 
         int initContext(const uint32_t width, const uint32_t height);
         int updateDefaultFrame(const uint32_t width, const uint32_t height);

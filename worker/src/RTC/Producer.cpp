@@ -711,23 +711,14 @@ namespace RTC
                 continue;
             }
 
-            std::vector<AVFramePtr> slaveFrames;
-            for (Producer * p : m_slaves)
-            {
-                if (p)
-                {
-                    // TODO put stream parameters into getLastFrame ??
-                    slaveFrames.emplace_back(p->getLastFrame());
-                }
-            }
-
-            // TODO join slave frames with primary
-
             std::vector<AVFramePtr> frames;
 
-            do
+            while (m_isMasterMode)
             {
                 RTC::DecodeContext & dc = rtpStream->GetDecodeContext(rtpStream->GetSsrc());
+
+                std::lock_guard<std::mutex> lock(dc.lock);
+
                 if (!dc.isOpened)
                 {
                     // MS_WARN_TAG(dead, "context not opened %" PRIu32, rtpStream->GetSsrc());
@@ -744,10 +735,10 @@ namespace RTC
                     break;
                 }
 
-                std::lock_guard<std::mutex> lock(dc.lock);
                 frames = dc.frames;
+
+                break;
             }
-            while (false);
 
             RTC::EncodeContext & ec = rtpStream->GetEncodeContext(rtpStream->GetSsrc());
             if (!ec.isOpened)
@@ -756,17 +747,66 @@ namespace RTC
                 continue;
             }
 
-            // if (dc.frameWidth != ec.frameWidth || dc.frameHeight != ec.frameHeight)
-            // {
-            //     MS_WARN_TAG(dead, "init (reinit) context ssrc %" PRIu16 " %" PRIu32 "x%" PRIu32, rtpStream->GetSsrc(), dc.frameWidth == 0 ? 320 : dc.frameWidth, dc.frameHeight == 0 ? 180 : dc.frameHeight);
-            //     ec.initContext(dc.frameWidth == 0 ? 320 : dc.frameWidth, dc.frameHeight == 0 ? 180 : dc.frameHeight);
-            // }
-
-            if (frames.size() == 0)
+            if (!m_isMasterMode)
             {
-                if (ec.updateDefaultFrame(ec.frameWidth, ec.frameHeight) == 0)
+                // !masterMode, only local frames
+
+                if (frames.size() == 0)
                 {
+                    if (ec.updateDefaultFrame(ec.frameWidth, ec.frameHeight) != 0)
+                    {
+                        MS_WARN_TAG(dead, "no frames, updateDefaultFrame failed");
+                        continue;
+                    }
                     frames.emplace_back(ec.defaultFrame);
+                }
+            }
+            else
+            {
+                // master mode, scale slave frames
+
+                if (ec.updateDefaultFrame(ec.frameWidth, ec.frameHeight) != 0)
+                {
+                    MS_WARN_TAG(dead, "updateDefaultFrame failed in master mode");
+                    continue;
+                }
+
+                uint32_t maxWidth  = ec.frameWidth;
+                uint32_t maxHeight = ec.frameHeight;
+
+                // define max size
+                for (Slave & s : m_slaves)
+                {
+                    if (maxWidth < s.x + s.width)
+                    {
+                        maxWidth = s.x + s.width;
+                    }
+                    if (maxHeight < s.y + s.height)
+                    {
+                        maxWidth = s.y + s.height;
+                    }
+                }
+
+                for (Slave & s : m_slaves)
+                {
+                    if (s.producer)
+                    {
+                        // TODO width, height
+                        AVFramePtr frame = s.producer->getLastFrame(s.width, s.height);
+                        if (!frame)
+                        {
+                            continue;
+                        }
+
+                        uint32_t frameWidth  = std::min(maxWidth, s.x  + s.width)  - s.x;
+                        uint32_t frameHeight = std::min(maxHeight, s.y + s.height) - s.y;
+                        ec.swc = sws_getCachedContext(ec.swc, frame->width, frame->height, AV_PIX_FMT_YUV420P,
+                                                                frameWidth, frameHeight, AV_PIX_FMT_YUV420P,
+                                                                SWS_BICUBIC, nullptr, nullptr, nullptr);
+                        sws_scale(ec.swc, frame->data, frame->linesize, 0, frame->height, 
+                                        ec.defaultFrame->data, ec.defaultFrame->linesize);
+
+                    }
                 }
             }
 
@@ -1195,7 +1235,7 @@ namespace RTC
             }
 
             // init context
-            RTC::EncodeContext & ec = rtpStream->GetEncodeContext(rtpStream->GetSsrc(), width, height);
+            /*RTC::EncodeContext & ec = */rtpStream->GetEncodeContext(rtpStream->GetSsrc(), width, height);
         }
 
         if (translateMode != decodeAndEncode)
@@ -1214,9 +1254,15 @@ namespace RTC
         m_master = master;
     }
 
-    void Producer::addSlave(Producer * slave)
+    void Producer::addSlave(Producer * slave, 
+                            const uint32_t x, const uint32_t y, 
+                            const uint32_t width, const uint32_t height, 
+                            const uint32_t z)
     {
-        m_slaves.emplace_back(slave);
+        Slave s;
+        s.producer = slave;
+        s.x = x, s.y = y, s.width = width, s.height = height, s.z = z;
+        m_slaves.emplace_back(s);
     }
 
     void Producer::onClosedSlave(Producer * slave)
@@ -1225,9 +1271,38 @@ namespace RTC
         m_slaves.erase(std::remove(m_slaves.begin(), m_slaves.end(), slave), m_slaves.end());
     }
 
-    AVFramePtr Producer::getLastFrame() const
+    AVFramePtr Producer::getLastFrame(const uint32_t width, const uint32_t height) const
     {
-        return AVFramePtr();
+        AVFramePtr bestFrame;
+
+        for (auto & it : mapSsrcRtpStream)
+        {
+            RTC::RtpStreamRecv * rtpStream = it.second;
+            if (!rtpStream)
+            {
+                MS_WARN_TAG(dead, "no stream");
+                continue;
+            }
+
+            RTC::DecodeContext & c = rtpStream->GetDecodeContext(rtpStream->GetSsrc());
+            if (!c.isOpened)
+            {
+                continue;
+            }
+
+            if (c.frames.size() == 0)
+            {
+                continue;
+            }
+
+            // TODO algo for select best frame
+            // for (const AVFramePtr & f : c.frames)
+            // {
+            // }
+            bestFrame = c.frames.front();
+        }
+
+        return bestFrame;
     }
 
     RTC::RtpStreamRecv* Producer::GetRtpStream(RTC::RtpPacket* packet)
