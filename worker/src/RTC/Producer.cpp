@@ -808,6 +808,8 @@ namespace RTC
 
                     }
                 }
+
+                frames.emplace_back(ec.defaultFrame);
             }
 
             std::vector<AVPacketPtr> packets;
