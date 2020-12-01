@@ -39,6 +39,8 @@ void Mixer::HandleRequest(Channel::Request * request)
 {
     MS_TRACE();
 
+    std::cerr << "request->data " << request->data.dump(4) << std::endl;
+
     switch (request->methodId)
     {
         case Channel::Request::MethodId::MIXER_PRODUCE:
@@ -116,8 +118,6 @@ RTC::AbstractProducerPtr Mixer::getProducerFromInternal(json & internal) const
 void Mixer::produce(Channel::Request * request)
 {
     MS_TRACE();
-
-    std::cerr << request->data.dump(4) << std::endl;
 
     std::string producerId;
     setNewProducerIdFromInternal(request->internal, producerId);
