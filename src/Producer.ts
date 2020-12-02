@@ -475,20 +475,6 @@ export class Producer extends EnhancedEventEmitter
         	'producer.startMasterMode', this._internal, reqData);
     }
 
-    /**
-     * Attach produser to producer as slave
-     */
-    async attachSlave(slaveId: string) : Promise<void>
-    {
-        logger.debug('setTranslateMode()');
-
-        const reqData = { slaveId };
-
-        await this._channel.request(
-        	'producer.attachSlave', this._internal, reqData);
-    }
-
-
 	/**
 	 * Send RTP packet (just valid for Producers created on a DirectTransport).
 	 */
