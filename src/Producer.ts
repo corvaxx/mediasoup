@@ -449,20 +449,6 @@ export class Producer extends EnhancedEventEmitter
 	}
 
     /**
-     * Set translate mode
-     */
-    async setTranslateMode(translateMode: string) : Promise<void>
-    {
-        logger.debug('setTranslateMode()');
-
-        const reqData = { translateMode };
-
-        await this._channel.request(
-        	'producer.setTranslateMode', this._internal, reqData);
-        this._translateMode = translateMode;
-    }
-
-    /**
      * Start master mode
      */
     async startMasterMode(width: number, height: number) : Promise<void>

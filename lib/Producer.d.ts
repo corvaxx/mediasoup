@@ -227,10 +227,6 @@ export declare class Producer extends EnhancedEventEmitter {
      */
     get translateMode(): string;
     /**
-     * Set translate mode
-     */
-    setTranslateMode(translateMode: string): Promise<void>;
-    /**
      * Start master mode
      */
     startMasterMode(width: number, height: number): Promise<void>;
