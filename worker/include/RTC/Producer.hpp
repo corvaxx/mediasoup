@@ -29,13 +29,6 @@ namespace RTC
 					 public RTC::KeyFrameRequestManager::Listener,
 					 public Timer::Listener
 	{
-	public:
-		enum TranslateMode
-		{
-			direct           = 0,
-			decodeAndEncode  = 1
-		};
-
 	private:
 		struct RtpEncodingMapping
 		{
@@ -85,8 +78,7 @@ namespace RTC
 
 		//
 		virtual ReceiveRtpPacketResult ReceiveRtpPacket(RTC::RtpPacket* packet);
-		ReceiveRtpPacketResult ReceiveRtpMedia(RTC::RtpPacket* packet);
-		ReceiveRtpPacketResult ReceiveRtpRtx(RTC::RtpPacket* packet);
+		ReceiveRtpPacketResult DecodeRtpPacket(RTC::RtpPacket* packet);
 		ReceiveRtpPacketResult DispatchRtpPacket(RTC::RtpPacket* packet);
 
 		//
@@ -150,8 +142,6 @@ namespace RTC
 		bool videoOrientationDetected{ false };
 		struct VideoOrientation videoOrientation;
 		struct TraceEventTypes traceEventTypes;
-
-		TranslateMode translateMode { direct };
 
 		// 40 - 25 fps
 		// 67 - 15 fps

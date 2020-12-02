@@ -206,11 +206,6 @@ namespace RTC
             }
 
             encodingMapping.mappedSsrc = jsonMappedSsrcIt->get<uint32_t>();
-
-            if (translateMode != direct)
-            {
-                m_timer.Start(m_timerDelay, m_timerDelay);
-            }
         }
 
         auto jsonPausedIt = data.find("paused");
@@ -608,41 +603,6 @@ namespace RTC
                 break;
             }
 
-            case Channel::Request::MethodId::PRODUCER_SET_TRANSLATE_MODE:
-            {
-                MS_WARN_TAG(dead, "PRODUCER_SET_TRANSLATE_MODE");
-
-                auto jit = request->data.find("translateMode");
-                if (jit == request->data.end() || !jit->is_string())
-                {
-                    MS_THROW_TYPE_ERROR("wrong type (not an string)");
-                }
-
-                std::string mode = jit->get<std::string>();
-
-                MS_WARN_TAG(dead, "PRODUCE MODE %s", mode.c_str());
-
-                if (mode == "direct")
-                {
-                    m_timer.Stop();
-                    translateMode = direct;
-                }
-                else if (mode == "decodeAndEncode")
-                {
-                    if (!m_timer.IsActive())
-                    {
-                        m_timer.Start(m_timerDelay, m_timerDelay);
-                    }
-                    translateMode = decodeAndEncode;
-                }
-                else
-                {
-                    MS_THROW_ERROR("unknown mode");
-                }
-
-                break;
-            }
-
             case Channel::Request::MethodId::PRODUCER_START_MASTER_MODE:
             {
                 MS_WARN_TAG(dead, "PRODUCER_START_MASTER_MODE");
@@ -915,48 +875,32 @@ namespace RTC
     {
         MS_TRACE();
 
-        if (translateMode == direct)
+        // in direct mode - dispatch packets without processing
+        ReceiveRtpPacketResult result = DispatchRtpPacket(packet);
+        if (result != ReceiveRtpPacketResult::MEDIA)
         {
-            // in direct mode - dispatch packets without processing
-            return DispatchRtpPacket(packet);
+            return result;
         }
 
-        if (m_isMasterMode)
+        if (m_isMasterMode || !m_master)
         {
-            return ReceiveRtpPacketResult::MEDIA;
+            return result;
         }
 
-        auto* rtpStream = GetRtpStream(packet);
-        if (!rtpStream)
-        {
-            // MS_WARN_TAG(rtp, "no stream found for received packet [ssrc:%" PRIu32 "]", packet->GetSsrc());
+        // for slave mode need to decode frame
 
-            return ReceiveRtpPacketResult::DISCARDED;
-        }
+        // if (random32(0) % 32 == 0)
+        // {
+        //     MS_WARN_TAG(dead, "DROPPED %" PRIu16, packet->GetSequenceNumber());
+        //     return ReceiveRtpPacketResult::MEDIA;    
+        // }
 
-        if (packet->GetSsrc() == rtpStream->GetRtxSsrc())
-        {
-            return ReceiveRtpRtx(packet);
-        }
-        else if (packet->GetSsrc() == rtpStream->GetSsrc())
-        {
-            // if (random32(0) % 32 == 0)
-            // {
-            //     MS_WARN_TAG(dead, "DROPPED %" PRIu16, packet->GetSequenceNumber());
-            //     return ReceiveRtpPacketResult::MEDIA;    
-            // }
+        DecodeRtpPacket(packet);
 
-            return ReceiveRtpMedia(packet);
-        }
-        else
-        {
-            // MS_ABORT("found stream does not match received packet");
-        }
-
-        return ReceiveRtpPacketResult::DISCARDED;
+        return result;
     }
 
-    ReceiveRtpPacketResult Producer::ReceiveRtpMedia(RTC::RtpPacket* packet)
+    ReceiveRtpPacketResult Producer::DecodeRtpPacket(RTC::RtpPacket* packet)
     {
         ReceiveRtpPacketResult result = ReceiveRtpPacketResult::MEDIA;
         
@@ -1020,7 +964,7 @@ namespace RTC
             c.lastSeq = packet->GetSequenceNumber();
         }
 
-        // decode and encode packets
+        // decode packets
         std::vector<AVPacketPtr> packets;
         if (nalptrs.size() > 0)
         {
@@ -1059,39 +1003,12 @@ namespace RTC
                     //     // {
                     //     //     dumpFrame(ec, frame);
                     //     // }
-
-                    //     // encode
-
-                    // if (c.updateDefaultFrame(c.frameWidth, c.frameHeight) == 0)
-                    // {
-                    //     c.frames.clear();
-                    //     c.frames.emplace_back(c.defaultFrame);
-                    // }
                 }
             }
 
         } // if (nalptrs.size() > 0)
 
         return result;
-    }
-
-    ReceiveRtpPacketResult Producer::ReceiveRtpRtx(RTC::RtpPacket* packet)
-    {
-        auto* rtpStream = GetRtpStream(packet);
-        if (!rtpStream)
-        {
-            // MS_WARN_TAG(rtp, "no stream found for received packet [ssrc:%" PRIu32 "]", packet->GetSsrc());
-
-            return ReceiveRtpPacketResult::DISCARDED;
-        }
-
-        // rtx packet
-        MS_WARN_TAG(dead, "RTX ssrc %" PRIu32 " rtx %" PRIu32 " unpack packet timestamp %" PRIu32 " type %" PRIu32 " seq %" PRIu16, 
-                            rtpStream->GetSsrc(), rtpStream->GetRtxSsrc(),
-                            packet->GetTimestamp(), packet->GetPayloadType(), packet->GetSequenceNumber());
-
-        // return ReceiveRtpPacketInternal(packet);
-        return ReceiveRtpPacketResult::RETRANSMISSION;
     }
 
     ReceiveRtpPacketResult Producer::DispatchRtpPacket(RTC::RtpPacket* packet)
@@ -1124,24 +1041,19 @@ namespace RTC
         {
             result = ReceiveRtpPacketResult::MEDIA;
 
+            // Process the packet.
             if (!rtpStream->ReceivePacket(packet))
             {
-                MS_WARN_TAG(dead, "not processed");
                 // May have to announce a new RTP stream to the listener.
                 if (this->mapSsrcRtpStream.size() > numRtpStreamsBefore)
-                {
                     NotifyNewRtpStream(rtpStream);
-                }
 
                 return result;
             }
         }
-
         // RTX packet.
         else if (packet->GetSsrc() == rtpStream->GetRtxSsrc())
         {
-            // MS_WARN_TAG(rtp, "received RTX packet stream name %s", rtpStream->GetCname().c_str());
-
             result = ReceiveRtpPacketResult::RETRANSMISSION;
             isRtx  = true;
 
@@ -1149,7 +1061,6 @@ namespace RTC
             if (!rtpStream->ReceiveRtxPacket(packet))
                 return result;
         }
-
         // Should not happen.
         else
         {
@@ -1239,11 +1150,7 @@ namespace RTC
             /*RTC::EncodeContext & ec = */rtpStream->GetEncodeContext(rtpStream->GetSsrc(), width, height);
         }
 
-        if (translateMode != decodeAndEncode)
-        {
-            translateMode = decodeAndEncode;
-            m_timer.Start(m_timerDelay, m_timerDelay);
-        }
+        m_timer.Start(m_timerDelay, m_timerDelay);
 
         m_isMasterMode = true;
     }

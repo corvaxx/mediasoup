@@ -45,7 +45,6 @@ namespace Channel
 		{ "producer.pause",                              Request::MethodId::PRODUCER_PAUSE                                   },
 		{ "producer.resume" ,                            Request::MethodId::PRODUCER_RESUME                                  },
 		{ "producer.enableTraceEvent",                   Request::MethodId::PRODUCER_ENABLE_TRACE_EVENT                      },
-		{ "producer.setTranslateMode",                   Request::MethodId::PRODUCER_SET_TRANSLATE_MODE                      },
 		{ "producer.startMasterMode",                    Request::MethodId::PRODUCER_START_MASTER_MODE                       },
 		{ "producer.attachSlave",                        Request::MethodId::PRODUCER_ATTACH_SLAVE                            },
 		{ "consumer.close",                              Request::MethodId::CONSUMER_CLOSE                                   },
