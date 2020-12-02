@@ -765,11 +765,11 @@ namespace RTC
             {
                 // master mode, scale slave frames
 
-                if (ec.updateDefaultFrame(ec.frameWidth, ec.frameHeight) != 0)
-                {
-                    MS_WARN_TAG(dead, "updateDefaultFrame failed in master mode");
-                    continue;
-                }
+                // if (ec.updateDefaultFrame(ec.frameWidth, ec.frameHeight) != 0)
+                // {
+                //     MS_WARN_TAG(dead, "updateDefaultFrame failed in master mode");
+                //     continue;
+                // }
 
                 for (Slave & s : m_slaves)
                 {
