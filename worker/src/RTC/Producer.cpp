@@ -793,7 +793,7 @@ namespace RTC
                         }
 
                         sws_scale(s.swc, frame->data, frame->linesize, s.y, frame->height, 
-                                        ec.defaultFrame->data, ec.defaultFrame->linesize);
+                                        ec.defaultFrame->data + s.x, ec.defaultFrame->linesize - s.x);
 
                     }
                 }
