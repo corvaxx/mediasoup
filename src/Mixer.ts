@@ -210,6 +210,9 @@ export class Mixer extends EnhancedEventEmitter
 
         logger.debug('close()');
 
+        if (this._producers.size === 0)
+            throw new TypeError('no mixer producers');
+
         this._closed = true;
 
         // Remove notification subscriptions.
@@ -295,11 +298,11 @@ export class Mixer extends EnhancedEventEmitter
 
         this._producers.set(producer.id, producer);
 
-        producer.on('@close', () =>
-        {
-            this._producers.delete(producer.id);
-            this.emit('@producerclose', producer);
-        });
+        // producer.on('@close', () =>
+        // {
+        //     this._producers.delete(producer.id);
+        //     this.emit('@producerclose', producer);
+        // });
 
         this.emit('@newproducer', producer);
 
