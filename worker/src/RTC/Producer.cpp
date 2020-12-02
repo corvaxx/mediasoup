@@ -644,7 +644,7 @@ namespace RTC
             return;
         }
 
-        MS_ASSERT(m_masterMode, "timer in master mode?");
+        MS_ASSERT(m_isMasterMode, "timer in master mode?");
 
         for (auto & it : mapSsrcRtpStream)
         {
