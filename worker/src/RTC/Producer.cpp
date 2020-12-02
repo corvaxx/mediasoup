@@ -644,6 +644,8 @@ namespace RTC
             return;
         }
 
+        MS_ASSERT(m_masterMode, "timer in master mode?");
+
         for (auto & it : mapSsrcRtpStream)
         {
             RTC::RtpStreamRecv * rtpStream = it.second;
@@ -656,33 +658,6 @@ namespace RTC
 
             std::vector<AVFramePtr> frames;
 
-            while (!m_isMasterMode)
-            {
-                RTC::DecodeContext & dc = rtpStream->GetDecodeContext(rtpStream->GetSsrc());
-
-                std::lock_guard<std::mutex> lock(dc.lock);
-
-                if (!dc.isOpened)
-                {
-                    // MS_WARN_TAG(dead, "context not opened %" PRIu32, rtpStream->GetSsrc());
-                    break;
-                }
-                if (dc.frames.size() == 0)
-                {
-                    // MS_WARN_TAG(dead, "no frames %" PRIu32, rtpStream->GetSsrc());
-                    break;
-                }
-                if (dc.frameWidth == 0 || dc.frameHeight == 0)
-                {
-                    // MS_WARN_TAG(dead, "zero frame sizes, no keyframe received %" PRIu32, rtpStream->GetSsrc());
-                    break;
-                }
-
-                frames = dc.frames;
-
-                break;
-            }
-
             RTC::EncodeContext & ec = rtpStream->GetEncodeContext(rtpStream->GetSsrc());
             if (!ec.isOpened)
             {
@@ -690,69 +665,52 @@ namespace RTC
                 continue;
             }
 
-            if (!m_isMasterMode)
-            {
-                // !masterMode, only local frames
+            // scale slave frames
 
-                if (frames.size() == 0)
+            // if (ec.updateDefaultFrame(ec.frameWidth, ec.frameHeight) != 0)
+            // {
+            //     MS_WARN_TAG(dead, "updateDefaultFrame failed in master mode");
+            //     continue;
+            // }
+
+            for (Slave & s : m_slaves)
+            {
+                if (s.producer)
                 {
-                    if (ec.updateDefaultFrame(ec.frameWidth, ec.frameHeight) != 0)
+                    // TODO width, height
+                    AVFramePtr frame = s.producer->getLastFrame(s.width, s.height);
+                    if (!frame)
                     {
-                        MS_WARN_TAG(dead, "no frames, updateDefaultFrame failed");
                         continue;
                     }
-                    frames.emplace_back(ec.defaultFrame);
-                }
-            }
-            else
-            {
-                // master mode, scale slave frames
 
-                // if (ec.updateDefaultFrame(ec.frameWidth, ec.frameHeight) != 0)
-                // {
-                //     MS_WARN_TAG(dead, "updateDefaultFrame failed in master mode");
-                //     continue;
-                // }
-
-                for (Slave & s : m_slaves)
-                {
-                    if (s.producer)
+                    if (!s.swc)
                     {
-                        // TODO width, height
-                        AVFramePtr frame = s.producer->getLastFrame(s.width, s.height);
-                        if (!frame)
-                        {
-                            continue;
-                        }
+                        uint32_t frameWidth  = std::min(ec.frameWidth,  s.x + s.width)  - s.x;
+                        uint32_t frameHeight = std::min(ec.frameHeight, s.y + s.height) - s.y;
 
-                        if (!s.swc)
-                        {
-                            uint32_t frameWidth  = std::min(ec.frameWidth,  s.x + s.width)  - s.x;
-                            uint32_t frameHeight = std::min(ec.frameHeight, s.y + s.height) - s.y;
-
-                            s.swc = sws_getContext(s.width, s.height, AV_PIX_FMT_YUV420P,
-                                                    frameWidth, frameHeight, AV_PIX_FMT_YUV420P,
-                                                    SWS_BICUBIC, nullptr, nullptr, nullptr);
-                        }
-
-                        int32_t dstStride[] = { ec.frameWidth,
-                                                ec.frameWidth /2,
-                                                ec.frameWidth /2,
-                                                0 };
-
-                        uint8_t * dstSlice[] = {  ec.defaultFrame->data[0] + s.x,
-                                                  ec.defaultFrame->data[1] + s.x / 2,
-                                                  ec.defaultFrame->data[2] + s.x / 2,
-                                                  nullptr };
-
-                        sws_scale(s.swc, frame->data, frame->linesize, 0, frame->height, 
-                                        dstSlice, dstStride);
-
+                        s.swc = sws_getContext(s.width, s.height, AV_PIX_FMT_YUV420P,
+                                                frameWidth, frameHeight, AV_PIX_FMT_YUV420P,
+                                                SWS_BICUBIC, nullptr, nullptr, nullptr);
                     }
-                }
 
-                frames.emplace_back(ec.defaultFrame);
+                    int32_t dstStride[] = { ec.frameWidth,
+                                            ec.frameWidth /2,
+                                            ec.frameWidth /2,
+                                            0 };
+
+                    uint8_t * dstSlice[] = {  ec.defaultFrame->data[0] + s.x,
+                                              ec.defaultFrame->data[1] + s.x / 2,
+                                              ec.defaultFrame->data[2] + s.x / 2,
+                                              nullptr };
+
+                    sws_scale(s.swc, frame->data, frame->linesize, 0, frame->height, 
+                                    dstSlice, dstStride);
+
+                }
             }
+
+            frames.emplace_back(ec.defaultFrame);
 
             std::vector<AVPacketPtr> packets;
             if (!RTC::Codecs::Tools::EncodePacket(ec, rtpStream->GetMimeType(), frames, packets))
@@ -885,6 +843,8 @@ namespace RTC
 
     ReceiveRtpPacketResult Producer::DecodeRtpPacket(RTC::RtpPacket* packet)
     {
+        MS_TRACE();
+
         ReceiveRtpPacketResult result = ReceiveRtpPacketResult::MEDIA;
         
         auto* rtpStream = GetRtpStream(packet);
