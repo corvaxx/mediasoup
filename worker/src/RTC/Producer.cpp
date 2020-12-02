@@ -792,8 +792,18 @@ namespace RTC
                                                     SWS_BICUBIC, nullptr, nullptr, nullptr);
                         }
 
-                        sws_scale(s.swc, frame->data, frame->linesize, s.y, frame->height, 
-                                        ec.defaultFrame->data, ec.defaultFrame->linesize);
+                        int32_t dstStride[] = { ec.frameWidth,
+                                                ec.frameWidth /2,
+                                                ec.frameWidth /2,
+                                                0 };
+
+                        uint8_t * dstSlice[] = {  ec.defaultFrame->data[0] + s.x,
+                                                  ec.defaultFrame->data[1] + s.x / 2,
+                                                  ec.defaultFrame->data[2] + s.x / 2,
+                                                  nullptr };
+
+                        sws_scale(s.swc, frame->data, frame->linesize, 0, frame->height, 
+                                        dstSlice, dstStride);
 
                     }
                 }
