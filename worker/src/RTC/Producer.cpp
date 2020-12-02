@@ -628,23 +628,6 @@ namespace RTC
                 break;
             }
 
-            case Channel::Request::MethodId::PRODUCER_ATTACH_SLAVE:
-            {
-                MS_WARN_TAG(dead, "PRODUCER_ATTACH_SLAVE");
-
-                auto jit = request->data.find("slaveId");
-                if (jit == request->data.end() || !jit->is_string())
-                {
-                    MS_THROW_TYPE_ERROR("wrong type (not an string)");
-                }
-
-                std::string slaveId = jit->get<std::string>();
-
-                MS_WARN_TAG(dead, "attach slave producer id %s", slaveId.c_str());
-
-                break;
-            }
-
             default:
             {
                 MS_THROW_ERROR("unknown method '%s'", request->method.c_str());
