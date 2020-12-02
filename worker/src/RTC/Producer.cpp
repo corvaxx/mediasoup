@@ -771,22 +771,6 @@ namespace RTC
                     continue;
                 }
 
-                uint32_t maxWidth  = ec.frameWidth;
-                uint32_t maxHeight = ec.frameHeight;
-
-                // define max size
-                for (Slave & s : m_slaves)
-                {
-                    if (maxWidth < s.x + s.width)
-                    {
-                        maxWidth = s.x + s.width;
-                    }
-                    if (maxHeight < s.y + s.height)
-                    {
-                        maxWidth = s.y + s.height;
-                    }
-                }
-
                 for (Slave & s : m_slaves)
                 {
                     if (s.producer)
