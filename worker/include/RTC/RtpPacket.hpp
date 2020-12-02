@@ -86,8 +86,8 @@ namespace RTC
 	{
         bool                    isOpened       { false };
 
-        int                     frameWidth     { 0 };
-        int                     frameHeight    { 0 };
+        uint32_t                frameWidth     { 0 };
+        uint32_t                frameHeight    { 0 };
 
 		std::mutex              lock;
 
@@ -101,8 +101,8 @@ namespace RTC
 	{
         bool                    isOpened       { false };
 
-        int                     frameWidth     { 0 };
-        int                     frameHeight    { 0 };
+        uint32_t                frameWidth     { 0 };
+        uint32_t                frameHeight    { 0 };
 
 		AVCodec               * codec         { nullptr };
         AVCodecContextPtr       codecContext;
@@ -115,8 +115,6 @@ namespace RTC
         // default frame
         int                     i             { 0 };
         AVFramePtr              defaultFrame;
-
-        SwsContext            * swc           { nullptr };
 
         int initContext(const uint32_t width, const uint32_t height);
         int updateDefaultFrame(const uint32_t width, const uint32_t height);

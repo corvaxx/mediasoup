@@ -798,12 +798,17 @@ namespace RTC
                             continue;
                         }
 
-                        uint32_t frameWidth  = std::min(maxWidth, s.x  + s.width)  - s.x;
-                        uint32_t frameHeight = std::min(maxHeight, s.y + s.height) - s.y;
-                        ec.swc = sws_getCachedContext(ec.swc, frame->width, frame->height, AV_PIX_FMT_YUV420P,
-                                                                frameWidth, frameHeight, AV_PIX_FMT_YUV420P,
-                                                                SWS_BICUBIC, nullptr, nullptr, nullptr);
-                        sws_scale(ec.swc, frame->data, frame->linesize, 0, frame->height, 
+                        if (!s.swc)
+                        {
+                            uint32_t frameWidth  = std::min(ec.frameWidth,  s.x + s.width)  - s.x;
+                            uint32_t frameHeight = std::min(ec.frameHeight, s.y + s.height) - s.y;
+
+                            s.swc = sws_getContext(s.width, s.height, AV_PIX_FMT_YUV420P,
+                                                    frameWidth, frameHeight, AV_PIX_FMT_YUV420P,
+                                                    SWS_BICUBIC, nullptr, nullptr, nullptr);
+                        }
+
+                        sws_scale(s.swc, frame->data, frame->linesize, s.y, frame->height, 
                                         ec.defaultFrame->data, ec.defaultFrame->linesize);
 
                     }
@@ -1269,6 +1274,7 @@ namespace RTC
         Slave s;
         s.producer = slave;
         s.x = x, s.y = y, s.width = width, s.height = height, s.z = z;
+
         m_slaves.emplace_back(s);
     }
 

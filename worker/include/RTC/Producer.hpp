@@ -171,6 +171,9 @@ namespace RTC
 			uint32_t           height   { 0 };
 			uint32_t           z        { 0 };
 
+	        SwsContext       * swc      { nullptr };
+
+
 			inline bool operator == (const Slave & other) const { return producer == other.producer; }
 			inline bool operator == (const AbstractProducer * ptr) const { return producer == ptr; }
 		};
