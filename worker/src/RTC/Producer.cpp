@@ -816,29 +816,26 @@ namespace RTC
     {
         MS_TRACE();
 
-        // in direct mode - dispatch packets without processing
-        ReceiveRtpPacketResult result = DispatchRtpPacket(packet);
-        if (result != ReceiveRtpPacketResult::MEDIA)
-        {
-            return result;
-        }
-
-        // if (m_isMasterMode || !m_master)
-        // {
-        //     return result;
-        // }
-
-        // for slave mode need to decode frame
-
         // if (random32(0) % 32 == 0)
         // {
         //     MS_WARN_TAG(dead, "DROPPED %" PRIu16, packet->GetSequenceNumber());
         //     return ReceiveRtpPacketResult::MEDIA;    
         // }
 
-        DecodeRtpPacket(packet);
+        if (!m_isMasterMode) //  || !m_master)
+        {
+            auto* rtpStream = GetRtpStream(packet);
+            if (rtpStream)
+            {
+                if (packet->GetSsrc() == rtpStream->GetSsrc())
+                {
+                    // Media packet.
+                    DecodeRtpPacket(packet);
+                }
+            }
+        }
 
-        return result;
+        return DispatchRtpPacket(packet);
     }
 
     ReceiveRtpPacketResult Producer::DecodeRtpPacket(RTC::RtpPacket* packet)
