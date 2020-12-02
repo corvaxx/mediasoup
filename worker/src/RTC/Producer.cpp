@@ -823,10 +823,10 @@ namespace RTC
             return result;
         }
 
-        if (m_isMasterMode || !m_master)
-        {
-            return result;
-        }
+        // if (m_isMasterMode || !m_master)
+        // {
+        //     return result;
+        // }
 
         // for slave mode need to decode frame
 
