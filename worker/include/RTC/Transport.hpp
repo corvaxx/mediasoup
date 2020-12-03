@@ -10,7 +10,6 @@
 #include "RTC/Consumer.hpp"
 #include "RTC/DataConsumer.hpp"
 #include "RTC/DataProducer.hpp"
-#include "RTC/FileProducer.hpp"
 #include "RTC/AbstractProducer.hpp"
 #include "RTC/RTCP/CompoundPacket.hpp"
 #include "RTC/RTCP/Packet.hpp"
