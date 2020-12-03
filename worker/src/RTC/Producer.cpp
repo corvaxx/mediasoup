@@ -686,6 +686,22 @@ namespace RTC
                         continue;
                     }
 
+                    if (s.mode == crop)
+                    {
+                        if (frame->width > s.width)
+                        {
+                            frame->crop_bottom = frame->width  - s.width;
+                        }
+                        if (frame->height > s.height)
+                        {
+                            frame->crop_right  = frame->height - s.height;
+                        }
+                        if (frame->crop_right > 0 || frame->crop_bottom > 0)
+                        {
+                            av_frame_apply_cropping(frame.get(), 0);
+                        }
+                    }
+
                     if (!s.swc)
                     {
                         uint32_t frameWidth  = std::min(ec.frameWidth,  s.x + s.width)  - s.x;

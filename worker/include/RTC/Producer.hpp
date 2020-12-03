@@ -21,6 +21,12 @@ using json = nlohmann::json;
 
 namespace RTC
 {
+	enum RenderMode
+	{
+		scale = 0,
+		crop  = 1
+	};
+
 	class Producer;
 	typedef std::shared_ptr<Producer> ProducerPtr;
 
@@ -165,6 +171,7 @@ namespace RTC
 			uint32_t           width    { 0 };
 			uint32_t           height   { 0 };
 			uint32_t           z        { 0 };
+			RenderMode         mode     { crop };
 
 	        SwsContext       * swc      { nullptr };
 
