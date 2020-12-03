@@ -1148,11 +1148,13 @@ namespace RTC
     void Producer::addSlave(AbstractProducer * slave, 
                             const uint32_t x, const uint32_t y, 
                             const uint32_t width, const uint32_t height, 
-                            const uint32_t z)
+                            const uint32_t z,
+                            const RenderMode & mode)
     {
         Slave s;
         s.producer = slave;
         s.x = x, s.y = y, s.width = width, s.height = height, s.z = z;
+        s.mode = mode;
 
         m_slaves.emplace_back(s);
 
@@ -1162,13 +1164,15 @@ namespace RTC
     void Producer::updateSlave(const std::string & producerId, 
                                 const uint32_t x, const uint32_t y, 
                                 const uint32_t width, const uint32_t height, 
-                                const uint32_t z)
+                                const uint32_t z,
+                                const RenderMode & mode)
     {
         for (Slave & s : m_slaves)
         {
             if (s.producer->id == producerId)
             {
                 s.x = x, s.y = y, s.width = width, s.height = height, s.z = z;
+                s.mode = mode;
                 SwsContext * tmp = s.swc;
                 s.swc = nullptr;
                 sws_freeContext(tmp);

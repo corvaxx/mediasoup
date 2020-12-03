@@ -21,12 +21,6 @@ using json = nlohmann::json;
 
 namespace RTC
 {
-	enum RenderMode
-	{
-		scale = 0,
-		crop  = 1
-	};
-
 	class Producer;
 	typedef std::shared_ptr<Producer> ProducerPtr;
 
@@ -96,11 +90,13 @@ namespace RTC
 		void addSlave(AbstractProducer * slave, 
 						const uint32_t x, const uint32_t y, 
 						const uint32_t width, const uint32_t height, 
-						const uint32_t z);
+						const uint32_t z,
+						const RenderMode & mode = scale);
     	void updateSlave(const std::string & producerId, 
                         const uint32_t x, const uint32_t y, 
                         const uint32_t width, const uint32_t height, 
-                        const uint32_t z);
+                        const uint32_t z,
+                        const RenderMode & mode = scale);
     	void removeSlave(const std::string & producerId); 
 
 		// 

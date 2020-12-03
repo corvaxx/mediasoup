@@ -8,6 +8,7 @@
 #include "Channel/Request.hpp"
 #include "Logger.hpp"
 #include "MediaSoupErrors.hpp"
+#include "RTC/AbstractProducer.hpp"
 #include "RTC/Producer.hpp"
 
 #include <iostream>
@@ -320,10 +321,18 @@ void Mixer::add(Channel::Request * request)
         MS_THROW_ERROR("missing internal.producerId");
     }
 
+    RenderMode mode = scale;
+    it = request->internal.find("renderMode");
+    if (it != request->internal.end() && it->is_string())
+    {
+        mode = it->get<std::string>() == "crop" ? crop
+                                                : scale;
+    }
+
     AbstractProducer * producer = listener->getProducerById(it->get<std::string>());
 
     producer->setMaster(mixerProducer.get());
-    mixerProducer->addSlave(producer, x, y, w, h, z);
+    mixerProducer->addSlave(producer, x, y, w, h, z, mode);
 
     request->Accept();
 }
@@ -365,7 +374,15 @@ void Mixer::update(Channel::Request * request)
         MS_THROW_ERROR("missing internal.producerId");
     }
 
-    mixerProducer->updateSlave(it->get<std::string>(), x, y, w, h, z);
+    RenderMode mode = scale;
+    it = request->internal.find("renderMode");
+    if (it != request->internal.end() && it->is_string())
+    {
+        mode = it->get<std::string>() == "crop" ? crop
+                                                : scale;
+    }
+
+    mixerProducer->updateSlave(it->get<std::string>(), x, y, w, h, z, mode);
 
     request->Accept();
 }

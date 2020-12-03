@@ -31,6 +31,12 @@ enum class ReceiveRtpPacketResult
     RETRANSMISSION
 };
 
+enum RenderMode
+{
+    scale = 0,
+    crop  = 1
+};
+
 class AbstractProducer;
 typedef std::shared_ptr<AbstractProducer> AbstractProducerPtr;
 
@@ -140,11 +146,13 @@ public:
     virtual void addSlave(AbstractProducer * slave, 
                             const uint32_t x, const uint32_t y, 
                             const uint32_t width, const uint32_t height, 
-                            const uint32_t z) = 0;
+                            const uint32_t z,
+                            const RenderMode & mode = scale) = 0;
     virtual void updateSlave(const std::string & producerId, 
                             const uint32_t x, const uint32_t y, 
                             const uint32_t width, const uint32_t height, 
-                            const uint32_t z) = 0;
+                            const uint32_t z,
+                            const RenderMode & mode = scale) = 0;
     virtual void removeSlave(const std::string & producerId) = 0; 
 
     // 
