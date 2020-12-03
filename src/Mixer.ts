@@ -330,4 +330,42 @@ export class Mixer extends EnhancedEventEmitter
         const status =
             await this._channel.request('mixer.add', internal, reqData);
     }
+
+    async update(producerId : string, options: { x : number, y : number, width : number, height : number, z : number}) 
+        : Promise<void>
+    {
+        logger.debug('update()');
+
+        if (this._producers.size === 0)
+            throw new TypeError('no mixer producers');
+        if (this._producers.has(producerId))
+            throw new TypeError(`a Producer with same id "${producerId}" in mixer producers`);
+
+        var mixerProducer = this._producers.values().next().value;
+
+        const internal = { ...this._internal, mixerProducerId: mixerProducer.id, producerId: producerId };
+        const reqData  = { options };
+
+        const status =
+            await this._channel.request('mixer.update', internal, reqData);
+    }
+
+    async remove(producerId : string) 
+        : Promise<void>
+    {
+        logger.debug('remove()');
+
+        if (this._producers.size === 0)
+            throw new TypeError('no mixer producers');
+        if (this._producers.has(producerId))
+            throw new TypeError(`a Producer with same id "${producerId}" in mixer producers`);
+
+        var mixerProducer = this._producers.values().next().value;
+
+        const internal = { ...this._internal, mixerProducerId: mixerProducer.id, producerId: producerId };
+        const reqData  = { };
+
+        const status =
+            await this._channel.request('mixer.remove', internal, reqData);
+    }
 }
