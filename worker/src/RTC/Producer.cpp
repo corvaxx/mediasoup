@@ -688,6 +688,8 @@ namespace RTC
 
                     if (s.mode == crop)
                     {
+                        std::cerr << "crop " << frame->width << "x" << frame->height << " to " << s.width << "x" << s.height << std::endl;
+
                         if (frame->width > s.width)
                         {
                             frame->crop_bottom = frame->width  - s.width;
@@ -696,6 +698,9 @@ namespace RTC
                         {
                             frame->crop_right  = frame->height - s.height;
                         }
+                        
+                        std::cerr << "crop right " << frame->crop_right << " bottom " << frame->crop_bottom << std::endl;
+
                         if (frame->crop_right > 0 || frame->crop_bottom > 0)
                         {
                             av_frame_apply_cropping(frame.get(), 0);
