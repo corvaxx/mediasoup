@@ -76,8 +76,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		// MS_WARN_TAG(dead, "RtpStreamSend::ReceivePacket");
-
 		// Call the parent method.
 		if (!RtpStream::ReceivePacket(packet))
 			return false;
@@ -103,8 +101,6 @@ namespace RTC
 			RTC::RTCP::FeedbackRtpNackItem* item = *it;
 
 			this->nackPacketCount += item->CountRequestedPackets();
-
-	        MS_WARN_TAG(dead, "NACK seq %" PRIu16, item->GetPacketId());
 
 			FillRetransmissionContainer(item->GetPacketId(), item->GetLostPacketBitmask());
 
@@ -269,8 +265,6 @@ namespace RTC
 	void RtpStreamSend::StorePacket(RTC::RtpPacket* packet)
 	{
 		MS_TRACE();
-
-		// MS_WARN_TAG(dead, "RtpStreamSend::StorePacket");
 
 		if (packet->GetSize() > RTC::MtuSize)
 		{
