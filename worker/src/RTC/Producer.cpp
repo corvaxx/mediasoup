@@ -828,8 +828,7 @@ namespace RTC
 
         ReceiveRtpPacketResult result = DispatchRtpPacket(packet);
 
-        if (result == ReceiveRtpPacketResult::MEDIA)
-        // if (!m_isMasterMode) //  || !m_master)
+        if (!m_isMasterMode && result == ReceiveRtpPacketResult::MEDIA) // && m_master)
         {
         //     auto* rtpStream = GetRtpStream(clone);
         //     if (rtpStream)
