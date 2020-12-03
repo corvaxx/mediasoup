@@ -691,7 +691,7 @@ namespace RTC
                         uint32_t frameWidth  = std::min(ec.frameWidth,  s.x + s.width)  - s.x;
                         uint32_t frameHeight = std::min(ec.frameHeight, s.y + s.height) - s.y;
 
-                        s.swc = sws_getContext(s.width, s.height, AV_PIX_FMT_YUV420P,
+                        s.swc = sws_getContext(frame->width, frame->height, AV_PIX_FMT_YUV420P,
                                                 frameWidth, frameHeight, AV_PIX_FMT_YUV420P,
                                                 SWS_BICUBIC, nullptr, nullptr, nullptr);
                     }
