@@ -904,7 +904,8 @@ namespace RTC
             if (c.lastSeq != 0 && c.lastSeq + 1 != packet->GetSequenceNumber())
             {
                 // TODO request packets
-                MS_WARN_TAG(dead, "missed %" PRIu16 " packets from %" PRIu16, packet->GetSequenceNumber() - c.lastSeq - 1, c.lastSeq);
+                // MS_WARN_TAG(dead, "missed %" PRIu16 " packets from %" PRIu16, packet->GetSequenceNumber() - c.lastSeq - 1, c.lastSeq);
+                std::cerr << "missed " << packet->GetSequenceNumber() - c.lastSeq - 1 << " packets from " << c.lastSeq << std::endl;
             }
 
             c.lastSeq = packet->GetSequenceNumber();
