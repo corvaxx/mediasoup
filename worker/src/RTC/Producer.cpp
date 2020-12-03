@@ -885,21 +885,21 @@ namespace RTC
                 }
             }
 
-            // // static size_t summary = 0;
-            // static const uint8_t start_code[4] = { 0, 0, 0, 1 };
+            // static size_t summary = 0;
+            static const uint8_t start_code[4] = { 0, 0, 0, 1 };
 
-            // // TODO debug code, write to file
-            // FILE * f = fopen(c.fileName.c_str(), "a+b");
+            // TODO debug code, write to file
+            FILE * f = fopen(c.fileName.c_str(), "a+b");
 
-            // for (const std::pair<const uint8_t *, size_t> & nal : nalptrs)
-            // {
-            //     fwrite(start_code, 1, 4, f);    
-            //     fwrite(nal.first, 1, nal.second, f);    
+            for (const std::pair<const uint8_t *, size_t> & nal : nalptrs)
+            {
+                fwrite(start_code, 1, 4, f);    
+                fwrite(nal.first, 1, nal.second, f);    
 
-            //     // MS_WARN_TAG(dead, "write packet size %" PRIu64 " summary %" PRIu64, nal.second + 4, summary);
-            // }
+                // MS_WARN_TAG(dead, "write packet size %" PRIu64 " summary %" PRIu64, nal.second + 4, summary);
+            }
 
-            // fclose(f);      
+            fclose(f);      
 
             if (c.lastSeq != 0 && c.lastSeq + 1 != packet->GetSequenceNumber())
             {
