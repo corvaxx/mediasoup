@@ -39,6 +39,8 @@ namespace Channel
 		{ "mixer.produce",                               Request::MethodId::MIXER_PRODUCE                                    },
 		{ "mixer.close",                                 Request::MethodId::MIXER_CLOSE                                      },
 		{ "mixer.add",                                   Request::MethodId::MIXER_ADD                                        },
+		{ "mixer.update",                                Request::MethodId::MIXER_UPDATE                                     },
+		{ "mixer.remove",                                Request::MethodId::MIXER_REMOVE                                     },
 		{ "producer.close",                              Request::MethodId::PRODUCER_CLOSE                                   },
 		{ "producer.dump",                               Request::MethodId::PRODUCER_DUMP                                    },
 		{ "producer.getStats",                           Request::MethodId::PRODUCER_GET_STATS                               },
