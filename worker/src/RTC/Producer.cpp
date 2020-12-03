@@ -692,11 +692,11 @@ namespace RTC
 
                         if (frame->width > s.width)
                         {
-                            frame->crop_bottom = frame->width  - s.width;
+                            frame->crop_right = frame->width  - s.width;
                         }
                         if (frame->height > s.height)
                         {
-                            frame->crop_right  = frame->height - s.height;
+                            frame->crop_bottom  = frame->height - s.height;
                         }
 
                         std::cerr << "crop right " << frame->crop_right << " bottom " << frame->crop_bottom << std::endl;
