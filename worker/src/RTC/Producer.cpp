@@ -822,18 +822,18 @@ namespace RTC
         //     return ReceiveRtpPacketResult::MEDIA;    
         // }
 
-        if (!m_isMasterMode) //  || !m_master)
-        {
-            auto* rtpStream = GetRtpStream(packet);
-            if (rtpStream)
-            {
-                if (packet->GetSsrc() == rtpStream->GetSsrc())
-                {
-                    // Media packet.
-                    DecodeRtpPacket(packet);
-                }
-            }
-        }
+        // if (!m_isMasterMode) //  || !m_master)
+        // {
+        //     auto* rtpStream = GetRtpStream(packet);
+        //     if (rtpStream)
+        //     {
+        //         if (packet->GetSsrc() == rtpStream->GetSsrc())
+        //         {
+        //             // Media packet.
+        //             DecodeRtpPacket(packet);
+        //         }
+        //     }
+        // }
 
         return DispatchRtpPacket(packet);
     }
