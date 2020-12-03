@@ -822,20 +822,27 @@ namespace RTC
         //     return ReceiveRtpPacketResult::MEDIA;    
         // }
 
+        uint8_t * buffer = new uint8_t[packet->GetSize() + 64];
+        RtpPacket * clone = packet->Clone(buffer);
+        clone->SetBuffer(buffer);
+
+        ReceiveRtpPacketResult result = DispatchRtpPacket(packet);
+
+        if (result == ReceiveRtpPacketResult::MEDIA)
         // if (!m_isMasterMode) //  || !m_master)
-        // {
-        //     auto* rtpStream = GetRtpStream(packet);
+        {
+        //     auto* rtpStream = GetRtpStream(clone);
         //     if (rtpStream)
         //     {
-        //         if (packet->GetSsrc() == rtpStream->GetSsrc())
+        //         if (clone->GetSsrc() == rtpStream->GetSsrc())
         //         {
-        //             // Media packet.
-        //             DecodeRtpPacket(packet);
+                    // Media packet.
+                    DecodeRtpPacket(clone);
         //         }
         //     }
-        // }
+        }
 
-        return DispatchRtpPacket(packet);
+        return result;
     }
 
     ReceiveRtpPacketResult Producer::DecodeRtpPacket(RTC::RtpPacket* packet)
