@@ -666,12 +666,14 @@ namespace RTC
             }
 
             // scale slave frames
-
-            // if (ec.updateDefaultFrame(ec.frameWidth, ec.frameHeight) != 0)
-            // {
-            //     MS_WARN_TAG(dead, "updateDefaultFrame failed in master mode");
-            //     continue;
-            // }
+            if (m_isSlavesUpdated)
+            {
+                if (ec.updateDefaultFrame(ec.frameWidth, ec.frameHeight, false) != 0)
+                {
+                    MS_WARN_TAG(dead, "updateDefaultFrame failed in master mode");
+                    continue;
+                }
+            }
 
             for (Slave & s : m_slaves)
             {
@@ -709,6 +711,8 @@ namespace RTC
 
                 }
             }
+
+            m_isSlavesUpdated = false;
 
             frames.emplace_back(ec.defaultFrame);
 
@@ -1126,6 +1130,8 @@ namespace RTC
         s.x = x, s.y = y, s.width = width, s.height = height, s.z = z;
 
         m_slaves.emplace_back(s);
+
+        m_isSlavesUpdated = true;
     }
 
     void Producer::updateSlave(const std::string & producerId, 
@@ -1143,11 +1149,14 @@ namespace RTC
                 sws_freeContext(tmp);
             }
         }   
+
+        m_isSlavesUpdated = true;
     }
 
     void Producer::removeSlave(const std::string & producerId)
     {
         m_slaves.erase(std::remove(m_slaves.begin(), m_slaves.end(), producerId), m_slaves.end());
+        m_isSlavesUpdated = true;
     }
 
 

@@ -174,6 +174,7 @@ namespace RTC
 			inline bool operator == (const std::string & id) const { return producer->id == id; }
 		};
 		std::vector<Slave>        m_slaves;
+		bool                      m_isSlavesUpdated { true };
 	};
 } // namespace RTC
 

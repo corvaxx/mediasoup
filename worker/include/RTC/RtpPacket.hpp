@@ -117,7 +117,7 @@ namespace RTC
         AVFramePtr              defaultFrame;
 
         int initContext(const uint32_t width, const uint32_t height);
-        int updateDefaultFrame(const uint32_t width, const uint32_t height);
+        int updateDefaultFrame(const uint32_t width, const uint32_t height, bool withIncrement = true);
 	};
 
 

@@ -971,7 +971,8 @@ namespace RTC
 		buffer = buf;
 	}
 
-    int EncodeContext::updateDefaultFrame(const uint32_t width, const uint32_t height)
+    int EncodeContext::updateDefaultFrame(const uint32_t width, const uint32_t height,
+    									  bool withIncrement)
     {
     	MS_TRACE();
 
@@ -996,7 +997,10 @@ namespace RTC
 
 		// int i = 0; // random32(0) % 32;
 
-		i = (++i) % 256;
+		if (withIncrement)
+		{
+			i = (++i) % 256;
+		}
 
         // prepare a dummy image
         // Y
