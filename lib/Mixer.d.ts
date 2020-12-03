@@ -4,6 +4,11 @@ import { MediaKind } from './RtpParameters';
 import { PayloadChannel } from './PayloadChannel';
 import { Producer } from './Producer';
 import { RtpCapabilities } from './RtpParameters';
+export declare enum MIXER_RENDER_MODE {
+    SCALE = "scale",
+    CROP = "crop",
+    PAD = "pad"
+}
 export declare class Mixer extends EnhancedEventEmitter {
     protected readonly _internal: {
         routerId: string;
@@ -88,6 +93,7 @@ export declare class Mixer extends EnhancedEventEmitter {
         width: number;
         height: number;
         z: number;
+        mode: MIXER_RENDER_MODE;
     }): Promise<void>;
     update(producerId: string, options: {
         x: number;
@@ -95,6 +101,7 @@ export declare class Mixer extends EnhancedEventEmitter {
         width: number;
         height: number;
         z: number;
+        mode: MIXER_RENDER_MODE;
     }): Promise<void>;
     remove(producerId: string): Promise<void>;
 }

@@ -12,6 +12,8 @@ import * as ortc from './ortc';
 
 const logger = new Logger('Mixer');
 
+export enum MIXER_RENDER_MODE { SCALE = 'scale', CROP = 'crop', PAD = 'pad' }
+
 export class Mixer extends EnhancedEventEmitter
 {
     // Internal data.
@@ -310,7 +312,7 @@ export class Mixer extends EnhancedEventEmitter
     }
 
     async add(producer : Producer, kind : MediaKind, 
-                options: { x : number, y : number, width : number, height : number, z : number}) 
+                options: { x : number, y : number, width : number, height : number, z : number, mode : MIXER_RENDER_MODE }) 
         : Promise<void>
     {
         logger.debug('add()');
@@ -331,7 +333,7 @@ export class Mixer extends EnhancedEventEmitter
             await this._channel.request('mixer.add', internal, reqData);
     }
 
-    async update(producerId : string, options: { x : number, y : number, width : number, height : number, z : number}) 
+    async update(producerId : string, options: { x : number, y : number, width : number, height : number, z : number, mode : MIXER_RENDER_MODE }) 
         : Promise<void>
     {
         logger.debug('update()');
