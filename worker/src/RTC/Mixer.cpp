@@ -46,16 +46,24 @@ void Mixer::HandleRequest(Channel::Request * request)
             produce(request);
             break;
         }
-
         case Channel::Request::MethodId::MIXER_CLOSE:
         {
             close(request);
             break;
         }
-
         case Channel::Request::MethodId::MIXER_ADD:
         {
             add(request);
+            break;
+        }
+        case Channel::Request::MethodId::MIXER_UPDATE:
+        {
+            update(request);
+            break;
+        }
+        case Channel::Request::MethodId::MIXER_REMOVE:
+        {
+            remove(request);
             break;
         }
 
@@ -316,6 +324,70 @@ void Mixer::add(Channel::Request * request)
 
     producer->setMaster(mixerProducer.get());
     mixerProducer->addSlave(producer, x, y, w, h, z);
+
+    request->Accept();
+}
+
+//******************************************************************************
+//******************************************************************************
+void Mixer::update(Channel::Request * request)
+{
+    MS_TRACE();
+
+    AbstractProducerPtr mixerProducer = getProducerFromInternal(request->internal);
+
+    auto it = request->data.find("options");
+    if (it == request->data.end() || !it->is_object())
+    {
+        MS_THROW_ERROR("missing options");
+    }
+
+    auto ix = it->find("x");
+    auto iy = it->find("y");
+    auto iw = it->find("width");
+    auto ih = it->find("height");
+    auto iz = it->find("z");
+
+    if (iw == it->end() || ih == it->end())
+    {
+        MS_THROW_ERROR("width and height must be specified");
+    }
+
+    uint32_t x = ix->get<uint32_t>();
+    uint32_t y = iy->get<uint32_t>();
+    uint32_t w = iw->get<uint32_t>();
+    uint32_t h = ih->get<uint32_t>();
+    uint32_t z = iz->get<uint32_t>();
+
+    it = request->internal.find("producerId");
+    if (it == request->internal.end() || !it->is_string())
+    {
+        MS_THROW_ERROR("missing internal.producerId");
+    }
+
+    mixerProducer->updateSlave(it->get<std::string>(), x, y, w, h, z);
+
+    request->Accept();
+}
+
+//******************************************************************************
+//******************************************************************************
+void Mixer::remove(Channel::Request * request)
+{
+    MS_TRACE();
+
+    AbstractProducerPtr mixerProducer = getProducerFromInternal(request->internal);
+
+    auto it = request->internal.find("producerId");
+    if (it == request->internal.end() || !it->is_string())
+    {
+        MS_THROW_ERROR("missing internal.producerId");
+    }
+
+    AbstractProducer * producer = listener->getProducerById(it->get<std::string>());
+
+    mixerProducer->removeSlave(producer->id);
+    producer->setMaster(nullptr);
 
     request->Accept();
 }

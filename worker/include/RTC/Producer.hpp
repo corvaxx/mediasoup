@@ -91,6 +91,11 @@ namespace RTC
 						const uint32_t x, const uint32_t y, 
 						const uint32_t width, const uint32_t height, 
 						const uint32_t z);
+    	void updateSlave(const std::string & producerId, 
+                        const uint32_t x, const uint32_t y, 
+                        const uint32_t width, const uint32_t height, 
+                        const uint32_t z);
+    	void removeSlave(const std::string & producerId); 
 
 		// 
 		void onClosedSlave(AbstractProducer * slave);
@@ -166,6 +171,7 @@ namespace RTC
 
 			inline bool operator == (const Slave & other) const { return producer == other.producer; }
 			inline bool operator == (const AbstractProducer * ptr) const { return producer == ptr; }
+			inline bool operator == (const std::string & id) const { return producer->id == id; }
 		};
 		std::vector<Slave>        m_slaves;
 	};

@@ -1108,8 +1108,10 @@ namespace RTC
 
     void Producer::setMaster(AbstractProducer * master)
     {
-        MS_ASSERT(m_master == nullptr, "master already set");
-        MS_ASSERT(master != nullptr, "master must be not null");
+        if (master)
+        {
+            MS_ASSERT(m_master == nullptr, "master already set");
+        }
         m_master = master;
     }
 
@@ -1125,9 +1127,31 @@ namespace RTC
         m_slaves.emplace_back(s);
     }
 
+    void Producer::updateSlave(const std::string & producerId, 
+                                const uint32_t x, const uint32_t y, 
+                                const uint32_t width, const uint32_t height, 
+                                const uint32_t z)
+    {
+        for (Slave & s : m_slaves)
+        {
+            if (s.producer->id == producerId)
+            {
+                s.x = x, s.y = y, s.width = width, s.height = height, s.z = z;
+                SwsContext * tmp = s.swc;
+                s.swc = nullptr;
+                sws_freeContext(tmp);
+            }
+        }   
+    }
+
+    void Producer::removeSlave(const std::string & producerId)
+    {
+        m_slaves.erase(std::remove(m_slaves.begin(), m_slaves.end(), producerId), m_slaves.end());
+    }
+
+
     void Producer::onClosedSlave(AbstractProducer * slave)
     {
-        // TODO remove from slaves
         m_slaves.erase(std::remove(m_slaves.begin(), m_slaves.end(), slave), m_slaves.end());
     }
 

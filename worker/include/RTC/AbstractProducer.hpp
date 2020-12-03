@@ -141,6 +141,11 @@ public:
                             const uint32_t x, const uint32_t y, 
                             const uint32_t width, const uint32_t height, 
                             const uint32_t z) = 0;
+    virtual void updateSlave(const std::string & producerId, 
+                            const uint32_t x, const uint32_t y, 
+                            const uint32_t width, const uint32_t height, 
+                            const uint32_t z) = 0;
+    virtual void removeSlave(const std::string & producerId) = 0; 
 
     // 
     virtual void onClosedSlave(AbstractProducer * slave) = 0;

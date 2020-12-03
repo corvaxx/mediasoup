@@ -79,6 +79,10 @@ protected:
     void close(Channel::Request * request);
     // 
     void add(Channel::Request * request);
+    // 
+    void update(Channel::Request * request);
+    // 
+    void remove(Channel::Request * request);
 
 protected:
     // AbstractProducer::Listener
