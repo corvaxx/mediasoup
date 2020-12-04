@@ -690,14 +690,18 @@ namespace RTC
                     {
                         if (frame->width > s.width)
                         {
-                            frame->crop_right = frame->width  - s.width;
+                            uint32_t delta    = (frame->width  - s.width) / 2;
+                            frame->crop_left  = delta;
+                            frame->crop_right = delta;
                         }
                         if (frame->height > s.height)
                         {
-                            frame->crop_bottom  = frame->height - s.height;
+                            uint32_t delta     = (frame->height  - s.height) / 2;
+                            frame->crop_top    = delta;
+                            frame->crop_bottom = delta;
                         }
 
-                        if (frame->crop_right > 0 || frame->crop_bottom > 0)
+                        if (frame->crop_left > 0 || frame->crop_top > 0)
                         {
                             int result = av_frame_apply_cropping(frame.get(), 0);
                             if (result != 0)
