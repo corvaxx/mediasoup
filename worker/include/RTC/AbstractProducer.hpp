@@ -34,7 +34,8 @@ enum class ReceiveRtpPacketResult
 enum RenderMode
 {
     scale = 0,
-    crop  = 1
+    crop  = 1,
+    pad   = 2
 };
 
 class AbstractProducer;
