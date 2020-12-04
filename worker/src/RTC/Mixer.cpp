@@ -303,30 +303,30 @@ void Mixer::add(Channel::Request * request)
     auto iw = it->find("width");
     auto ih = it->find("height");
     auto iz = it->find("z");
+    auto im = it->find("mode");
 
     if (iw == it->end() || ih == it->end())
     {
         MS_THROW_ERROR("width and height must be specified");
     }
 
-    uint32_t x = ix->get<uint32_t>();
-    uint32_t y = iy->get<uint32_t>();
+    uint32_t x = ix == it->end() ? 0 : ix->get<uint32_t>();
+    uint32_t y = ix == it->end() ? 0 : iy->get<uint32_t>();
     uint32_t w = iw->get<uint32_t>();
     uint32_t h = ih->get<uint32_t>();
-    uint32_t z = iz->get<uint32_t>();
+    uint32_t z = ix == it->end() ? 0 : iz->get<uint32_t>();
+
+    RenderMode mode = scale;
+    if (im != it->end() && im->is_string())
+    {
+        mode = im->get<std::string>() == "crop" ? crop
+                                                : scale;
+    }
 
     it = request->internal.find("producerId");
     if (it == request->internal.end() || !it->is_string())
     {
         MS_THROW_ERROR("missing internal.producerId");
-    }
-
-    RenderMode mode = scale;
-    it = request->internal.find("renderMode");
-    if (it != request->internal.end() && it->is_string())
-    {
-        mode = it->get<std::string>() == "crop" ? crop
-                                                : scale;
     }
 
     AbstractProducer * producer = listener->getProducerById(it->get<std::string>());
@@ -356,30 +356,30 @@ void Mixer::update(Channel::Request * request)
     auto iw = it->find("width");
     auto ih = it->find("height");
     auto iz = it->find("z");
+    auto im = it->find("mode");
 
     if (iw == it->end() || ih == it->end())
     {
         MS_THROW_ERROR("width and height must be specified");
     }
 
-    uint32_t x = ix->get<uint32_t>();
-    uint32_t y = iy->get<uint32_t>();
+    uint32_t x = ix == it->end() ? 0 : ix->get<uint32_t>();
+    uint32_t y = ix == it->end() ? 0 : iy->get<uint32_t>();
     uint32_t w = iw->get<uint32_t>();
     uint32_t h = ih->get<uint32_t>();
-    uint32_t z = iz->get<uint32_t>();
+    uint32_t z = ix == it->end() ? 0 : iz->get<uint32_t>();
+
+    RenderMode mode = scale;
+    if (im != it->end() && im->is_string())
+    {
+        mode = im->get<std::string>() == "crop" ? crop
+                                                : scale;
+    }
 
     it = request->internal.find("producerId");
     if (it == request->internal.end() || !it->is_string())
     {
         MS_THROW_ERROR("missing internal.producerId");
-    }
-
-    RenderMode mode = scale;
-    it = request->internal.find("renderMode");
-    if (it != request->internal.end() && it->is_string())
-    {
-        mode = it->get<std::string>() == "crop" ? crop
-                                                : scale;
     }
 
     mixerProducer->updateSlave(it->get<std::string>(), x, y, w, h, z, mode);
