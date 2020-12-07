@@ -753,12 +753,18 @@ namespace RTC
                         if (frame->width * k < dstW)
                         {
                             uint32_t delta    = static_cast<uint32_t>((dstW - frame->width * k) / 2);
+
+                            std::cerr << "deltaW " << delta << std::endl;
+
                             dstX += delta;
                             dstW -= delta;
                        }
-                        if (frame->height * k > dstH)
+                        if (frame->height * k < dstH)
                         {
                             uint32_t delta     = static_cast<uint32_t>((dstH - frame->height * k) / 2);
+
+                            std::cerr << "deltaH " << delta << std::endl;
+
                             dstY += delta;
                             dstH -= delta;
                         }
