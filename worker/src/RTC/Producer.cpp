@@ -689,13 +689,18 @@ namespace RTC
                     std::cerr << "s width " << s.width << " height " << s.height << std::endl;
                     std::cerr << "frame width " << frame->width << " height " << frame->height << std::endl;
 
+                    std::cerr << "mode " << (s.mode == crop ? "crop" : s.mode == pad ? "pad" : "scale") << std::endl;
+
+                    // TODO temporary set to pad
+                    s.mode = pad;
+                    std::cerr << "mode set to pad" << std::endl;
+
                     double kx = static_cast<double>(s.width)  / frame->width;
                     double ky = static_cast<double>(s.height) / frame->height;
 
                     double k = s.mode == crop ? std::max(kx, ky) :
                                s.mode == pad  ? std::min(kx, ky) :
                                1;
-                    std::cerr << "mode " << (s.mode == crop ? "crop" : s.mode == pad ? "pad" : "scale") << std::endl;
 
                     std::cerr << "k " << k << " kx " << kx << " ky " << ky << std::endl;
 
