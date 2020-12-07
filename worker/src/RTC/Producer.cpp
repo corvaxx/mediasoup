@@ -686,23 +686,12 @@ namespace RTC
                         continue;
                     }
 
-                    std::cerr << "s width " << s.width << " height " << s.height << std::endl;
-                    std::cerr << "frame width " << frame->width << " height " << frame->height << std::endl;
-
-                    std::cerr << "mode " << (s.mode == crop ? "crop" : s.mode == pad ? "pad" : "scale") << std::endl;
-
-                    // TODO temporary set to pad
-                    s.mode = pad;
-                    std::cerr << "mode set to pad" << std::endl;
-
                     double kx = static_cast<double>(s.width)  / frame->width;
                     double ky = static_cast<double>(s.height) / frame->height;
 
                     double k = s.mode == crop ? std::max(kx, ky) :
                                s.mode == pad  ? std::min(kx, ky) :
                                1;
-
-                    std::cerr << "k " << k << " kx " << kx << " ky " << ky << std::endl;
 
                     uint32_t dstX = s.x;
                     uint32_t dstY = s.y;
@@ -716,8 +705,6 @@ namespace RTC
                         {
                             uint32_t delta    = static_cast<uint32_t>((frame->width - dstW / k) / 2);
 
-                            std::cerr << "deltaW " << delta << std::endl;
-
                             frame->crop_left  = delta;
                             frame->crop_right = delta;
                         }
@@ -725,14 +712,9 @@ namespace RTC
                         {
                             uint32_t delta     = static_cast<uint32_t>((frame->height - dstH / k) / 2);
 
-                            std::cerr << "deltaH " << delta << std::endl;
-
                             frame->crop_top    = delta;
                             frame->crop_bottom = delta;
                         }
-
-                        std::cerr << "crop frame to " << frame->width - frame->crop_left - frame->crop_right  
-                                    << "x" << frame->height - frame->crop_top - frame->crop_bottom << std::endl;
 
                         if (frame->crop_left > 0 || frame->crop_top > 0)
                         {
@@ -743,8 +725,6 @@ namespace RTC
                                 MS_WARN_TAG(dead, "av_frame_apply_cropping failed %x %s", result, av_make_error_string(errstr, 80, result));
                             }
                         }
-
-                        std::cerr << "frame cropped to " << frame->width << "x" << frame->height << std::endl;
                     }
 
                     else if (s.mode == pad)
@@ -754,16 +734,12 @@ namespace RTC
                         {
                             uint32_t delta    = static_cast<uint32_t>(dstW - frame->width * k);
 
-                            std::cerr << "deltaW " << delta << std::endl;
-
                             dstX += delta / 2;
                             dstW -= delta;
                        }
                         if (frame->height * k < dstH)
                         {
                             uint32_t delta     = static_cast<uint32_t>(dstH - frame->height * k);
-
-                            std::cerr << "deltaH " << delta << std::endl;
 
                             dstY += delta / 2;
                             dstH -= delta;
@@ -792,9 +768,6 @@ namespace RTC
                                                   ec.defaultFrame->data[1] + ec.frameWidth*dstY / 2 + dstX / 2,
                                                   ec.defaultFrame->data[2] + ec.frameWidth*dstY / 2 + dstX / 2,
                                                   nullptr };
-
-
-                        std::cerr << "scale " << frame->width << "x" << frame->height << " to " << dstW << "x" << dstH << std::endl;
 
                         sws_scale(s.swc, frame->data, frame->linesize, 0, frame->height, 
                                         dstSlice, dstStride);
