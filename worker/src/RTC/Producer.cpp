@@ -709,13 +709,13 @@ namespace RTC
                         // crop frame 
                         if (frame->width * k > dstW)
                         {
-                            uint32_t delta    = static_cast<uint32_t>((frame->width - dstW / k) / 2);
+                            uint32_t delta    = static_cast<uint32_t>((frame->width - dstW / k) / (2 * k));
                             frame->crop_left  = delta;
                             frame->crop_right = delta;
                         }
                         if (frame->height * k > dstH)
                         {
-                            uint32_t delta     = static_cast<uint32_t>((frame->height - dstH / k) / 2);
+                            uint32_t delta     = static_cast<uint32_t>((frame->height - dstH / k) / (2 * k));
                             frame->crop_top    = delta;
                             frame->crop_bottom = delta;
                         }
