@@ -686,12 +686,18 @@ namespace RTC
                         continue;
                     }
 
+                    std::cerr << "s width " << s.width << " height " << s.height << std::endl;
+                    std::cerr << "frame width " << frame->width << " height " << frame->height << std::endl;
+
                     double kx = static_cast<double>(s.width)  / frame->width;
                     double ky = static_cast<double>(s.height) / frame->height;
 
                     double k = s.mode == crop ? std::max(kx, ky) :
                                s.mode == pad  ? std::min(kx, ky) :
                                1;
+                    std::cerr << "mode " << (s.mode == crop ? "crop" : s.mode == pad ? "pad" : "scale") << std::endl;
+
+                    std::cerr << "k " << k << " kx " << kx << " ky " << ky << std::endl;
 
                     uint32_t dstX = s.x;
                     uint32_t dstY = s.y;
@@ -723,6 +729,8 @@ namespace RTC
                                 MS_WARN_TAG(dead, "av_frame_apply_cropping failed %x %s", result, av_make_error_string(errstr, 80, result));
                             }
                         }
+
+                        std::cerr << "crop frame to " << frame->width << "x" << frame.height << std::endl;
                     }
 
                     else if (s.mode == pad)
