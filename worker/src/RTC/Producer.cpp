@@ -752,20 +752,20 @@ namespace RTC
                         // calculate dst(X)
                         if (frame->width * k < dstW)
                         {
-                            uint32_t delta    = static_cast<uint32_t>((dstW - frame->width * k) / 2);
+                            uint32_t delta    = static_cast<uint32_t>(dstW - frame->width * k);
 
                             std::cerr << "deltaW " << delta << std::endl;
 
-                            dstX += delta;
+                            dstX += delta / 2;
                             dstW -= delta;
                        }
                         if (frame->height * k < dstH)
                         {
-                            uint32_t delta     = static_cast<uint32_t>((dstH - frame->height * k) / 2);
+                            uint32_t delta     = static_cast<uint32_t>(dstH - frame->height * k);
 
                             std::cerr << "deltaH " << delta << std::endl;
 
-                            dstY += delta;
+                            dstY += delta / 2;
                             dstH -= delta;
                         }
                     }
