@@ -731,7 +731,7 @@ namespace RTC
 
                         if (frame->crop_left > 0 || frame->crop_top > 0)
                         {
-                            int result = av_frame_apply_cropping(frame.get(), 0);
+                            int result = av_frame_apply_cropping(frame.get(), AV_FRAME_CROP_UNALIGNED);
                             if (result != 0)
                             {
                                 char errstr[80];
