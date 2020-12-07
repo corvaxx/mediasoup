@@ -788,9 +788,9 @@ namespace RTC
                                                 ec.frameWidth /2,
                                                 0 };
 
-                        uint8_t * dstSlice[] = {  ec.defaultFrame->data[0] + dstX,
-                                                  ec.defaultFrame->data[1] + dstX / 2,
-                                                  ec.defaultFrame->data[2] + dstX / 2,
+                        uint8_t * dstSlice[] = {  ec.defaultFrame->data[0] + ec.frameWidth*dstY + dstX,
+                                                  ec.defaultFrame->data[1] + ec.frameWidth*dstY / 2 + dstX / 2,
+                                                  ec.defaultFrame->data[2] + ec.frameWidth*dstY / 2 + dstX / 2,
                                                   nullptr };
 
 
