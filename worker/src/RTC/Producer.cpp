@@ -730,7 +730,7 @@ namespace RTC
                             }
                         }
 
-                        std::cerr << "crop frame to " << frame->width << "x" << frame.height << std::endl;
+                        std::cerr << "crop frame to " << frame->width << "x" << frame->height << std::endl;
                     }
 
                     else if (s.mode == pad)
