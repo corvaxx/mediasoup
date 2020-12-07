@@ -711,7 +711,7 @@ namespace RTC
                         {
                             uint32_t delta    = static_cast<uint32_t>((frame->width - dstW / k) / 2);
 
-                            std::cerr << "deltaW" << delta << std::endl;
+                            std::cerr << "deltaW " << delta << std::endl;
 
                             frame->crop_left  = delta;
                             frame->crop_right = delta;
@@ -720,11 +720,14 @@ namespace RTC
                         {
                             uint32_t delta     = static_cast<uint32_t>((frame->height - dstH / k) / 2);
 
-                            std::cerr << "deltaH" << delta << std::endl;
+                            std::cerr << "deltaH " << delta << std::endl;
 
                             frame->crop_top    = delta;
                             frame->crop_bottom = delta;
                         }
+
+                        std::cerr << "crop frame to " << frame->width - frame->crop_left - frame->crop_right  
+                                    << "x" << frame->height - frame->crop_top - frame->crop_bottom << std::endl;
 
                         if (frame->crop_left > 0 || frame->crop_top > 0)
                         {
@@ -736,7 +739,7 @@ namespace RTC
                             }
                         }
 
-                        std::cerr << "crop frame to " << frame->width << "x" << frame->height << std::endl;
+                        std::cerr << "frame cropped to " << frame->width << "x" << frame->height << std::endl;
                     }
 
                     else if (s.mode == pad)
