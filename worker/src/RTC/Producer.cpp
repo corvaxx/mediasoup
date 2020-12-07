@@ -710,12 +710,18 @@ namespace RTC
                         if (frame->width * k > dstW)
                         {
                             uint32_t delta    = static_cast<uint32_t>((frame->width - dstW / k) / 2);
+
+                            std::cerr << "deltaW" << delta << std::endl;
+
                             frame->crop_left  = delta;
                             frame->crop_right = delta;
                         }
                         if (frame->height * k > dstH)
                         {
                             uint32_t delta     = static_cast<uint32_t>((frame->height - dstH / k) / 2);
+
+                            std::cerr << "deltaH" << delta << std::endl;
+
                             frame->crop_top    = delta;
                             frame->crop_bottom = delta;
                         }
