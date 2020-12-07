@@ -393,8 +393,9 @@ void Mixer::update(Channel::Request * request)
     RenderMode mode = scale;
     if (im != it->end() && im->is_string())
     {
-        mode = im->get<std::string>() == "crop" ? crop
-                                                : scale;
+        std::string smode = im->get<std::string>();
+        mode = smode == "crop" ? crop :
+               smode == "pad"  ? pad  : scale;
     }
 
     it = request->internal.find("producerId");
