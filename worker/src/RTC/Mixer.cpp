@@ -292,8 +292,6 @@ void Mixer::add(Channel::Request * request)
 
     AbstractProducerPtr mixerProducer = getProducerFromInternal(request->internal);
 
-    std::cerr << request->data.dump(4) << std::endl;
-
     auto it = request->data.find("options");
     if (it == request->data.end() || !it->is_object())
     {
@@ -326,16 +324,10 @@ void Mixer::add(Channel::Request * request)
     RenderMode mode = scale;
     if (im != it->end() && im->is_string())
     {
-        std::cerr << "received render mode " << im->get<std::string>() << std::endl;
-
         std::string smode = im->get<std::string>();
         mode = smode == "crop" ? crop :
                smode == "pad"  ? pad  : scale;
     }
-
-    std::cerr << "render mode " << (mode == crop ? "crop" :
-                                    mode == pad  ? "pad"  :
-                                                   "scale") << std::endl;
 
     it = request->internal.find("producerId");
     if (it == request->internal.end() || !it->is_string())
@@ -358,8 +350,6 @@ void Mixer::update(Channel::Request * request)
     MS_TRACE();
 
     AbstractProducerPtr mixerProducer = getProducerFromInternal(request->internal);
-
-    std::cerr << request->data.dump(4) << std::endl;
 
     auto it = request->data.find("options");
     if (it == request->data.end() || !it->is_object())
