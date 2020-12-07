@@ -318,11 +318,16 @@ void Mixer::add(Channel::Request * request)
     uint32_t h = ih->get<uint32_t>();
     uint32_t z = ix == it->end() ? 0 : iz->get<uint32_t>();
 
+    if (x % 2 || y % 2 || w % 2 || h % 2)
+    {
+        MS_THROW_ERROR("incorrect dimensions (must be a multiple of 2)");
+    }
+
     RenderMode mode = scale;
     if (im != it->end() && im->is_string())
     {
         std::cerr << "received render mode " << im->get<std::string>() << std::endl;
-        
+
         mode = im->get<std::string>() == "crop" ? crop
                                                 : scale;
     }
@@ -378,6 +383,11 @@ void Mixer::update(Channel::Request * request)
     uint32_t w = iw->get<uint32_t>();
     uint32_t h = ih->get<uint32_t>();
     uint32_t z = ix == it->end() ? 0 : iz->get<uint32_t>();
+
+    if (x % 2 || y % 2 || w % 2 || h % 2)
+    {
+        MS_THROW_ERROR("incorrect dimensions (must be a multiple of 2)");
+    }
 
     RenderMode mode = scale;
     if (im != it->end() && im->is_string())

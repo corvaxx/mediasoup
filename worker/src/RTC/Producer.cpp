@@ -686,17 +686,25 @@ namespace RTC
                         continue;
                     }
 
+                    double kx = static_cast<double>(s.width)  / frame->width;
+                    double ky = static_cast<double>(s.height) / frame->height;
+
+                    double k = s.mode == crop ? std::max(kx, ky) :
+                               s.mode == pad  ? std::min(kx, ky) :
+                               1;
+
                     if (s.mode == crop)
                     {
-                        if (frame->width > s.width)
+                        // crop frame for dest aspect ratio
+                        if (frame->width * k > s.width)
                         {
-                            uint32_t delta    = (frame->width  - s.width) / 2;
+                            uint32_t delta    = static_cast<uint32_t>((frame->width - s.width / k) / 2);
                             frame->crop_left  = delta;
                             frame->crop_right = delta;
                         }
-                        if (frame->height > s.height)
+                        if (frame->height * k > s.height)
                         {
-                            uint32_t delta     = (frame->height  - s.height) / 2;
+                            uint32_t delta     = static_cast<uint32_t>((frame->height - s.height / k) / 2);
                             frame->crop_top    = delta;
                             frame->crop_bottom = delta;
                         }
@@ -712,32 +720,40 @@ namespace RTC
                         }
                     }
 
-                    if (!s.swc)
+                    else if (s.mode == pad)
                     {
-                        uint32_t frameWidth  = std::min(ec.frameWidth,  s.x + s.width)  - s.x;
-                        uint32_t frameHeight = std::min(ec.frameHeight, s.y + s.height) - s.y;
 
-                        s.swc = sws_getContext(frame->width, frame->height, AV_PIX_FMT_YUV420P,
-                                                frameWidth, frameHeight, AV_PIX_FMT_YUV420P,
-                                                SWS_BICUBIC, nullptr, nullptr, nullptr);
                     }
 
-                    int32_t dstStride[] = { ec.frameWidth,
-                                            ec.frameWidth /2,
-                                            ec.frameWidth /2,
-                                            0 };
+                    // else
+                    {
+                        // scale
+                        if (!s.swc)
+                        {
+                            uint32_t frameWidth  = std::min(ec.frameWidth,  s.x + s.width)  - s.x;
+                            uint32_t frameHeight = std::min(ec.frameHeight, s.y + s.height) - s.y;
 
-                    uint8_t * dstSlice[] = {  ec.defaultFrame->data[0] + s.x,
-                                              ec.defaultFrame->data[1] + s.x / 2,
-                                              ec.defaultFrame->data[2] + s.x / 2,
-                                              nullptr };
+                            s.swc = sws_getContext(frame->width, frame->height, AV_PIX_FMT_YUV420P,
+                                                    frameWidth, frameHeight, AV_PIX_FMT_YUV420P,
+                                                    SWS_BICUBIC, nullptr, nullptr, nullptr);
+                        }
+
+                        int32_t dstStride[] = { ec.frameWidth,
+                                                ec.frameWidth /2,
+                                                ec.frameWidth /2,
+                                                0 };
+
+                        uint8_t * dstSlice[] = {  ec.defaultFrame->data[0] + s.x,
+                                                  ec.defaultFrame->data[1] + s.x / 2,
+                                                  ec.defaultFrame->data[2] + s.x / 2,
+                                                  nullptr };
 
 
-                    std::cerr << "scale " << frame->width << "x" << frame->height << " to " << s.width << "x" << s.height << std::endl;
+                        std::cerr << "scale " << frame->width << "x" << frame->height << " to " << s.width << "x" << s.height << std::endl;
 
-                    sws_scale(s.swc, frame->data, frame->linesize, 0, frame->height, 
-                                    dstSlice, dstStride);
-
+                        sws_scale(s.swc, frame->data, frame->linesize, 0, frame->height, 
+                                        dstSlice, dstStride);
+                    }
                 }
             }
 
