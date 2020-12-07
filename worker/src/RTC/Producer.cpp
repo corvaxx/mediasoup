@@ -693,18 +693,23 @@ namespace RTC
                                s.mode == pad  ? std::min(kx, ky) :
                                1;
 
+                    uint32_t dstX = s.x;
+                    uint32_t dstY = s.y;
+                    uint32_t dstW = s.width;
+                    uint32_t dstH = s.height;
+
                     if (s.mode == crop)
                     {
-                        // crop frame for dest aspect ratio
-                        if (frame->width * k > s.width)
+                        // crop frame 
+                        if (frame->width * k > dstW)
                         {
-                            uint32_t delta    = static_cast<uint32_t>((frame->width - s.width / k) / 2);
+                            uint32_t delta    = static_cast<uint32_t>((frame->width - dstW / k) / 2);
                             frame->crop_left  = delta;
                             frame->crop_right = delta;
                         }
-                        if (frame->height * k > s.height)
+                        if (frame->height * k > dstH)
                         {
-                            uint32_t delta     = static_cast<uint32_t>((frame->height - s.height / k) / 2);
+                            uint32_t delta     = static_cast<uint32_t>((frame->height - dstH / k) / 2);
                             frame->crop_top    = delta;
                             frame->crop_bottom = delta;
                         }
@@ -722,7 +727,19 @@ namespace RTC
 
                     else if (s.mode == pad)
                     {
-
+                        // calculate dst(X)
+                        if (frame->width * k < dstW)
+                        {
+                            uint32_t delta    = static_cast<uint32_t>((dstW - frame->width * k) / 2);
+                            dstX += delta;
+                            dstW -= delta;
+                       }
+                        if (frame->height * k > dstH)
+                        {
+                            uint32_t delta     = static_cast<uint32_t>((dstH - frame->height * k) / 2);
+                            dstY += delta;
+                            dstH -= delta;
+                        }
                     }
 
                     // else
@@ -730,8 +747,8 @@ namespace RTC
                         // scale
                         if (!s.swc)
                         {
-                            uint32_t frameWidth  = std::min(ec.frameWidth,  s.x + s.width)  - s.x;
-                            uint32_t frameHeight = std::min(ec.frameHeight, s.y + s.height) - s.y;
+                            uint32_t frameWidth  = std::min(ec.frameWidth,  dstX + dstW) - dstX;
+                            uint32_t frameHeight = std::min(ec.frameHeight, dstY + dstH) - dstY;
 
                             s.swc = sws_getContext(frame->width, frame->height, AV_PIX_FMT_YUV420P,
                                                     frameWidth, frameHeight, AV_PIX_FMT_YUV420P,
@@ -743,13 +760,13 @@ namespace RTC
                                                 ec.frameWidth /2,
                                                 0 };
 
-                        uint8_t * dstSlice[] = {  ec.defaultFrame->data[0] + s.x,
-                                                  ec.defaultFrame->data[1] + s.x / 2,
-                                                  ec.defaultFrame->data[2] + s.x / 2,
+                        uint8_t * dstSlice[] = {  ec.defaultFrame->data[0] + dstX,
+                                                  ec.defaultFrame->data[1] + dstX / 2,
+                                                  ec.defaultFrame->data[2] + dstX / 2,
                                                   nullptr };
 
 
-                        std::cerr << "scale " << frame->width << "x" << frame->height << " to " << s.width << "x" << s.height << std::endl;
+                        std::cerr << "scale " << frame->width << "x" << frame->height << " to " << dstW << "x" << dstH << std::endl;
 
                         sws_scale(s.swc, frame->data, frame->linesize, 0, frame->height, 
                                         dstSlice, dstStride);
