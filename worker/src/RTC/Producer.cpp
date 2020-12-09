@@ -895,17 +895,33 @@ namespace RTC
 
         ReceiveRtpPacketResult result = DispatchRtpPacket(packet);
 
-        if (!m_isMasterMode && result == ReceiveRtpPacketResult::MEDIA) // && m_master)
+        if (!m_isMasterMode)
         {
+            if (result == ReceiveRtpPacketResult::MEDIA)
+            {
         //     auto* rtpStream = GetRtpStream(clone);
         //     if (rtpStream)
         //     {
         //         if (clone->GetSsrc() == rtpStream->GetSsrc())
         //         {
                     // Media packet.
+                    std::cerr << "decode packet seq=" << packet->GetSequenceNumber() << std::endl;
                     DecodeRtpPacket(clone);
         //         }
         //     }
+            }
+            else if (result == ReceiveRtpPacketResult::RETRANSMISSION)
+            {
+                auto * stream = GetRtpStream(clone);
+                if (stream)
+                {
+                    if (packet->RtxDecode(stream->GetPayloadType(), stream->GetSsrc()))
+                    {
+                        std::cerr << "decode packet (rtx) seq=" << packet->GetSequenceNumber() << std::endl;
+                        DecodeRtpPacket(clone);
+                    }
+                }
+            }
         }
 
         return result;
