@@ -923,9 +923,9 @@ namespace RTC
                 auto * stream = GetRtpStream(clone);
                 if (stream)
                 {
-                    if (packet->RtxDecode(stream->GetPayloadType(), stream->GetSsrc()))
+                    if (clone->RtxDecode(stream->GetPayloadType(), stream->GetSsrc()))
                     {
-                        std::cerr << "decode packet (rtx) seq=" << packet->GetSequenceNumber() << std::endl;
+                        std::cerr << "decode packet (rtx) seq=" << clone->GetSequenceNumber() << std::endl;
                         DecodeRtpPacket(clone);
                     }
                 }
