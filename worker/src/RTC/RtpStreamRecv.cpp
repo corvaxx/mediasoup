@@ -6,6 +6,8 @@
 #include "Utils.hpp"
 #include "RTC/Codecs/Tools.hpp"
 
+#include <iostream>
+
 namespace RTC
 {
 	/* Static. */
@@ -257,7 +259,7 @@ namespace RTC
 		// Process the packet at codec level.
 		if (packet->GetPayloadType() == GetPayloadType())
 		{
-			std::cerr << "process packet at codec level seq=" << pacjet->GetSequenceNumber() << std::endl;
+			std::cerr << "process packet at codec level seq=" << packet->GetSequenceNumber() << std::endl;
 			RTC::Codecs::Tools::ProcessRtpPacket(packet, GetMimeType());
 		}
 
@@ -380,7 +382,7 @@ namespace RTC
 		// Process the packet at codec level.
 		if (packet->GetPayloadType() == GetPayloadType())
 		{
-			std::cerr << "process packet at codec level (rtx) seq=" << pacjet->GetSequenceNumber() << std::endl;
+			std::cerr << "process packet at codec level (rtx) seq=" << packet->GetSequenceNumber() << std::endl;
 			RTC::Codecs::Tools::ProcessRtpPacket(packet, GetMimeType());
 		}
 
