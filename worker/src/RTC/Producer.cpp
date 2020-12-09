@@ -883,11 +883,19 @@ namespace RTC
     {
         MS_TRACE();
 
-        // if (random32(0) % 32 == 0)
-        // {
-        //     MS_WARN_TAG(dead, "DROPPED %" PRIu16, packet->GetSequenceNumber());
-        //     return ReceiveRtpPacketResult::MEDIA;    
-        // }
+        auto * rtpStream = GetRtpStream(packet);
+        if (rtpStream)
+        {
+            if (packet->GetSsrc() == rtpStream->GetSsrc())
+            {
+                if (random32(0) % 32 == 0)
+                {
+                    std::cerr << "DROPPED " << packet->GetSequenceNumber() << std::endl;
+                    // MS_WARN_TAG(dead, "DROPPED %" PRIu16, packet->GetSequenceNumber());
+                    return ReceiveRtpPacketResult::MEDIA;    
+                }
+            }
+        }
 
         uint8_t * buffer = new uint8_t[packet->GetSize() + 64];
         RtpPacket * clone = packet->Clone(buffer);
