@@ -1016,8 +1016,8 @@ namespace RTC
         {
             for (uint32_t x = 0; x < width/2; ++x) 
             {
-                defaultFrame->data[1][y * defaultFrame->linesize[1] + x] = 128 + y + i * 2; // 128 + 84;
-                defaultFrame->data[2][y * defaultFrame->linesize[2] + x] = 64 + x + i * 5; // 128 + 106;
+                defaultFrame->data[1][y * defaultFrame->linesize[1] + x] = 128 + 84;  // 128 + y + i * 2;
+                defaultFrame->data[2][y * defaultFrame->linesize[2] + x] = 128 + 106; //  64 + x + i * 5;
             }
         }
 
