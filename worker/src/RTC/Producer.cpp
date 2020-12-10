@@ -796,8 +796,8 @@ namespace RTC
                                                 0 };
 
                         uint8_t * dstSlice[] = {  ec.defaultFrame->data[0] + ec.frameWidth*dstY + dstX,
-                                                  ec.defaultFrame->data[1] + ec.frameWidth*dstY / 2 + dstX / 2,
-                                                  ec.defaultFrame->data[2] + ec.frameWidth*dstY / 2 + dstX / 2,
+                                                  ec.defaultFrame->data[1] + ec.frameWidth*dstY / 4 + dstX / 2,
+                                                  ec.defaultFrame->data[2] + ec.frameWidth*dstY / 4 + dstX / 2,
                                                   nullptr };
 
                         sws_scale(s.swc, frame->data, frame->linesize, 0, frame->height, 
