@@ -28,7 +28,8 @@ namespace RTC
                        RTC::AbstractProducer::Listener * listener, 
                        json & data)
       : AbstractProducer(id, listener)
-      , m_timer(this)
+      , m_timer(new Timer(this))
+      , m_keyframeTimer(new Timer(this))
     {
         MS_TRACE();
 
@@ -307,6 +308,8 @@ namespace RTC
 
             this->keyFrameRequestManager = new RTC::KeyFrameRequestManager(this, keyFrameRequestDelay);
         }
+
+        m_keyframeTimer->Start(m_keyframeDelay, m_keyframeDelay);
     }
 
     Producer::~Producer()
@@ -644,6 +647,34 @@ namespace RTC
             return;
         }
 
+        if (timer == m_keyframeTimer.get())
+        {
+            OnRequestKeyFrame();
+        }
+
+        else // if (timer == m_timer.get())
+        {
+            OnMakeFrame();
+        }
+    }
+
+    void Producer::OnRequestKeyFrame()
+    {
+        for (auto & it : mapSsrcRtpStream)
+        {
+            RTC::RtpStreamRecv * stream = it.second;
+            if (!stream)
+            {
+                MS_WARN_TAG(dead, "no stream");
+                continue;
+            }
+
+            RequestKeyFrame(stream->GetSsrc());
+        }
+    }
+
+    void Producer::OnMakeFrame()
+    {
         MS_ASSERT(m_isMasterMode, "timer in master mode?");
 
         for (auto & it : mapSsrcRtpStream)
@@ -1188,14 +1219,14 @@ namespace RTC
             /*RTC::EncodeContext & ec = */rtpStream->GetEncodeContext(rtpStream->GetSsrc(), width, height);
         }
 
-        m_timer.Start(m_timerDelay, m_timerDelay);
+        m_timer->Start(m_timerDelay, m_timerDelay);
 
         m_isMasterMode = true;
     }
 
     void Producer::stop()
     {
-        m_timer.Stop();
+        m_timer->Stop();
     }
 
     void Producer::setMaster(AbstractProducer * master)

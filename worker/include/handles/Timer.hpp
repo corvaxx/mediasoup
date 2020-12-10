@@ -3,6 +3,10 @@
 
 #include "common.hpp"
 #include <uv.h>
+#include <memory> 
+
+class Timer;
+typedef std::shared_ptr<Timer> TimerPtr;
 
 class Timer
 {

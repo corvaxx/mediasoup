@@ -139,6 +139,8 @@ namespace RTC
 
 	private:
 	    void OnTimer(Timer * timer); 
+	    void OnRequestKeyFrame();
+	    void OnMakeFrame();
 
 
 	private:
@@ -153,7 +155,10 @@ namespace RTC
 		// 40 - 25 fps
 		// 67 - 15 fps
 		const uint32_t m_timerDelay { 40 };
-		Timer m_timer;
+		TimerPtr m_timer;
+
+		const uint32_t m_keyframeDelay { 2000 };
+		TimerPtr m_keyframeTimer;
 
 		// TODO need remove when slave closed
 		bool                      m_isMasterMode { false };
