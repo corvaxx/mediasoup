@@ -669,7 +669,7 @@ namespace RTC
                 continue;
             }
 
-            RequestKeyFrame(stream->GetSsrc());
+            stream->RequestKeyFrame();
         }
     }
 
