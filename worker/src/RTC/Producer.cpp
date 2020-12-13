@@ -929,7 +929,7 @@ namespace RTC
         // }
 
         uint8_t * buffer = new uint8_t[packet->GetSize() + 64];
-        RtpPacket * clone = packet->Clone(buffer);
+        RtpPacketPtr clone(packet->Clone(buffer));
         clone->SetBuffer(buffer);
 
         ReceiveRtpPacketResult result = DispatchRtpPacket(packet);
@@ -944,14 +944,14 @@ namespace RTC
         //         if (clone->GetSsrc() == rtpStream->GetSsrc())
         //         {
                     // Media packet.
-                    std::cerr << "decode packet seq=" << packet->GetSequenceNumber() << std::endl;
+                    std::cerr << "decode packet seq=" << clone->GetSequenceNumber() << std::endl;
                     DecodeRtpPacket(clone);
         //         }
         //     }
             }
             else if (result == ReceiveRtpPacketResult::RETRANSMISSION)
             {
-                auto * stream = GetRtpStream(clone);
+                auto * stream = GetRtpStream(clone.get());
                 if (stream)
                 {
                     if (clone->RtxDecode(stream->GetPayloadType(), stream->GetSsrc()))
@@ -966,18 +966,15 @@ namespace RTC
         return result;
     }
 
-    ReceiveRtpPacketResult Producer::DecodeRtpPacket(RTC::RtpPacket* packet)
+    void Producer::DecodeRtpPacket(RTC::RtpPacketPtr & packet)
     {
         MS_TRACE();
 
-        ReceiveRtpPacketResult result = ReceiveRtpPacketResult::MEDIA;
-        
-        auto* rtpStream = GetRtpStream(packet);
+        auto* rtpStream = GetRtpStream(packet.get());
         if (!rtpStream)
         {
             // MS_WARN_TAG(rtp, "no stream found for received packet [ssrc:%" PRIu32 "]", packet->GetSsrc());
-
-            return ReceiveRtpPacketResult::DISCARDED;
+            return;
         }
 
         // MS_WARN_TAG(rtp, "received MEDIA packet stream name %s", rtpStream->GetCname().c_str());
@@ -987,97 +984,105 @@ namespace RTC
         //                     packet->GetSize(), packet->GetTimestamp(), 
         //                     packet->GetPayloadType(), packet->GetSequenceNumber());
 
-        std::vector<std::pair<const uint8_t *, size_t> > nalptrs;
+        // unpack and process packet
+        RTC::UnpackContext & c = rtpStream->GetUnpackContext(rtpStream->GetSsrc());
+
+        if (c.lastSeq != 0 && c.lastSeq + 1 != packet->GetSequenceNumber())
         {
+            // TODO request packets
+            // MS_WARN_TAG(dead, "missed %" PRIu16 " packets from %" PRIu16, packet->GetSequenceNumber() - c.lastSeq - 1, c.lastSeq);
+            std::cerr << "missed " << packet->GetSequenceNumber() - c.lastSeq - 1 << " packets from " << c.lastSeq << std::endl;
 
-            // unpack and process packet
-            RTC::UnpackContext & c = rtpStream->GetUnpackContext(rtpStream->GetSsrc());
+            c.queue[packet->GetSequenceNumber()] = packet;
+            return;
+        }
 
-            if (!RTC::Codecs::Tools::UnpackRtpPacket(c, packet, rtpStream->GetMimeType(), nalptrs))
+        do
+        {
+            c.lastSeq = packet->GetSequenceNumber();
+
+            std::vector<std::pair<const uint8_t *, size_t> > nalptrs;
+            if (!RTC::Codecs::Tools::UnpackRtpPacket(c, packet.get(), rtpStream->GetMimeType(), nalptrs))
             {
                 // unpack error
                 if (c.flags & RTP_PAYLOAD_FLAG_PACKET_LOST)
                 {
-                    // force request keyframe ?
-                    if (this->keyFrameRequestManager)
-                    {
-                        this->keyFrameRequestManager->ForceKeyFrameNeeded(packet->GetSsrc());
-                    }
-                    return result;
+                    rtpStream->RequestKeyFrame();
+                    return;
                 }
             }
 
             // static size_t summary = 0;
-            static const uint8_t start_code[4] = { 0, 0, 0, 1 };
+            // static const uint8_t start_code[4] = { 0, 0, 0, 1 };
 
-            // TODO debug code, write to file
-            FILE * f = fopen(c.fileName.c_str(), "a+b");
+            // // TODO debug code, write to file
+            // FILE * f = fopen(c.fileName.c_str(), "a+b");
 
-            for (const std::pair<const uint8_t *, size_t> & nal : nalptrs)
+            // for (const std::pair<const uint8_t *, size_t> & nal : nalptrs)
+            // {
+            //     fwrite(start_code, 1, 4, f);    
+            //     fwrite(nal.first, 1, nal.second, f);    
+
+            //     // MS_WARN_TAG(dead, "write packet size %" PRIu64 " summary %" PRIu64, nal.second + 4, summary);
+            // }
+
+            // fclose(f);      
+
+            // decode packets
+            std::vector<AVPacketPtr> packets;
+            if (nalptrs.size() > 0)
             {
-                fwrite(start_code, 1, 4, f);    
-                fwrite(nal.first, 1, nal.second, f);    
+                RTC::DecodeContext & c = rtpStream->GetDecodeContext(rtpStream->GetSsrc());
 
-                // MS_WARN_TAG(dead, "write packet size %" PRIu64 " summary %" PRIu64, nal.second + 4, summary);
-            }
+                std::lock_guard<std::mutex> lock(c.lock);
 
-            fclose(f);      
-
-            if (c.lastSeq != 0 && c.lastSeq + 1 != packet->GetSequenceNumber())
-            {
-                // TODO request packets
-                // MS_WARN_TAG(dead, "missed %" PRIu16 " packets from %" PRIu16, packet->GetSequenceNumber() - c.lastSeq - 1, c.lastSeq);
-                std::cerr << "missed " << packet->GetSequenceNumber() - c.lastSeq - 1 << " packets from " << c.lastSeq << std::endl;
-            }
-
-            c.lastSeq = packet->GetSequenceNumber();
-        }
-
-        // decode packets
-        std::vector<AVPacketPtr> packets;
-        if (nalptrs.size() > 0)
-        {
-            RTC::DecodeContext & c = rtpStream->GetDecodeContext(rtpStream->GetSsrc());
-
-            std::lock_guard<std::mutex> lock(c.lock);
-
-            for (const std::pair<const uint8_t *, size_t> & nal : nalptrs)
-            {
-                std::vector<uint8_t> v(nal.second + 4);
-                v[0] = v[1] = v[2] = 0;
-                v[3] = 1;
-                memcpy(&v[4], nal.first, nal.second);
-
-                std::vector<AVFramePtr> frames;
-                if (!RTC::Codecs::Tools::DecodePacket(c, rtpStream->GetMimeType(), &v[0], nal.second + 4, frames))
+                for (const std::pair<const uint8_t *, size_t> & nal : nalptrs)
                 {
-                    // no frames
-                    if (c.frameWidth == 0 && c.frameHeight == 0)
+                    std::vector<uint8_t> v(nal.second + 4);
+                    v[0] = v[1] = v[2] = 0;
+                    v[3] = 1;
+                    memcpy(&v[4], nal.first, nal.second);
+
+                    std::vector<AVFramePtr> frames;
+                    if (!RTC::Codecs::Tools::DecodePacket(c, rtpStream->GetMimeType(), &v[0], nal.second + 4, frames))
                     {
-                        MS_WARN_TAG(dead, "NO KEYFRAME");
-                        // TODO request keyframe ?
+                        // no frames
+                        if (c.frameWidth == 0 && c.frameHeight == 0)
+                        {
+                            MS_WARN_TAG(dead, "NO KEYFRAME");
+                            // TODO request keyframe ?
+                        }
+                    }
+                    else
+                    {
+                        // MS_WARN_TAG(dead, "decoded %" PRIu64 " frames", frames.size());
+                        c.frames = frames;
+
+                        // if (frames.size() > 0)
+                        // {                
+                        //     RTC::EncodeContext & ec = rtpStream->GetEncodeContext(rtpStream->GetSsrc());
+
+                        //     // dump to jpeg
+                        //     // for (AVFramePtr & frame : frames)
+                        //     // {
+                        //     //     dumpFrame(ec, frame);
+                        //     // }
                     }
                 }
-                else
-                {
-                    // MS_WARN_TAG(dead, "decoded %" PRIu64 " frames", frames.size());
-                    c.frames = frames;
 
-                    // if (frames.size() > 0)
-                    // {                
-                    //     RTC::EncodeContext & ec = rtpStream->GetEncodeContext(rtpStream->GetSsrc());
+            } // if (nalptrs.size() > 0)
 
-                    //     // dump to jpeg
-                    //     // for (AVFramePtr & frame : frames)
-                    //     // {
-                    //     //     dumpFrame(ec, frame);
-                    //     // }
-                }
+            if (c.queue.count(c.lastSeq + 1))
+            {
+                packet = c.queue[c.lastSeq + 1];
+                c.queue.erase(c.lastSeq + 1);
             }
-
-        } // if (nalptrs.size() > 0)
-
-        return result;
+            else
+            {
+                packet.reset();
+            }
+        }
+        while (packet);
     }
 
     ReceiveRtpPacketResult Producer::DispatchRtpPacket(RTC::RtpPacket* packet)

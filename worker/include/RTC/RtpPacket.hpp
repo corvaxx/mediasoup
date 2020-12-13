@@ -80,6 +80,8 @@ namespace RTC
 		uint8_t     ptr[RTP_PAYLOAD_MAX_SIZE];
 
 		uint16_t    lastSeq       { 0 };
+
+		std::map<uint16_t, RTC::RtpPacketPtr> queue;
 	};
 
 	struct DecodeContext

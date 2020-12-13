@@ -77,9 +77,10 @@ namespace RTC
 		virtual void HandleRequest(Channel::Request* request);
 
 		//
-		virtual ReceiveRtpPacketResult ReceiveRtpPacket(RTC::RtpPacket* packet);
-		ReceiveRtpPacketResult DecodeRtpPacket(RTC::RtpPacket* packet);
-		ReceiveRtpPacketResult DispatchRtpPacket(RTC::RtpPacket* packet);
+		virtual ReceiveRtpPacketResult ReceiveRtpPacket(RTC::RtpPacket * packet);
+		ReceiveRtpPacketResult DispatchRtpPacket(RTC::RtpPacket * packet);
+
+		void DecodeRtpPacket(RTC::RtpPacketPtr & packet);
 
 		//
 		void startMasterMode(const uint32_t width, const uint32_t height);
