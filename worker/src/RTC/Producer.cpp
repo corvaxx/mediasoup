@@ -1292,7 +1292,7 @@ namespace RTC
         m_slaves.erase(std::remove(m_slaves.begin(), m_slaves.end(), slave), m_slaves.end());
     }
 
-    AVFramePtr Producer::getLastFrame(const uint32_t width, const uint32_t height) const
+    AVFramePtr Producer::getLastFrame(const uint32_t /*width*/, const uint32_t /*height*/) const
     {
         AVFramePtr bestFrame;
 
@@ -1321,6 +1321,7 @@ namespace RTC
             // {
             // }
             bestFrame = c.frames.front();
+            break;
         }
 
         return bestFrame;
