@@ -714,6 +714,7 @@ namespace RTC
                     AVFramePtr frame = s.producer->getLastFrame(s.width, s.height);
                     if (!frame)
                     {
+                        std::cerr << "no last frame" << std::endl;
                         continue;
                     }
 
@@ -1076,9 +1077,12 @@ namespace RTC
             {
                 packet = c.queue[c.lastSeq + 1];
                 c.queue.erase(c.lastSeq + 1);
+
+                std::cerr << "decode from queue seq=" << packet->GetSequenceNumber() << " queued " << c.queue.size() << " packets" << std::endl;
             }
             else
             {
+                std::cerr << "queue empty" << std::endl;
                 packet.reset();
             }
         }
