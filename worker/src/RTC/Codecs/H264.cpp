@@ -13,6 +13,8 @@
 #include <sys/utsname.h>
 #include <openssl/md5.h>
 
+#include <iostream>
+
 extern "C"
 {
     #include <libavcodec/avcodec.h>
