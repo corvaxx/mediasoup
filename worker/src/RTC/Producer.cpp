@@ -1055,11 +1055,15 @@ namespace RTC
                         }
 
                         // make grayscaled
-                        RTC::Codecs::Tools::MakeGrayScaled(rtpStream->GetMimeType(), c.frames);
+                        if (c.noFrameCounter++ >= 32)
+                        {
+                            RTC::Codecs::Tools::MakeGrayScaled(rtpStream->GetMimeType(), c.frames);
+                        }
                     }
                     else
                     {
                         // MS_WARN_TAG(dead, "decoded %" PRIu64 " frames", frames.size());
+                        c.noFrameCounter = 0;
                         c.frames = frames;
 
                         // if (frames.size() > 0)

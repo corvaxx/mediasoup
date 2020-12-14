@@ -97,6 +97,7 @@ namespace RTC
         AVCodecContextPtr       codecContext;
 
         std::vector<AVFramePtr> frames;
+        uint32_t                noFrameCounter { 0 };
 	};
 
 	struct EncodeContext
