@@ -677,8 +677,6 @@ namespace RTC
     {
         MS_ASSERT(m_isMasterMode, "timer in master mode?");
 
-        std::cerr << "OnMakeFrame" << std::endl;
-
         for (auto & it : mapSsrcRtpStream)
         {
             RTC::RtpStreamRecv * rtpStream = it.second;
