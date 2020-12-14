@@ -284,6 +284,46 @@ namespace RTC
                 return true;
             }
 
+            static bool MakeGrayScaled(const RTC::RtpCodecMimeType & mimeType, 
+                                        std::vector<AVFramePtr> & frames)
+            {
+                switch (mimeType.type)
+                {
+                    case RTC::RtpCodecMimeType::Type::VIDEO:
+                    {
+                        switch (mimeType.subtype)
+                        {
+                            case RTC::RtpCodecMimeType::Subtype::VP8:
+                            case RTC::RtpCodecMimeType::Subtype::VP9:
+                            {
+                                assert(false || "unsupported codec");
+                                break;
+                            }
+
+                            case RTC::RtpCodecMimeType::Subtype::H264:
+                            {
+                                return RTC::Codecs::H264::MakeGrayScaled(frames);
+                            }
+
+                            default:
+                            {
+                                MS_WARN_TAG(dead, "unsupported mime sub %d", static_cast<int>(mimeType.subtype));
+                                break;
+                            }
+
+                        }
+                        break;
+                    }
+
+                    default:
+                    {
+                        MS_WARN_TAG(dead, "unsupported mime %d", static_cast<int>(mimeType.type));
+                        break;
+                    }
+                }
+                return true;
+            }
+
             static void ProcessRtpPacket(RTC::RtpPacket* packet, const RTC::RtpCodecMimeType& mimeType)
             {
                 switch (mimeType.type)

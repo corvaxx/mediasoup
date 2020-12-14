@@ -59,6 +59,7 @@ namespace RTC
             static bool EncodePacket(RTC::EncodeContext & context,
                                         const std::vector<AVFramePtr> & frames,
                                         std::vector<AVPacketPtr> & packets);
+            static bool MakeGrayScaled(std::vector<AVFramePtr> & frames);
 
 		public:
 			class EncodingContext : public RTC::Codecs::EncodingContext

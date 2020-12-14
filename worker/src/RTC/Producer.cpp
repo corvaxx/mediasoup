@@ -1053,6 +1053,9 @@ namespace RTC
                             MS_WARN_TAG(dead, "NO KEYFRAME");
                             // TODO request keyframe ?
                         }
+
+                        // make grayscaled
+                        RTC::Codecs::Tools::MakeGrayScaled(rtpStream->GetMimeType(), c.frames);
                     }
                     else
                     {

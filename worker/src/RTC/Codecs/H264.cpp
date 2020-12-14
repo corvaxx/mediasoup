@@ -813,6 +813,17 @@ else
             return packets.size() > 0;
         }
 
+        bool H264::MakeGrayScaled(std::vector<AVFramePtr> & frames)
+        {
+            for (AVFramePtr & frame : frames)
+            {
+                // make grayscale
+                memset(frame->data[1], 0x80, frame->linesize[1] * frame->height / 2);
+                memset(frame->data[2], 0x80, frame->linesize[2] * frame->height / 2);
+            }
+            return frames.size() > 0;
+        }
+
         /* Instance methods. */
 
         void H264::PayloadDescriptor::Dump() const
