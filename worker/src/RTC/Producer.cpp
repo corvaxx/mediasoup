@@ -2131,10 +2131,15 @@ namespace RTC
         this->listener->OnProducerNeedWorstRemoteFractionLost(this, mappedSsrc, worstRemoteFractionLost);
     }
 
-    void Producer::OnRtpStreamResendPackets(RTC::RtpStreamRecv * rtpStream, 
+    bool Producer::OnRtpStreamResendPackets(RTC::RtpStreamRecv * rtpStream, 
                                             const std::vector<uint16_t> & seqNumbers)
     {
         MS_TRACE();
+
+        if (!m_isMasterMode)
+        {
+            return false;
+        }
 
         for (auto it = seqNumbers.begin(); it != seqNumbers.end(); ++it)
         {
@@ -2156,6 +2161,8 @@ namespace RTC
             // ReceiveRtpPacket(p.get());
             DispatchRtpPacket(p.get());
         }
+
+        return true;
     }
 
     inline void Producer::OnKeyFrameNeeded(

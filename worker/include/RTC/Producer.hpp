@@ -130,7 +130,7 @@ namespace RTC
 		void OnRtpStreamSendRtcpPacket(RTC::RtpStreamRecv* rtpStream, RTC::RTCP::Packet* packet) override;
 		void OnRtpStreamNeedWorstRemoteFractionLost(
 		  RTC::RtpStreamRecv* rtpStream, uint8_t& worstRemoteFractionLost) override;
-		void OnRtpStreamResendPackets(
+		bool OnRtpStreamResendPackets(
 			  RTC::RtpStreamRecv* rtpStream, const std::vector<uint16_t> & seqNumbers) override;
 
 

@@ -795,6 +795,12 @@ namespace RTC
 	{
 		MS_TRACE();
 
+		if (static_cast<RTC::RtpStreamRecv::Listener*>(this->listener)->OnRtpStreamResendPackets(this, seqNumbers))
+		{
+			// producer (listener) in master mode - NACK processed
+			return;
+		}
+
 		MS_ASSERT(this->params.useNack, "NACK required but not supported");
 
 		MS_DEBUG_TAG(
