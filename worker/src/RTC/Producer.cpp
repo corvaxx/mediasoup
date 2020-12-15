@@ -1196,7 +1196,7 @@ namespace RTC
         // Post-process the packet.
         PostProcessRtpPacket(packet);
 
-        std::cerr << "send to transport seq=" packet->GetSequenceNumber() << std::endl;
+        std::cerr << "send to transport seq=" << packet->GetSequenceNumber() << std::endl;
 
         this->listener->OnProducerRtpPacketReceived(this, packet);
 

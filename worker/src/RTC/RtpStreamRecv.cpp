@@ -248,8 +248,8 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		std::cerr << "stream received seq=" packet->GetSequenceNumber() << std::endl;
-		
+		std::cerr << "stream received seq=" << packet->GetSequenceNumber() << std::endl;
+
 		// Call the parent method.
 		if (!RTC::RtpStream::ReceivePacket(packet))
 		{
