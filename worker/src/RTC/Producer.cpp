@@ -309,7 +309,7 @@ namespace RTC
             this->keyFrameRequestManager = new RTC::KeyFrameRequestManager(this, keyFrameRequestDelay);
         }
 
-        m_keyframeTimer->Start(m_keyframeDelay, m_keyframeDelay);
+        // m_keyframeTimer->Start(m_keyframeDelay, m_keyframeDelay);
     }
 
     Producer::~Producer()
@@ -649,7 +649,7 @@ namespace RTC
 
         if (timer == m_keyframeTimer.get())
         {
-            OnRequestKeyFrame();
+            // OnRequestKeyFrame();
         }
 
         else // if (timer == m_timer.get())
