@@ -248,8 +248,6 @@ namespace RTC
 	{
 		MS_TRACE();
 
-		std::cerr << "stream received seq=" << packet->GetSequenceNumber() << std::endl;
-
 		// Call the parent method.
 		if (!RTC::RtpStream::ReceivePacket(packet))
 		{
@@ -261,7 +259,6 @@ namespace RTC
 		// Process the packet at codec level.
 		if (packet->GetPayloadType() == GetPayloadType())
 		{
-			// std::cerr << "process packet at codec level seq=" << packet->GetSequenceNumber() << std::endl;
 			RTC::Codecs::Tools::ProcessRtpPacket(packet, GetMimeType());
 		}
 
@@ -384,7 +381,6 @@ namespace RTC
 		// Process the packet at codec level.
 		if (packet->GetPayloadType() == GetPayloadType())
 		{
-			// std::cerr << "process packet at codec level (rtx) seq=" << packet->GetSequenceNumber() << std::endl;
 			RTC::Codecs::Tools::ProcessRtpPacket(packet, GetMimeType());
 		}
 

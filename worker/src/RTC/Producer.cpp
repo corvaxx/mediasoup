@@ -714,7 +714,6 @@ namespace RTC
                     AVFramePtr frame = s.producer->getLastFrame(s.width, s.height);
                     if (!frame)
                     {
-                        std::cerr << "no last frame" << std::endl;
                         continue;
                     }
 
@@ -922,7 +921,6 @@ namespace RTC
         //     {
         //         if (random32(0) % 32 == 0)
         //         {
-        //             std::cerr << "DROPPED " << packet->GetSequenceNumber() << std::endl;
         //             // MS_WARN_TAG(dead, "DROPPED %" PRIu16, packet->GetSequenceNumber());
         //             return ReceiveRtpPacketResult::MEDIA;    
         //         }
@@ -945,7 +943,6 @@ namespace RTC
         //         if (clone->GetSsrc() == rtpStream->GetSsrc())
         //         {
                     // Media packet.
-                    std::cerr << "decode packet seq=" << clone->GetSequenceNumber() << std::endl;
                     DecodeRtpPacket(clone);
         //         }
         //     }
@@ -957,7 +954,6 @@ namespace RTC
                 {
                     if (clone->RtxDecode(stream->GetPayloadType(), stream->GetSsrc()))
                     {
-                        std::cerr << "decode packet (rtx) seq=" << clone->GetSequenceNumber() << std::endl;
                         DecodeRtpPacket(clone);
                     }
                 }
@@ -992,8 +988,6 @@ namespace RTC
         {
             // TODO request packets
             // MS_WARN_TAG(dead, "missed %" PRIu16 " packets from %" PRIu16, packet->GetSequenceNumber() - c.lastSeq - 1, c.lastSeq);
-            std::cerr << "missed " << packet->GetSequenceNumber() - c.lastSeq - 1 << " packets from " << c.lastSeq << std::endl;
-
             c.queue[packet->GetSequenceNumber()] = packet;
             return;
         }
@@ -1084,12 +1078,9 @@ namespace RTC
             {
                 packet = c.queue[c.lastSeq + 1];
                 c.queue.erase(c.lastSeq + 1);
-
-                std::cerr << "decode from queue seq=" << packet->GetSequenceNumber() << " queued " << c.queue.size() << " packets" << std::endl;
             }
             else
             {
-                std::cerr << "queue empty" << std::endl;
                 packet.reset();
             }
         }
@@ -1195,8 +1186,6 @@ namespace RTC
 
         // Post-process the packet.
         PostProcessRtpPacket(packet);
-
-        std::cerr << "send to transport seq=" << packet->GetSequenceNumber() << std::endl;
 
         this->listener->OnProducerRtpPacketReceived(this, packet);
 

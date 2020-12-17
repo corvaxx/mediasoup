@@ -746,7 +746,6 @@ else
                     }
 
                     // MS_WARN_TAG(dead, "DecodePacket FRAME %dx%d %d", frame->width, frame->height, frame->key_frame);
-                    std::cerr << "FRAME " << frame->width << "x" << frame->height << " keyframe " << frame->key_frame << std::endl;
                     frames.emplace_back(frame);
                 }
             }
