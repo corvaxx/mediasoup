@@ -113,6 +113,7 @@ namespace RTC
         AVCodec               * jpegCodec     { nullptr };
         AVCodecContextPtr       jpegContext;
 
+        int64_t                 framePts      { 0 };
         int64_t                 totalPts      { 0 };
         
         // default frame

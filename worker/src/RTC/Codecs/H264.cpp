@@ -768,6 +768,12 @@ else
                     // make grayscale
                     // memset(frame->data[1], 0x80, frame->linesize[1] * frame->height / 2);
                     // memset(frame->data[2], 0x80, frame->linesize[2] * frame->height / 2);
+
+                    const int64_t duration = (static_cast<double>(context.codecContext->time_base.num) / context.codecContext->time_base.den) * 1000;
+                    context.totalPts += duration;
+
+                    frame->pts = ++context.framePts;
+                    frame->pkt_pts = frame->pkt_dts = context.totalPts;
                     
                     // use avcodec_send_frame / avcodec_receive_packet instead
                     int result = avcodec_send_frame(context.codecContext.get(), frame.get());
@@ -796,11 +802,6 @@ else
 
                             break;
                         }
-
-                        const int64_t duration = (static_cast<double>(context.codecContext->time_base.num) / context.codecContext->time_base.den) * 1000;
-                        context.totalPts += duration;
-
-                        MS_WARN_TAG(dead, "PTS %" PRIu32, context.totalPts);
 
                         pkt->pts = pkt->dts = context.totalPts;
 
