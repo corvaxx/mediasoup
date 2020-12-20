@@ -813,6 +813,8 @@ namespace RTC
             std::vector<AVPacketPtr> packets;
             if (!RTC::Codecs::Tools::EncodePacket(ec, rtpStream->GetMimeType(), frames, packets))
             {
+                std::cerr << "no frames, pts=" << ec.totalPts << std::endl;
+
                 // error or no frames
                 MS_WARN_TAG(dead, "encode error or no packets ready %" PRIu32, rtpStream->GetSsrc());
                 continue;
@@ -820,6 +822,8 @@ namespace RTC
 
             for (AVPacketPtr & pkt : packets)
             {
+                std::cerr << "encoded, pts=" << ec.totalPts << std::endl;
+
                 // produce
                 RTC::ProduceContext & c = rtpStream->GetProduceContext(rtpStream->GetSsrc());
                 c.payloadType = rtpStream->GetPayloadType();
