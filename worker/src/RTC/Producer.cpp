@@ -835,6 +835,8 @@ namespace RTC
 
                     for (RTC::RtpPacketPtr & p : produced)
                     {
+                        std::cerr << "got packet, seq=" << p->GetSequenceNumber() << " payload size=" << p->GetPayloadLength()<< std::endl;
+
                         MS_ASSERT(c.produced.count(p->GetSequenceNumber()) == 0, "duplicate sequence");
 
                         c.produced[p->GetSequenceNumber()] = p;
@@ -861,6 +863,7 @@ namespace RTC
 
                             for (const std::pair<const uint8_t *, size_t> & nal : nalptrs2)
                             {
+                                std::cerr << "write packet size=" << nal.second + 4 << " summary=" << summary + (nal.second + 4) << std::endl;
                                 fwrite(start_code, 1, 4, f);    
                                 fwrite(nal.first, 1, nal.second, f);    
 
