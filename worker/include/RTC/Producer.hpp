@@ -155,7 +155,7 @@ namespace RTC
 
 		// 40 - 25 fps
 		// 67 - 15 fps
-		const uint32_t m_timerDelay { 40 };
+		const uint32_t m_timerDelay { 1000 / MIXER_FPS };
 		TimerPtr m_timer;
 
 		const uint32_t m_keyframeDelay { 2000 };

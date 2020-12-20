@@ -1046,7 +1046,7 @@ namespace RTC
 
 	    codecContext->width        = width;
 	    codecContext->height       = height;
-		codecContext->time_base    = (AVRational){1, 25};
+		codecContext->time_base    = (AVRational){ 1, MIXER_FPS };
 		codecContext->pix_fmt      = AV_PIX_FMT_YUV420P;
 
         MS_WARN_TAG(dead, "codec params %dx%d timebase %d-%d", 
