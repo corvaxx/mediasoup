@@ -32,7 +32,7 @@ using json = nlohmann::json;
 
 #define RTP_FIXED_HEADER                12
 
-#define MIXER_FPS                       15
+#define MIXER_FPS                       8
 
 namespace RTC
 {
