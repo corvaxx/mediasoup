@@ -697,9 +697,9 @@ namespace RTC
             }
 
             // scale slave frames
-            if (m_isSlavesUpdated)
+            // if (m_isSlavesUpdated)
             {
-                if (ec.updateDefaultFrame(ec.frameWidth, ec.frameHeight, false) != 0)
+                if (ec.updateDefaultFrame(ec.frameWidth, ec.frameHeight, true) != 0)
                 {
                     MS_WARN_TAG(dead, "updateDefaultFrame failed in master mode");
                     continue;
