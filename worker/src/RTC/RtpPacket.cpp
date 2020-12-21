@@ -1067,7 +1067,7 @@ namespace RTC
 		// c.codecContext->qcompress    = .6;
 		codecContext->max_b_frames      = 0;
 		codecContext->refs              = 3;
-		codecContext->gop_size          = 25;
+		codecContext->gop_size          = MIXER_FPS * 4;
 		codecContext->thread_count      = 1;
 		codecContext->delay             = 0;
 		codecContext->me_subpel_quality = 4; 
