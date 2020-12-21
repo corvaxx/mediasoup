@@ -1053,7 +1053,7 @@ namespace RTC
         			codecContext->width, codecContext->height,
         			codecContext->time_base.num, codecContext->time_base.den);
 
-		// MS_ASSERT(av_opt_set(c.codecContext->priv_data, "preset", "ultrafast", AV_OPT_SEARCH_CHILDREN) == 0, "preset");
+		MS_ASSERT(av_opt_set(codecContext->priv_data, "preset", "medium", AV_OPT_SEARCH_CHILDREN) == 0, "preset");
 		// av_opt_set(c.codecContext->priv_data, "preset", "medium", 0);
 		// av_opt_set(c.codecContext->priv_data, "tune",   "zerolatency", 0);
 		// c.codecContext->level = ;
