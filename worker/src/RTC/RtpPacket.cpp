@@ -1044,6 +1044,7 @@ namespace RTC
 		codecContext.reset(avcodec_alloc_context3(codec));
 		MS_ASSERT(codecContext, "alloc context failed");
 
+		codecContext->bit_rate     = 0.22 * width * height * MIXER_FPS;
 	    codecContext->width        = width;
 	    codecContext->height       = height;
 		codecContext->time_base    = (AVRational){ 1, MIXER_FPS };
