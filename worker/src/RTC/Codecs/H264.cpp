@@ -805,7 +805,7 @@ else
                             break;
                         }
 
-                        pkt->pts = pkt->dts = context.totalPts;
+                        // pkt->pts = pkt->dts = context.totalPts;
 
                         packets.emplace_back(pkt);
                     }
