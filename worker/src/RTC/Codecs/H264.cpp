@@ -805,6 +805,8 @@ else
                             break;
                         }
 
+                        std::cerr << "avcodec_receive_packet pts=" << pkt->pts << " dts=" << pkt->dts << std::endl;
+
                         // pkt->pts = pkt->dts = context.totalPts;
 
                         packets.emplace_back(pkt);
