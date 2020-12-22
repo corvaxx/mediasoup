@@ -175,7 +175,7 @@ namespace RTC
 			uint32_t           z        { 0 };
 			RenderMode         mode     { scale };
 
-	        SwsContext       * swc      { nullptr };
+	        SwsContextPtr      swc;
 
 
 			inline bool operator == (const Slave & other) const { return producer == other.producer; }

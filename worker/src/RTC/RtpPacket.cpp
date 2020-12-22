@@ -971,15 +971,14 @@ namespace RTC
 		buffer = buf;
 	}
 
-    int EncodeContext::updateDefaultFrame(const uint32_t width, const uint32_t height,
-    									  bool withIncrement)
+    int EncodeContext::updateDefaultFrame(bool withIncrement)
     {
     	MS_TRACE();
 
 		defaultFrame.reset(av_frame_alloc());
 		defaultFrame->format = AV_PIX_FMT_YUV420P;
-		defaultFrame->width  = width; // c->width;
-		defaultFrame->height = height; // c->height;
+		defaultFrame->width  = frameWidth; // c->width;
+		defaultFrame->height = frameHeight; // c->height;
 
 		int result = av_frame_get_buffer(defaultFrame.get(), 0);
 		if (result < 0)
@@ -1004,27 +1003,45 @@ namespace RTC
 
         // prepare a dummy image
         // Y
-        for (uint32_t y = 0; y < height; ++y) 
+        for (uint32_t y = 0; y < frameHeight; ++y) 
         {
-            for (uint32_t x = 0; x < width; ++x) 
+            for (uint32_t x = 0; x < frameWidth; ++x) 
             {
                 defaultFrame->data[0][y * defaultFrame->linesize[0] + x] = x + y + i * 3; // 149;
             }
         }
         // Cb and Cr
-        for (uint32_t y = 0; y < height/2; ++y) 
+        for (uint32_t y = 0; y < frameHeight/2; ++y) 
         {
-            for (uint32_t x = 0; x < width/2; ++x) 
+            for (uint32_t x = 0; x < frameWidth/2; ++x) 
             {
                 defaultFrame->data[1][y * defaultFrame->linesize[1] + x] = 128 + 84;  // 128 + y + i * 2;
                 defaultFrame->data[2][y * defaultFrame->linesize[2] + x] = 128 + 106; //  64 + x + i * 5;
             }
         }
 
+        // final frame
+		finalFrame.reset(av_frame_alloc());
+		finalFrame->format = AV_PIX_FMT_YUV420P;
+		finalFrame->width  = frameWidth / scale; // c->width;
+		finalFrame->height = frameHeight / scale; // c->height;
+
+		result = av_frame_get_buffer(finalFrame.get(), 0);
+		if (result < 0)
+		{
+			finalFrame.reset();
+			return result;
+		}
+
+        swc.reset(sws_getContext(frameWidth, frameHeight, AV_PIX_FMT_YUV420P,
+                                 frameWidth / scale, frameHeight / scale, AV_PIX_FMT_YUV420P,
+                                 SWS_BICUBIC, nullptr, nullptr, nullptr));
+
+
 		return 0;
     }
 
-    int EncodeContext::initContext(const uint32_t width, const uint32_t height)
+    int EncodeContext::initContext(const uint32_t width, const uint32_t height, const uint32_t _scale)
     {
     	MS_TRACE();
 
@@ -1032,6 +1049,7 @@ namespace RTC
 
     	frameWidth  = width;
     	frameHeight = height;
+    	scale       = _scale;
 
     	totalPts    = 0;
 
@@ -1115,7 +1133,7 @@ namespace RTC
             MS_WARN_TAG(dead, "jpeg codec OK");
         }
 
-		result = updateDefaultFrame(width, height);
+		result = updateDefaultFrame();
 		if (!defaultFrame)
 		{
         	char errstr[80];

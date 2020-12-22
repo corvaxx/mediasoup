@@ -699,7 +699,7 @@ namespace RTC
             // scale slave frames
             if (m_isSlavesUpdated)
             {
-                if (ec.updateDefaultFrame(ec.frameWidth, ec.frameHeight, false) != 0)
+                if (ec.updateDefaultFrame(false) != 0)
                 {
                     MS_WARN_TAG(dead, "updateDefaultFrame failed in master mode");
                     continue;
@@ -720,9 +720,9 @@ namespace RTC
                     double kx = static_cast<double>(s.width)  / frame->width;
                     double ky = static_cast<double>(s.height) / frame->height;
 
-                    double k = (s.mode == crop ? std::max(kx, ky) :
+                    double k = s.mode == crop ? std::max(kx, ky) :
                                s.mode == pad  ? std::min(kx, ky) :
-                               1) * ec.scale;
+                               1;
 
                     uint32_t dstX = s.x;
                     uint32_t dstY = s.y;
@@ -785,9 +785,9 @@ namespace RTC
                             uint32_t frameWidth  = std::min(ec.frameWidth,  dstX + dstW) - dstX;
                             uint32_t frameHeight = std::min(ec.frameHeight, dstY + dstH) - dstY;
 
-                            s.swc = sws_getContext(frame->width, frame->height, AV_PIX_FMT_YUV420P,
-                                                    frameWidth, frameHeight, AV_PIX_FMT_YUV420P,
-                                                    SWS_BICUBIC, nullptr, nullptr, nullptr);
+                            s.swc.reset(sws_getContext(frame->width, frame->height, AV_PIX_FMT_YUV420P,
+                                                       frameWidth, frameHeight, AV_PIX_FMT_YUV420P,
+                                                       SWS_BICUBIC, nullptr, nullptr, nullptr));
                         }
 
                         int32_t dstStride[] = { ec.frameWidth,
@@ -800,7 +800,7 @@ namespace RTC
                                                   ec.defaultFrame->data[2] + ec.frameWidth*dstY / 4 + dstX / 2,
                                                   nullptr };
 
-                        sws_scale(s.swc, frame->data, frame->linesize, 0, frame->height, 
+                        sws_scale(s.swc.get(), frame->data, frame->linesize, 0, frame->height, 
                                         dstSlice, dstStride);
                     }
                 }
@@ -808,7 +808,18 @@ namespace RTC
 
             m_isSlavesUpdated = false;
 
-            frames.emplace_back(ec.defaultFrame);
+            if (ec.scale == 1)
+            {
+                frames.emplace_back(ec.defaultFrame);
+            }
+            else
+            {
+                sws_scale(ec.swc.get(), ec.defaultFrame->data, ec.defaultFrame->linesize, 0, ec.defaultFrame->height, 
+                                        ec.finalFrame->data, ec.finalFrame->linesize);
+
+                frames.emplace_back(ec.finalFrame);
+            }
+
 
             std::vector<AVPacketPtr> packets;
             if (!RTC::Codecs::Tools::EncodePacket(ec, rtpStream->GetMimeType(), frames, packets))
@@ -1280,9 +1291,7 @@ namespace RTC
             {
                 s.x = x, s.y = y, s.width = width, s.height = height, s.z = z;
                 s.mode = mode;
-                SwsContext * tmp = s.swc;
-                s.swc = nullptr;
-                sws_freeContext(tmp);
+                s.swc.reset();
             }
         }   
 
