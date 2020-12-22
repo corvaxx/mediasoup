@@ -815,7 +815,7 @@ namespace RTC
             }
             else
             {
-                innt result = sws_scale(ec.swc.get(), ec.defaultFrame->data, ec.defaultFrame->linesize, 0, ec.defaultFrame->height, 
+                int result = sws_scale(ec.swc.get(), ec.defaultFrame->data, ec.defaultFrame->linesize, 0, ec.defaultFrame->height, 
                                         ec.finalFrame->data, ec.finalFrame->linesize);
 
                 std::cerr << "scaled to " << ec.finalFrame->width << "x" << ec.finalFrame->height << " with result=" << result << std::endl;
