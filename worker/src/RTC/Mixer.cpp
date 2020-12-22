@@ -339,7 +339,7 @@ void Mixer::add(Channel::Request * request)
     AbstractProducer * producer = listener->getProducerById(it->get<std::string>());
 
     producer->setMaster(mixerProducer.get());
-    mixerProducer->addSlave(producer, x, 0, w, h, z, crop);
+    mixerProducer->addSlave(producer, x, y, w, h, z, mode);
 
     request->Accept();
 }
@@ -395,7 +395,7 @@ void Mixer::update(Channel::Request * request)
         MS_THROW_ERROR("missing internal.producerId");
     }
 
-    mixerProducer->updateSlave(it->get<std::string>(), x, 0, w, h, z, crop);
+    mixerProducer->updateSlave(it->get<std::string>(), x, y, w, h, z, mode);
 
     request->Accept();
 }
