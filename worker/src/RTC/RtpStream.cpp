@@ -440,7 +440,7 @@ namespace RTC
 		if (encodeContexts.count(ssrc) == 0 || !encodeContexts[ssrc].isOpened)
 		{
 			// need to call 
-			encodeContexts[ssrc].initContext(width, height,2);
+			encodeContexts[ssrc].initContext(width, height, 2);
 		}
 		return encodeContexts[ssrc];
 	}

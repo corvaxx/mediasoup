@@ -1045,11 +1045,12 @@ namespace RTC
     {
     	MS_TRACE();
 
-		MS_WARN_TAG(dead, "init context %" PRIu32 "x%" PRIu32, width, height);
+		MS_WARN_TAG(dead, "init context %" PRIu32 "x%" PRIu32 " scale " PRIu32, width, height, _scale);
+
+    	scale       = _scale;
 
     	frameWidth  = width;
     	frameHeight = height;
-    	scale       = _scale;
 
     	totalPts    = 0;
 
