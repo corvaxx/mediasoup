@@ -722,7 +722,7 @@ namespace RTC
 
                     double k = (s.mode == crop ? std::max(kx, ky) :
                                s.mode == pad  ? std::min(kx, ky) :
-                               1) * scale;
+                               1) * ec.scale;
 
                     uint32_t dstX = s.x;
                     uint32_t dstY = s.y;
