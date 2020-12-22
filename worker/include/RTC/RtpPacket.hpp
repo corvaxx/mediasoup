@@ -108,6 +108,7 @@ namespace RTC
 
         uint32_t                frameWidth     { 0 };
         uint32_t                frameHeight    { 0 };
+        uint32_t                scale          { 2 };
 
 		AVCodec               * codec         { nullptr };
         AVCodecContextPtr       codecContext;
