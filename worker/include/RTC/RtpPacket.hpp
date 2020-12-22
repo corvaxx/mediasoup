@@ -53,11 +53,13 @@ namespace RTC
 		void operator()( AVPacket       * ptr ) { if (ptr) av_free_packet(ptr); delete ptr; } 
 		void operator()( AVFrame        * ptr ) { if (ptr) av_frame_free(&ptr); } 
 		void operator()( AVCodecContext * ptr ) { if (ptr) avcodec_close(ptr); av_free(ptr); } 
+		void operator()( SwsContext     * ptr ) { if (ptr) sws_freeContext(ptr); }
 	};
 
 	typedef shared_ptr_with_deleter<AVPacket,       AVDeleter> AVPacketPtr; 
 	typedef shared_ptr_with_deleter<AVFrame,        AVDeleter> AVFramePtr; 
 	typedef shared_ptr_with_deleter<AVCodecContext, AVDeleter> AVCodecContextPtr; 
+	typedef shared_ptr_with_deleter<SwsContext,     AVDeleter> SwsContextPtr; 
 
 
 	struct ProduceContext
