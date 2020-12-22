@@ -776,6 +776,8 @@ else
 
                     frame->pts     = context.framePts;
                     frame->pkt_pts = frame->pkt_dts = context.totalPts;
+
+                    std::cerr << "send to encoder " << frame->width << "x" << frame->height << " pts " << frame->pts << std::endl;
                     
                     // use avcodec_send_frame / avcodec_receive_packet instead
                     int result = avcodec_send_frame(context.codecContext.get(), frame.get());

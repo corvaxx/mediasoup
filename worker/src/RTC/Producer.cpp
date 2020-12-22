@@ -804,7 +804,8 @@ namespace RTC
                                         dstSlice, dstStride);
                     }
                 }
-            }
+
+            } // for (Slave & s : m_slaves)
 
             m_isSlavesUpdated = false;
 
@@ -814,11 +815,11 @@ namespace RTC
             }
             else
             {
-                sws_scale(ec.swc.get(), ec.defaultFrame->data, ec.defaultFrame->linesize, 0, ec.defaultFrame->height, 
+                innt result = sws_scale(ec.swc.get(), ec.defaultFrame->data, ec.defaultFrame->linesize, 0, ec.defaultFrame->height, 
                                         ec.finalFrame->data, ec.finalFrame->linesize);
 
-                std::cerr << "scaled to " << ec.finalFrame->width << "x" << ec.finalFrame->height << std::endl;
-                
+                std::cerr << "scaled to " << ec.finalFrame->width << "x" << ec.finalFrame->height << " with result=" << result << std::endl;
+
                 frames.emplace_back(ec.finalFrame);
             }
 
