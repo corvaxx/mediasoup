@@ -720,9 +720,9 @@ namespace RTC
                     double kx = static_cast<double>(s.width)  / frame->width;
                     double ky = static_cast<double>(s.height) / frame->height;
 
-                    double k = s.mode == crop ? std::max(kx, ky) :
+                    double k = (s.mode == crop ? std::max(kx, ky) :
                                s.mode == pad  ? std::min(kx, ky) :
-                               1;
+                               1) * scale;
 
                     uint32_t dstX = s.x;
                     uint32_t dstY = s.y;
