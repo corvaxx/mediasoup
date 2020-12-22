@@ -1057,21 +1057,19 @@ namespace RTC
 		MS_ASSERT(av_opt_set(codecContext->priv_data, "preset", "medium", AV_OPT_SEARCH_CHILDREN) == 0, "preset");
 		// av_opt_set(c.codecContext->priv_data, "preset", "medium", 0);
 		// av_opt_set(c.codecContext->priv_data, "tune",   "zerolatency", 0);
-		// c.codecContext->level = ;
 
 		// c.codecContext->coder_type = 1;
-		// c.codecContext->me_subpel_quality = 7;
 		// c.codecContext->me_range = 16;
 		// c.codecContext->keyint_min = 25; 
-		// c.codecContext->i_quant_factor = 0.71;
-		// c.codecContext->b_frame_strategy = 1;
-		// c.codecContext->qcompress    = .6;
 		codecContext->max_b_frames      = 0;
 		codecContext->refs              = 3;
-		codecContext->gop_size          = MIXER_FPS * 4;
+		codecContext->gop_size          = MIXER_FPS;
 		codecContext->thread_count      = 1;
 		codecContext->delay             = 0;
-		codecContext->me_subpel_quality = 4; 
+		codecContext->me_subpel_quality = 4;
+		codecContext->i_quant_factor    = 0.71;
+		codecContext->b_frame_strategy  = 1;
+		codecContext->qcompress         = 0.6;
 
 		// sliced-threads:
 		// quantizer=15:no-mbtree:sync-lookahead=0:rc-lookahead=0
