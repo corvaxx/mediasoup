@@ -118,15 +118,18 @@ namespace RTC
         AVCodec               * jpegCodec     { nullptr };
         AVCodecContextPtr       jpegContext;
 
+        SwsContextPtr           swc;
+
         int64_t                 framePts      { 0 };
         int64_t                 totalPts      { 0 };
         
         // default frame
         int                     i             { 0 };
         AVFramePtr              defaultFrame;
+        AVFramePtr              finalFrame;
 
-        int initContext(const uint32_t width, const uint32_t height);
-        int updateDefaultFrame(const uint32_t width, const uint32_t height, bool withIncrement = true);
+        int initContext(const uint32_t width, const uint32_t height, const uint32_t scale);
+        int updateDefaultFrame(bool withIncrement = true);
 	};
 
 
