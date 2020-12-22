@@ -11,6 +11,9 @@
 
 namespace RTC
 {
+	class TransportCongestionControlServer;
+	typedef std::shared_ptr<TransportCongestionControlServer> TransportCongestionControlServerPtr;
+	
 	class TransportCongestionControlServer : public webrtc::RemoteBitrateEstimator::Listener,
 	                                         public Timer::Listener
 	{

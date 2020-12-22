@@ -8,6 +8,7 @@
 #include "RTC/AbstractProducer.hpp"
 #include "RTC/RtpListener.hpp"
 #include "RTC/RtpHeaderExtensionIds.hpp"
+#include "RTC/TransportCongestionControlServer.hpp"
 
 #include <json.hpp>
 #include <string>
@@ -22,7 +23,8 @@ namespace RTC
 
 //******************************************************************************
 //******************************************************************************
-class Mixer : public RTC::AbstractProducer::Listener
+class Mixer : public RTC::AbstractProducer::Listener,
+              public RTC::TransportCongestionControlServer::Listener
 {
 public:
     class Listener
@@ -57,7 +59,6 @@ public:
                                                             uint32_t mappedSsrc,
                                                             uint8_t& worstRemoteFractionLost) = 0;
         virtual AbstractProducer * getProducerById(const std::string & id) = 0;
-
     };
 
 public:
@@ -84,6 +85,9 @@ protected:
     // 
     void remove(Channel::Request * request);
 
+private:
+    virtual bool IsConnected() const;
+
 protected:
     // AbstractProducer::Listener
     virtual void OnProducerPaused(RTC::AbstractProducer * producer);
@@ -102,6 +106,9 @@ protected:
                                                         uint32_t mappedSsrc, 
                                                         uint8_t& worstRemoteFractionLost);
 
+    // TransportCongestionControlServer::Listener
+    virtual void OnTransportCongestionControlServerSendRtcpPacket(RTC::TransportCongestionControlServer* tccServer, RTC::RTCP::Packet* packet);
+
 private:
     const std::string id;
     Listener * listener;
@@ -110,6 +117,11 @@ private:
     RTC::RtpListener rtpListener;
     RTC::RtpHeaderExtensionIds recvRtpHeaderExtensionIds;
     std::unordered_map<std::string, RTC::AbstractProducerPtr> mapProducers;
+
+    RTC::TransportCongestionControlServerPtr tccServer;
+
+    uint32_t initialAvailableOutgoingBitrate{ 600000u };
+    uint32_t maxIncomingBitrate{ 0u };
 
 };
 

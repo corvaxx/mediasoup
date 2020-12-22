@@ -201,75 +201,75 @@ void Mixer::produce(Channel::Request * request)
 
     // Check if TransportCongestionControlServer or REMB server must be
     // created.
-    // const auto& rtpHeaderExtensionIds = producer->GetRtpHeaderExtensionIds();
-    // const auto& codecs                = producer->GetRtpParameters().codecs;
+    const auto& rtpHeaderExtensionIds = producer->GetRtpHeaderExtensionIds();
+    const auto& codecs                = producer->GetRtpParameters().codecs;
 
     // Set TransportCongestionControlServer.
-    // if (!this->tccServer)
-    // {
-    //     bool createTccServer{ false };
-    //     RTC::BweType bweType;
+    if (!this->tccServer)
+    {
+        bool createTccServer{ false };
+        RTC::BweType bweType;
 
-    //     // Use transport-cc if:
-    //     // - there is transport-wide-cc-01 RTP header extension, and
-    //     // - there is "transport-cc" in codecs RTCP feedback.
-    //     //
-    //     // clang-format off
-    //     if (
-    //         rtpHeaderExtensionIds.transportWideCc01 != 0u &&
-    //         std::any_of(
-    //             codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
-    //             {
-    //                 return std::any_of(
-    //                     codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RTC::RtcpFeedback& fb)
-    //                     {
-    //                         return fb.type == "transport-cc";
-    //                     });
-    //             })
-    //     )
-    //     // clang-format on
-    //     {
-    //         MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlServer with transport-cc");
+        // Use transport-cc if:
+        // - there is transport-wide-cc-01 RTP header extension, and
+        // - there is "transport-cc" in codecs RTCP feedback.
+        //
+        // clang-format off
+        if (
+            rtpHeaderExtensionIds.transportWideCc01 != 0u &&
+            std::any_of(
+                codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
+                {
+                    return std::any_of(
+                        codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RTC::RtcpFeedback& fb)
+                        {
+                            return fb.type == "transport-cc";
+                        });
+                })
+        )
+        // clang-format on
+        {
+            MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlServer with transport-cc");
 
-    //         createTccServer = true;
-    //         bweType         = RTC::BweType::TRANSPORT_CC;
-    //     }
-    //     // Use REMB if:
-    //     // - there is abs-send-time RTP header extension, and
-    //     // - there is "remb" in codecs RTCP feedback.
-    //     //
-    //     // clang-format off
-    //     else if (
-    //         rtpHeaderExtensionIds.absSendTime != 0u &&
-    //         std::any_of(
-    //             codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
-    //             {
-    //                 return std::any_of(
-    //                     codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RTC::RtcpFeedback& fb)
-    //                     {
-    //                         return fb.type == "goog-remb";
-    //                     });
-    //             })
-    //     )
-    //     // clang-format on
-    //     {
-    //         MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlServer with REMB");
+            createTccServer = true;
+            bweType         = RTC::BweType::TRANSPORT_CC;
+        }
+        // Use REMB if:
+        // - there is abs-send-time RTP header extension, and
+        // - there is "remb" in codecs RTCP feedback.
+        //
+        // clang-format off
+        else if (
+            rtpHeaderExtensionIds.absSendTime != 0u &&
+            std::any_of(
+                codecs.begin(), codecs.end(), [](const RTC::RtpCodecParameters& codec)
+                {
+                    return std::any_of(
+                        codec.rtcpFeedback.begin(), codec.rtcpFeedback.end(), [](const RTC::RtcpFeedback& fb)
+                        {
+                            return fb.type == "goog-remb";
+                        });
+                })
+        )
+        // clang-format on
+        {
+            MS_DEBUG_TAG(bwe, "enabling TransportCongestionControlServer with REMB");
 
-    //         createTccServer = true;
-    //         bweType         = RTC::BweType::REMB;
-    //     }
+            createTccServer = true;
+            bweType         = RTC::BweType::REMB;
+        }
 
-    //     if (createTccServer)
-    //     {
-    //         this->tccServer = new RTC::TransportCongestionControlServer(this, bweType, RTC::MtuSize);
+        if (createTccServer)
+        {
+            this->tccServer.reset(new RTC::TransportCongestionControlServer(this, bweType, RTC::MtuSize));
 
-    //         if (this->maxIncomingBitrate != 0u)
-    //             this->tccServer->SetMaxIncomingBitrate(this->maxIncomingBitrate);
+            if (this->maxIncomingBitrate != 0u)
+                this->tccServer->SetMaxIncomingBitrate(this->maxIncomingBitrate);
 
-    //         if (IsConnected())
-    //             this->tccServer->TransportConnected();
-    //     }
-    // }
+            if (IsConnected())
+                this->tccServer->TransportConnected();
+        }
+    }
 }
 
 //******************************************************************************
@@ -423,6 +423,13 @@ void Mixer::remove(Channel::Request * request)
 
 //******************************************************************************
 //******************************************************************************
+inline bool Mixer::IsConnected() const
+{
+    return true;
+}
+
+//******************************************************************************
+//******************************************************************************
 void Mixer::OnProducerPaused(RTC::AbstractProducer * producer)
 {
     MS_TRACE();
@@ -491,6 +498,15 @@ void Mixer::OnProducerNeedWorstRemoteFractionLost(RTC::AbstractProducer * produc
 {
     MS_TRACE();
     listener->OnMixerNeedWorstRemoteFractionLost(this, producer, mappedSsrc, worstRemoteFractionLost);
+}
+
+void Mixer::OnTransportCongestionControlServerSendRtcpPacket(RTC::TransportCongestionControlServer * /*tccServer*/, 
+                                                             RTC::RTCP::Packet * /*packet*/)
+{
+    MS_TRACE();
+
+    // packet->Serialize(RTC::RTCP::Buffer);
+    // SendRtcpPacket(packet);
 }
 
 } // namespace RTC
