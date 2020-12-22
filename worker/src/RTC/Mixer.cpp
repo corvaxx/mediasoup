@@ -153,7 +153,8 @@ void Mixer::produce(Channel::Request * request)
     }
 
     // start master mode
-    producer->startMasterMode(1280, 720);
+    // producer->startMasterMode(1280, 720);
+    producer->startMasterMode(640, 360);
 
     // Insert into the map.
     this->mapProducers[producerId] = producer;
